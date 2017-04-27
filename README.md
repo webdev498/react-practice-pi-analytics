@@ -17,7 +17,7 @@ You can now browse to http://localhost:3000/int/addressing
 git submodule update --remote
 ```
 
-Current functionality:
+## Functionality for v1:
 
 * Link `ServiceAddress`es to `LawFirm`s
 
