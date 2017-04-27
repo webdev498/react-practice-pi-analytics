@@ -1,3 +1,5 @@
+// Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
+
 const path = require("path")
 const webpack = require("webpack")
 
