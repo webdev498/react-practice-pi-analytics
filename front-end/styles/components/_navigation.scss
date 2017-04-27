@@ -1,0 +1,30 @@
+// Copyright (c) 2016 Practice Insight Pty Ltd. All rights reserved.
+
+.mdl-navigation {
+
+  .mdl-button {
+    border-radius: 0;
+    line-height: 1;
+    opacity: 0.6;
+    padding: 0 24px;
+    text-transform: none;
+    transition: opacity 0.2s;
+
+    &:hover {
+      background: none;
+      opacity: 1;
+    }
+  }
+
+  .material-icons {
+    margin-right: 5px;
+  }
+
+}
+
+.mdl-navigation.float-right {
+  left: auto;
+  position: absolute;
+  right: 40px;
+  top: 0;
+}

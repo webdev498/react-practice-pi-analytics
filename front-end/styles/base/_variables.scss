@@ -1,0 +1,94 @@
+// Copyright (c) 2016 Practice Insight Pty Ltd. All rights reserved.
+@import "../vendor/mdl/color-definitions";
+@import "../vendor/mdl/functions";
+
+// easing
+$ease-in-out: cubic-bezier(.1,.7,.91,.49);
+
+$layout-screen-size-threshold: 1200px;
+
+// grid
+$grid-desktop-columns: 12 !default;
+$grid-desktop-gutter: 16px !default;
+$grid-desktop-margin: 16px !default;
+
+$grid-desktop-breakpoint: 1200px;
+
+$grid-tablet-columns: 8 !default;
+$grid-tablet-gutter: $grid-desktop-gutter !default;
+$grid-tablet-margin: $grid-desktop-margin !default;
+
+$grid-tablet-breakpoint: 768px;
+
+$grid-phone-columns: 4 !default;
+$grid-phone-gutter: $grid-desktop-gutter !default;
+$grid-phone-margin: $grid-desktop-margin !default;
+
+$grid-cell-default-columns: $grid-phone-columns !default;
+$grid-max-columns: $grid-desktop-columns !default;
+
+// fonts
+$preferred_font: 'Open Sans', sans-serif;
+$performance_font: 'Open Sans', sans-serif;
+
+// colours
+$color-primary: 58,111,165;
+$color-primary-dark: 43,81,119;
+$color-accent: 70,134,198;
+$color-primary-contrast: $color-dark-contrast;
+$color-accent-contrast: $color-dark-contrast;
+
+// text colour
+$text-color-primary: unquote("rgba(#{$color-black}, 0.87)");
+$text-link-color: unquote("rgb(#{$color-accent})");
+
+// Default button colors.
+$button-primary-color: unquote("rgb(#{$palette-grey-200})");
+$button-secondary-color: unquote("rgb(#{$color-black})");
+$button-hover-color: $button-primary-color;
+$button-active-color: unquote("rgba(#{$palette-grey-500}, 0.40)");
+$button-focus-color: unquote("rgba(#{$color-black}, 0.12)");
+
+// Colored button colors.
+$button-primary-color-alt: unquote("rgb(#{$color-accent})");
+$button-secondary-color-alt: unquote("rgb(#{$color-primary-contrast})");
+$button-hover-color-alt: #233268;
+$button-active-color-alt: unquote("rgb(#{$color-primary})");
+$button-focus-color-alt: $button-focus-color;
+$button-ripple-color-alt: unquote("rgb(#{$color-primary-contrast})");
+$button-primary-color-disabled: unquote("rgba(#{$color-black}, 0.12)");
+$button-secondary-color-disabled: unquote("rgba(#{$color-black}, 0.26)");
+
+$button-icon-color: unquote("rgb(#{$palette-grey-700})");
+$button-icon-focus-color: $button-focus-color;
+
+$icon-toggle-color: unquote("rgb(#{$palette-grey-700})");
+$icon-toggle-focus-color: $button-focus-color;
+$icon-toggle-checked-color: unquote("rgb(#{$color-primary})");
+$icon-toggle-checked-focus-color: unquote("rgba(#{$color-primary}, 0.26)");
+$icon-toggle-disabled-color: unquote("rgba(#{$color-black}, 0.26)");
+
+$ripple-bg-color: unquote("rgb(#{$color-light-contrast})");
+$layout-nav-color: unquote("rgb(#{$palette-grey-300})");
+
+// Header
+$layout-header-bg-color: unquote("rgb(#{$color-primary})");
+$layout-header-text-color: unquote("rgb(#{$color-primary-contrast})");
+$layout-header-nav-hover-color: unquote("rgba(#{$palette-grey-700}, 0.6)");
+$layout-header-tab-text-color: unquote("rgba(#{$color-primary-contrast}, 0.6)");
+
+// Drawer
+$layout-drawer-bg-color: unquote("rgb(#{$palette-grey-50})");
+$layout-drawer-border-color: unquote("rgb(#{$palette-grey-300})");
+$layout-text-color: unquote("rgb(#{$palette-grey-800})");
+$layout-drawer-navigation-color: #757575;
+$layout-drawer-navigation-link-active-background: unquote("rgb(#{$palette-grey-300})");
+$layout-drawer-navigation-link-active-color: unquote("rgb(#{$color-primary-dark})");
+
+
+// Footer
+$footer-bg-color: unquote("rgb(#{$palette-grey-100})");
+$footer-color: unquote("rgb(#{$palette-grey-500})");
+$footer-heading-color: unquote("rgb(#{$palette-grey-300})");
+$footer-button-fill-color: $footer-color;
+$footer-underline-color: unquote("rgb(#{$palette-grey-300})");

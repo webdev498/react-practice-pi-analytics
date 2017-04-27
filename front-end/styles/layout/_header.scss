@@ -1,0 +1,18 @@
+.mdl-layout__header-row {
+  position: relative;
+  width: 100%;
+}
+
+//overwrite hacky mdl styles
+.mdl-layout--fixed-drawer.is-upgraded:not(.is-small-screen)
+> .mdl-layout__inner-container
+> .mdl-layout__header {
+  margin-left: 0;
+  width: 100%;
+
+  @media(min-width: $layout-screen-size-threshold) {
+    margin-left: $layout-drawer-width;
+    width: calc(100% - #{$layout-drawer-width});
+  }
+
+}

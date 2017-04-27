@@ -1,0 +1,9 @@
+// Copyright (c) 2016 Practice Insight Pty Ltd. All rights reserved.
+
+.mdl-button {
+  border-radius: 2px;
+}
+
+.mdl-button--primary:hover, .mdl-button--primary.mdl-button--raised:hover {
+  background: $button-hover-color-alt;
+}
