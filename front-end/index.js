@@ -4,6 +4,7 @@ import "babel-polyfill"
 import React from "react"
 import WebFont from "webfontloader"
 import { render } from "react-dom"
+import Root from "./components/Root"
 
 WebFont.load({
   google: {
@@ -15,6 +16,6 @@ WebFont.load({
 })
 
 render(
-  <h1>Hello, World!</h1>,
+  <Root />,
   document.getElementById("root")
 )
