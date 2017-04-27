@@ -37,19 +37,19 @@ module.exports = {
         test: /\.s?css$/,
         use: [
           {
-            loader: "style",
+            loader: "style-loader",
           },
           {
-            loader: "css",
+            loader: "css-loader",
+            options: {
+              importLoaders: 1,
+            }
           },
           {
-            loader: "postcss",
+            loader: "resolve-url-loader",
           },
           {
-            loader: "resolve-url",
-          },
-          {
-            loader: "sass",
+            loader: "sass-loader",
           },
         ],
       },
