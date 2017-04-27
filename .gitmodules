@@ -1,0 +1,3 @@
+[submodule "pi-shared-protobuf"]
+	path = pi-shared-protobuf
+	url = ssh://git@stash.priv.practiceinsight.io:7999/pic/pi-protobuf-definitions.git
