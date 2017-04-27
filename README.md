@@ -11,6 +11,14 @@ npm start
 
 You can now browse to http://localhost:3000/int/addressing
 
+## Type Checking
+
+```
+brew install flow
+cd front-end
+flow check
+```
+
 ## Updating Protobuf Definitions
 
 ```
