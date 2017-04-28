@@ -1,22 +1,5 @@
 
-.mdl-data-table tbody tr {
-  height: 36px;
-}
-
-.mdl-data-table td, .mdl-data-table th {
-  padding: 3px 8px 3px 8px;
-  height: 36px;
-}
-
-.mdl-data-table th {
-  padding-bottom: 4px;
-}
-
-.mdl-data-table td:first-of-type, .mdl-data-table th:first-of-type {
-  padding-left: 10px;
-}
-
-.mdl-data-table td:last-of-type, .mdl-data-table th:last-of-type {
-  padding-right: 10px;
+.mdl-data-table td {
+  vertical-align: top;
 }
 
