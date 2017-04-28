@@ -22,7 +22,7 @@ module.exports = {
     new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.HotModuleReplacementPlugin(),
     new WebpackShellPlugin({ onBuildStart: [
-      "cd generated && ./build-js-from-proto.sh",
+      process.platform == "win32" ? "cd generated && build-js-from-proto" : "cd generated && ./build-js-from-proto.sh"
     ] }),
   ],
   module: {
