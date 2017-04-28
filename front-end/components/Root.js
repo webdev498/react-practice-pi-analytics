@@ -31,7 +31,7 @@ const Root = (): React.Element<Layout> =>
                    }]
                  }
                  >
-        <TableHeader name="entity">Entity</TableHeader>
+        <TableHeader name="entity">Name</TableHeader>
         <TableHeader name="addressLine1">Address</TableHeader>
         <TableHeader name="addressLine2" />
         <TableHeader name="addressLine3" />
@@ -41,12 +41,13 @@ const Root = (): React.Element<Layout> =>
         <TableHeader name="country">Country</TableHeader>
         <TableHeader name="serviceAddressId">Entity ID</TableHeader>
       </DataTable>
-      <Button accent style={{margin: "10px 10px 0 0"}}><Icon name="create" /> Create As New Firm</Button>
-      <Button accent style={{margin: "10px 10px 0 0"}}><Icon name="not_interested" /> Not a Law Firm</Button>
-      <Button accent style={{margin: "10px 10px 0 0"}}><Icon name="skip_next" /> Skip</Button>
+      <Button raised style={{margin: "10px 10px 0 0"}}><Icon name="create" /> Create As New Firm</Button>
+      <Button raised style={{margin: "10px 10px 0 0"}}><Icon name="not_interested" /> Not a Law Firm</Button>
+      <Button raised style={{margin: "10px 10px 0 0"}}><Icon name="skip_next" /> Skip</Button>
+      <Button disabled accent style={{margin: "10px 10px 0 0", float: "right"}}><Icon name="description" /> View Sample Applications</Button>
 
       <Tabs ripple style={{marginTop: "8px"}}>
-        <Tab>Suggestions</Tab>
+        <Tab>Suggestions (US)</Tab>
         <Tab>Search</Tab>
       </Tabs>
       <section>
@@ -55,44 +56,39 @@ const Root = (): React.Element<Layout> =>
                    rows={[
                      {
                        lawFirmId: <span>58586 <IconButton accent name="open_in_new" /></span>,
-                       entity: "Law Offices Of Mark A. Wilson, CA",
+                       entity: <a href="#">Law Offices Of Mark A. Wilson, CA</a>,
                        serviceAddress: "WILSON, Mark, Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
-                       country: "US",
-                       website: <a>http://www.wilsonlawaz.com/mark-wilson/</a>,
+                       website: <a href="#">http://www.wilsonlawaz.com/mark-wilson/</a>,
                        serviceAddressId: "1036990",
                        actions: <IconButton name="cancel" accent />,
                      },
                      {
-                       lawFirmId: "Not a law firm",
-                       entity: "NEL R. FONTANILLA",
+                       lawFirmId: <span style={{color: "#bbb"}}>Non law firm</span>,
+                       entity: <a href="#">NEL R. FONTANILLA</a>,
                        serviceAddress: "1536 HEMMINGWAY ROAD, SAN JOSE CA 95132",
-                       country: "US",
                        serviceAddressId: "1051425",
                        actions: <IconButton name="cancel" accent />,
                      },
                      {
-                       lawFirmId: "Not a law firm",
-                       entity: "INTERACTIV CORPORATION",
+                       lawFirmId: <span style={{color: "#bbb"}}>Non law firm</span>,
+                       entity: <a href="#">INTERACTIV CORPORATION</a>,
                        serviceAddress: "1659 N CAPITOL AVE # 225, 1659 N CAPITOL AVE # 225, SAN JOSE, CA 95132",
-                       country: "US",
                        website: "",
                        serviceAddressId: "563472",
                        actions: <IconButton name="cancel" accent />,
                      },
                      {
-                       lawFirmId: "Not a law firm",
-                       entity: "BEAUTYQQ INC",
+                       lawFirmId: <span style={{color: "#bbb"}}>Non law firm</span>,
+                       entity: <a href="#">BEAUTYQQ INC</a>,
                        serviceAddress: "2928 LAMBETH COURT, SAN JOSE, CA 95132",
-                       country: "US",
                        website: "",
                        serviceAddressId: "584214",
                        actions: <IconButton name="cancel" accent />,
                      },
                      {
                        lawFirmId: <span>44161 <IconButton accent name="open_in_new" /></span>,
-                       entity: "PEREZ, YVONNE, CA",
+                       entity: <a href="#">PEREZ, YVONNE, CA</a>,
                        serviceAddress: "PEREZ, YVONNE, 2121 LIMEWOOD DR., SAN JOSE, CA 95132",
-                       country: "US",
                        website: "",
                        serviceAddressId: "610070",
                        actions: <IconButton name="cancel" accent />,
@@ -102,7 +98,6 @@ const Root = (): React.Element<Layout> =>
           <TableHeader name="lawFirmId">Law Firm ID</TableHeader>
           <TableHeader name="entity">Entity</TableHeader>
           <TableHeader name="serviceAddress">Address</TableHeader>
-          <TableHeader name="country">Country</TableHeader>
           <TableHeader name="website">Website</TableHeader>
           <TableHeader name="serviceAddressId">Entity ID</TableHeader>
           <TableHeader name="actions">Re-sort</TableHeader>
