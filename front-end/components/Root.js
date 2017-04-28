@@ -20,11 +20,7 @@ const Root = (): React.Element<Layout> =>
                  rows={[
                    {
                      entity: <span>WILSON, Mark <IconButton accent name="search" /></span>,
-                     addressLine1: <span>Law Offices of Mark Wilson <IconButton accent name="search" /></span>,
-                     addressLine2: "PMB: 348 2530 Berryessa Road",
-                     addressLine3: "San Jose, CA 95132",
-                     addressLine4: "",
-                     addressLine5: "",
+                     address: <span>Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132<IconButton accent name="search" /></span>,
                      phone: "",
                      country: <span>US <IconButton accent name="edit" /></span>,
                      serviceAddressId: "1326958"
@@ -32,11 +28,7 @@ const Root = (): React.Element<Layout> =>
                  }
                  >
         <TableHeader name="entity">Name</TableHeader>
-        <TableHeader name="addressLine1">Address</TableHeader>
-        <TableHeader name="addressLine2" />
-        <TableHeader name="addressLine3" />
-        <TableHeader name="addressLine4" />
-        <TableHeader name="addressLine5" />
+        <TableHeader name="address">Address</TableHeader>
         <TableHeader name="phone">Phone</TableHeader>
         <TableHeader name="country">Country</TableHeader>
         <TableHeader name="serviceAddressId">Entity ID</TableHeader>
