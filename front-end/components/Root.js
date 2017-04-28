@@ -4,8 +4,7 @@ import React from "react"
 import "react-mdl/extra/material.js"
 import "../styles/main.scss"
 import {
-  Layout, Header, HeaderRow, Content, Navigation, Button, Icon, IconButton, Tabs, Tab, DataTable, TableHeader,
-  Footer, FooterSection,
+  Layout, Header, HeaderRow, Content, Navigation, Button, Icon, IconButton, Tabs, Tab, DataTable, TableHeader, Snackbar
 } from "react-mdl"
 
 const Root = (): React.Element<Layout> =>
@@ -46,13 +45,12 @@ const Root = (): React.Element<Layout> =>
       <Button accent style={{margin: "10px 10px 0 0"}}><Icon name="not_interested" /> Not a Law Firm</Button>
       <Button accent style={{margin: "10px 10px 0 0"}}><Icon name="skip_next" /> Skip</Button>
 
-      <Tabs ripple style={{marginTop: "50px"}}>
+      <Tabs ripple style={{marginTop: "8px"}}>
         <Tab>Suggestions</Tab>
         <Tab>Search</Tab>
       </Tabs>
       <section>
         <DataTable style={{width: "100%"}}
-                   shaodow={2}
                    rowKeyColumn="lawFirmId"
                    rows={[
                      {
@@ -103,7 +101,7 @@ const Root = (): React.Element<Layout> =>
           >
           <TableHeader name="lawFirmId">Law Firm ID</TableHeader>
           <TableHeader name="entity">Entity</TableHeader>
-          <TableHeader name="serviceAddress">Service Address</TableHeader>
+          <TableHeader name="serviceAddress">Address</TableHeader>
           <TableHeader name="country">Country</TableHeader>
           <TableHeader name="website">Website</TableHeader>
           <TableHeader name="serviceAddressId">Entity ID</TableHeader>
@@ -111,10 +109,9 @@ const Root = (): React.Element<Layout> =>
         </DataTable>
       </section>
     </Content>
-    <Footer size="mini" style={{padding: "10px"}}>
-      <span>Previous Action: Marking [1427571] PINCHAK, George, L. Tarolli, Sundheim, Covell & Tummino L.L.P. 1300 East Ninth Street, Suite 1700 Cleveland, OH 44114 (US) to Tarolli Sundheim Covell & Tummino, OH</span>
-      <Button accent><Icon name="undo" />Undo</Button>
-    </Footer>
+    <Snackbar active={true} action="Undo" onTimeout={() => {}}>
+      Assigned [1427571] PINCHAK, George, L. Tarolli, Sundheim, Covell & Tummino L.L.P. 1300 East Ninth Street, Suite 1700 Cleveland, OH 44114 (US) to Tarolli Sundheim Covell & Tummino, OH
+    </Snackbar>
   </Layout>
 
 export default Root
