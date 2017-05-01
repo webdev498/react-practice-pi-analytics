@@ -1,6 +1,5 @@
-set -e
+echo off
 
-# Clear previous run
 rmdir /s /q from-proto 
 mkdir from-proto\tmp
 xcopy ..\..\pi-shared-protobuf\src from-proto\tmp\ /y /e
