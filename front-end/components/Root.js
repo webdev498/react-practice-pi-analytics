@@ -35,17 +35,16 @@ const Root = (props: RootProps): React.Element<Layout> =>
             Applications</Button>
         </Cell>
       </Grid>
-
       <AddressesContainer/>
-      <Footer size="mini">
-        <FooterSection type="left"><span>Assigned [1427571] PINCHAK, George, L. Tarolli, Sundheim, Covell & Tummino L.L.P. 1300 East Ninth
-          Street, Suite 1700 Cleveland, OH 44114 (US) to Tarolli Sundheim Covell & Tummino, OH</span>
-        </FooterSection>
-        <FooterSection type="right">
-          <Button onClick={props.onUndo} raised style={{float: "right"}}>Undo</Button>
-        </FooterSection>
-      </Footer>
     </Content>
+    <Footer size="mini">
+      <FooterSection type="left"><span>Assigned [1427571] PINCHAK, George, L. Tarolli, Sundheim, Covell & Tummino L.L.P. 1300 East Ninth
+          Street, Suite 1700 Cleveland, OH 44114 (US) to Tarolli Sundheim Covell & Tummino, OH</span>
+      </FooterSection>
+      <FooterSection type="right">
+        <Button onClick={props.onUndo} raised style={{float: "right"}}>Undo</Button>
+      </FooterSection>
+    </Footer>
   </Layout>
 
 export default Root
