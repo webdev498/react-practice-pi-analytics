@@ -12,7 +12,7 @@ FirmDisplayProps = {
 const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
 
   const renderGoogleSearchIcon = (value: string) => {
-    var url = "".concat("https://www.google.ru/search?q=", value.replace(/ /g, "+"));
+    var url = "".concat("https://www.google.com/search?q=", value.replace(/ /g, "+"));
     return (
       <span>{value} <a href={url} target="_blank"><IconButton accent name="search"/></a></span>
     )
@@ -26,6 +26,7 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
     )
   }
 
+  // TODO: Display en translation in second row if service address is not in English
   const mapRows = () => {
     return [props.firm].map((firm) => ({
       lawFirmId: firm.lawFirmId,
@@ -38,9 +39,7 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
   }
 
   return (
-
     <div>
-      <h5>{[props.firm.entity, props.firm.address].join(" ")}</h5>
       <DataTable style={{width: "100%"}} rowKeyColumn="lawFirmId" rows={mapRows()}>
         <TableHeader name="entity" cellFormatter={renderGoogleSearchIcon}>Name</TableHeader>
         <TableHeader name="address" cellFormatter={renderGoogleSearchIcon}>Address</TableHeader>
