@@ -7,7 +7,7 @@ package pi.analytics.admin.serviceaddress.server;
 /**
  * @author shane.xie@practiceinsight.io
  */
-public class ServiceAddressAdminLauncher {
+public class ServiceAddressSortingServerLauncher {
 
   public static void main(final String[] args) throws Exception {
   }

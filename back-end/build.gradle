@@ -21,10 +21,10 @@ buildscript {
 }
 
 distributions {
-    mainClassName = 'pi.analytics.admin.serviceaddress.server.ServiceAddressAdminLauncher'
-    archivesBaseName = 'service-address-admin'
+    mainClassName = 'pi.analytics.admin.serviceaddress.server.ServiceAddressSortingServerLauncher'
+    archivesBaseName = 'service-address-sorting'
     main {
-        baseName = 'service-address-admin'
+        baseName = 'service-address-sorting'
     }
 }
 
