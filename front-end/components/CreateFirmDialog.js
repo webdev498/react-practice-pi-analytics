@@ -5,15 +5,17 @@ import u from "updeep";
 import React from "react";
 import ReactDOM from "react-dom";
 import "dialog-polyfill/dialog-polyfill.css";
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Textfield} from "react-mdl";
+import * as DialogPolyfill from "dialog-polyfill";
+import {Button, Cell, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Textfield} from "react-mdl";
 import onClickOutside from "react-onclickoutside";
+import {SelectField} from "react-mdl-selectfield";
 
 type
 CreateFirmDialogProps = {
-  firm: {},
+  firm: Object,
   open: boolean,
   onSubmit: (firm: Object) => void,
-  onCancel: () => void,
+  onCancel: () => void
 }
 
 class CreateFirmDialog extends React.Component {
@@ -21,14 +23,13 @@ class CreateFirmDialog extends React.Component {
 
   constructor(props: CreateFirmDialogProps) {
     super(props);
-
     this.state = {name: '', url: '', state: '', country: ''};
   }
 
   componentDidMount() {
     const dialog = ReactDOM.findDOMNode(this);
-    if (!dialog.showModal) {
-      window.dialogPolyfill.registerDialog(dialog);
+    if (dialog && !dialog.showModal) {
+      DialogPolyfill.registerDialog(dialog);
     }
   }
 
@@ -38,44 +39,69 @@ class CreateFirmDialog extends React.Component {
     }
   }
 
-  render(): ?React.Element<any> {
-
-    const statesList = [].map((state) => {
+  createOptions(values: Array<string>) {
+    return values.map((value) => {
       return (
-        <Options value={state}>{state}</Options>
+        <Options value={value}>{value}</Options>
       )
     });
+  }
 
-    const countriesList = [].map((country) => {
-      return (
-        <Options value={country}>{country}</Options>
-      )
-    })
+  handleClickOutside = (event: Event) => {
+    if (this.props.open) {
+      this.props.onCancel();
+    }
+  }
+
+  render(): ?React.Element<any> {
+
+    let statesList = this.createOptions([]);
+    let countriesList = this.createOptions([]);
+
+    let close = (event: Event) => {
+      event.preventDefault();
+      this.props.onCancel();
+    }
 
     return (
       <Dialog open={this.props.open} onCancel={this.props.onCancel}>
-        <Button style={{height: 0, width: 0, padding: 0, margin: 0, float: "right", opacity: 0}}>FocusHere</Button>
-        <DialogTitle>Alert Details</DialogTitle>
-        <IconButton name="close" onClick={this.props.onCancel} style={{float: "right"}}>Close</IconButton>
-        <DialogContent>
-          <form onSubmit={(event: Event) => {
-            event.preventDefault();
-            props.onSubmit(this.state);
-          }}>
-            <Textfield value={this.props.firm.name} onChange={this.createListener('name')}/>
-            <Textfield value={this.props.firm.url} onChange={this.createListener('url')}/>
-            <SelectField label={"Select state"} value={this.props.firm.state} onChange={this.createListener('state')}>
-              {statesList}
-            </SelectField>
-            <SelectField label={"Select country"} value={this.props.firm.country} onChange={this.createListener('country')}>
-              {countriesList}
-            </SelectField>
-            <DialogActions>
-              <Button type="button">Cancel</Button>
-              <Button type="submit">Save</Button>
-            </DialogActions>
-          </form>
-        </DialogContent>
+        <DialogTitle>Create new Law Firm</DialogTitle>
+        <IconButton name="close" onClick={close} style={{top: "18px"}} onFocus={(event) => this.nameInput.inputRef.focus()}>Close</IconButton>
+        <form onSubmit={(event: Event) => {
+          event.preventDefault();
+          this.props.onSubmit(this.state);
+        }}>
+          <DialogContent>
+            <Grid>
+              <Cell col={12}>
+                <Textfield style={{width: "100%"}} id={"name"} label={"Name"} ref={(input) => {
+                  this.nameInput = input;
+                }} onChange={this.createListener('name')}/>
+              </Cell>
+            </Grid>
+            <Grid>
+              <Cell col={12}>
+                <Textfield style={{width: "100%"}} id={"url"} label={"Firm URL"} onChange={this.createListener('url')}/>
+              </Cell>
+            </Grid>
+            <Grid>
+              <Cell col={6}>
+                <SelectField label={"Select state"} onChange={this.createListener('state')}>
+                  {statesList}
+                </SelectField>
+              </Cell>
+              <Cell col={6}>
+                <SelectField label={"Select country"} onChange={this.createListener('country')}>
+                  {countriesList}
+                </SelectField>
+              </Cell>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button type="button" onClick={close}>Cancel</Button>
+            <Button type="submit">Save</Button>
+          </DialogActions>
+        </form>
       </Dialog>
     )
   }

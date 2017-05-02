@@ -3,7 +3,7 @@
 //@flow
 import Addresses from "../components/Addresses";
 import {changeTab} from "../reducers/addresses";
-import {bingServiceAddress} from "../reducers/root";
+import {sortServiceAddress} from "../reducers/root";
 import {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 
@@ -17,8 +17,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onTabChange: (tab: number) => {
     dispatch(changeTab(tab));
   },
-  onBindServiceAddress: (address: Object) => {
-    dispatch(bingServiceAddress(address));
+  onSortServiceAddress: (address: Object) => {
+    dispatch(sortServiceAddress(address));
   }
 })
 

@@ -5,7 +5,7 @@ import Search from "../components/Search";
 import {doSearch} from "../reducers/search";
 import {Dispatch, State} from "redux";
 import {connect} from "react-redux";
-import {bingServiceAddress} from "../reducers/root";
+import {sortServiceAddress} from "../reducers/root";
 
 const mapStateToProps = (state: State) => ({
   items: state.search.items,
@@ -18,8 +18,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     event.preventDefault();
     dispatch(doSearch(event.target.value));
   },
-  onBindServiceAddress: (address: Object) => {
-    dispatch(bingServiceAddress(address));
+  onSortServiceAddress: (address: Object) => {
+    dispatch(sortServiceAddress(address));
   }
 })
 

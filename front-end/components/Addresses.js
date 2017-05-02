@@ -12,7 +12,7 @@ AddressesProps = {
   items: Array,
   firmAddress: string,
   onTabChange: (tab: int) => void,
-  onBindServiceAddress: (address: Object) => void
+  onSortServiceAddress: (address: Object) => void
 }
 
 const Addresses = (props: AddressesProps): React.Element<Layout> =>
@@ -24,7 +24,7 @@ const Addresses = (props: AddressesProps): React.Element<Layout> =>
     <section>
       {props.tab == 0 ? (
         <AddressesList addresses={props.items} serviceAddress={props.firmAddress}
-                       onBindServiceAddress={props.onBindServiceAddress}/>
+                       onSortServiceAddress={props.onSortServiceAddress}/>
       ) : (
          <SearchContainer />
        )}

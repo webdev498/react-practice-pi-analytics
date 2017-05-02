@@ -9,7 +9,7 @@ type
 AddressesListProps = {
   serviceAddress: String,
   addresses: Array,
-  onBindServiceAddress: (address: Object) => void
+  onSortServiceAddress: (address: Object) => void
 }
 
 class AddressesList extends React.Component {
@@ -21,7 +21,7 @@ class AddressesList extends React.Component {
 
   renderLawFirmId(isLawFirm: boolean, lawFirmId: String): React.Element<any> {
     if (isLawFirm) {
-      var href = "".concat("https://practiceinsight.io/int/dataServices/firmInfo.jsp?id=", lawFirmId, "#agents");
+      var href = "".concat("dataServices/firmInfo.jsp?id=", lawFirmId, "#agents");
       return <span>{lawFirmId}&nbsp;<a href={href} target="_blank"><IconButton accent name="open_in_new"/></a></span>
     }
     return <span style={{color: "#bbb"}}>Non law firm</span>
@@ -31,7 +31,7 @@ class AddressesList extends React.Component {
     if (address.isLawFirm) {
       return <a href="#" onClick={(event: Event) => {
         event.preventDefault();
-        this.props.onBindServiceAddress(address);
+        this.props.onSortServiceAddress(address);
       }}>{address.entity}</a>
     }
     return <span>{address.entity}</span>

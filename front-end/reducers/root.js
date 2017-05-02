@@ -22,16 +22,38 @@ export default root;
 export const createFirm = (): Action => ({
   type: Actions.CREATE_FIRM,
   payload: {
-    firm: {}
+    isCreateFirmDialogOpen: true
   }
 });
 
-export const bingServiceAddress = (address: Object): Action => ({
+export const closeFirmDialog = (): Action => ({
+  type: Actions.CLOSE_FIRM_DIALOG,
+  payload: {
+    isCreateFirmDialogOpen: false
+  }
+})
+
+export const sortServiceAddress = (address: Object): Action => ({
   type: Actions.BIND_SERVICE_ADDRESS,
   payload: {
     firm: {
       address: address.serviceAddress,
       serviceAddressId: address.serviceAddressId
     }
+  }
+})
+
+export const unsortedServiceAddressFulfilled = (address: Object): Action => ({
+  type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED,
+  payload: {
+    firm: address,
+    loading: false
+  }
+})
+
+export const unsortedServiceAddressFetchError = (): Action => ({
+  type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
+  payload: {
+    loading: false
   }
 })

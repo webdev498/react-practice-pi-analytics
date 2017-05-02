@@ -12,15 +12,14 @@ FirmDisplayProps = {
 const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
 
   const renderGoogleSearchIcon = (value: string) => {
-    var url = "".concat("https://www.google.com/search?q=", value.replace(/ /g, "+"));
+    var url = "https://www.google.com/search?q=".concat(value.replace(/ /g, "+"));
     return (
       <span>{value} <a href={url} target="_blank"><IconButton accent name="search"/></a></span>
     )
   }
 
   const renderCountryEditIcon = (country: string, localId: string) => {
-    var url = "".concat("https://practiceinsight.io/int/addressing/localCountryC.jsp?findLocalEntity=Find&localID=",
-                        localId);
+    var url = "addressing/localCountryC.jsp?findLocalEntity=Find&localID=".concat(localId);
     return (
       <span>{country} <a href={url}><IconButton accent name="edit"/></a></span>
     )

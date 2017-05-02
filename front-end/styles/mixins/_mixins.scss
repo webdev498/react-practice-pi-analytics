@@ -4,9 +4,23 @@
 
 .button-bar {
 
-  >button:nth-child(2n) {
+  padding-left: 0px;
+  padding-right: 0px;
+
+  >div {
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+
+  >div>button:nth-child(2n) {
     margin-left: 32px;
     margin-right: 32px;
   }
 
+}
+
+.mdl-layout__content.center {
+  width: 100%;
+  text-align: center;
+  overflow: hidden;
 }
