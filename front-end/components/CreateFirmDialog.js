@@ -5,7 +5,7 @@ import u from "updeep";
 import React from "react";
 import ReactDOM from "react-dom";
 import "dialog-polyfill/dialog-polyfill.css";
-import {Button, Dialog, DialogContent, DialogTitle, IconButton, Textfield} from "react-mdl";
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Textfield} from "react-mdl";
 import onClickOutside from "react-onclickoutside";
 
 type
@@ -70,6 +70,10 @@ class CreateFirmDialog extends React.Component {
             <SelectField label={"Select country"} value={this.props.firm.country} onChange={this.createListener('country')}>
               {countriesList}
             </SelectField>
+            <DialogActions>
+              <Button type="button">Cancel</Button>
+              <Button type="submit">Save</Button>
+            </DialogActions>
           </form>
         </DialogContent>
       </Dialog>

@@ -13,6 +13,7 @@ protoc --js_out=import_style=commonjs:../ \
     google/api/annotations.proto \
     google/api/http.proto \
     patent_common.proto \
+    service_address_sorting.proto \
 
 cd ../../
 rm -rf from-proto/tmp/
