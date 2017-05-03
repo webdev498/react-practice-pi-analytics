@@ -12,7 +12,8 @@ AddressesProps = {
   items: Array,
   firmAddress: string,
   onTabChange: (tab: int) => void,
-  onSortServiceAddress: (address: Object) => void
+  onSortServiceAddress: (address: Object) => void,
+  onUnsortServiceAddress: (address: Object) => void
 }
 
 const Addresses = (props: AddressesProps): React.Element<Layout> =>

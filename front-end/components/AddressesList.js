@@ -9,7 +9,8 @@ type
 AddressesListProps = {
   serviceAddress: String,
   addresses: Array,
-  onSortServiceAddress: (address: Object) => void
+  onSortServiceAddress: (address: Object) => void,
+  onUnsortServiceAddress: (address: Object) => void
 }
 
 class AddressesList extends React.Component {
@@ -61,8 +62,11 @@ class AddressesList extends React.Component {
     return null
   }
 
-  renderActions(lawFirmId: String) {
-    return <a href={lawFirmId}><IconButton name="cancel" accent/></a>
+  renderActions(address: Object) {
+    return <a href={lawFirmId}><IconButton name="cancel" accent onClick={(event: Event) => {
+      event.preventDefault();
+      this.props.onUnsortServiceAddress(address);
+    }}/></a>
   }
 
   mapRows() {
@@ -73,7 +77,7 @@ class AddressesList extends React.Component {
       serviceAddress: this.renderServiceAddressWithInclusions(address.serviceAddress, this.props.serviceAddress),
       website: this.renderWebsite(address.website),
       serviceAddressId: address.serviceAddressId,
-      actions: this.renderActions(address.lawFirmId)
+      actions: this.renderActions(address)
     }))
   };
 

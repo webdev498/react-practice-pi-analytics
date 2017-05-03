@@ -9,8 +9,8 @@ import {connect} from "react-redux";
 
 const mapStateToProps = (state: State) => ({
   tab: state.addresses.tab,
-  items: state.addresses.items,
-  firmAddress: state.addresses.firmAddress
+  items: state.root.firm.suggestedAgents,
+  firmAddress: state.root.firm.serviceAddressToSort
 })
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({

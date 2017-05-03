@@ -6,7 +6,18 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "dialog-polyfill/dialog-polyfill.css";
 import * as DialogPolyfill from "dialog-polyfill";
-import {Button, Cell, Dialog, DialogActions, DialogContent, DialogTitle, Grid, IconButton, Textfield} from "react-mdl";
+import {
+  Button,
+  Cell,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  IconButton,
+  ProgressBar,
+  Textfield
+} from "react-mdl";
 import onClickOutside from "react-onclickoutside";
 import {SelectField} from "react-mdl-selectfield";
 
@@ -14,8 +25,9 @@ type
 CreateFirmDialogProps = {
   firm: Object,
   open: boolean,
+  loading: boolean,
   onSubmit: (firm: Object) => void,
-  onCancel: () => void
+  onClose: () => void
 }
 
 class CreateFirmDialog extends React.Component {
@@ -49,7 +61,7 @@ class CreateFirmDialog extends React.Component {
 
   handleClickOutside = (event: Event) => {
     if (this.props.open) {
-      this.props.onCancel();
+      this.props.onClose();
     }
   }
 
@@ -60,13 +72,17 @@ class CreateFirmDialog extends React.Component {
 
     let close = (event: Event) => {
       event.preventDefault();
-      this.props.onCancel();
+      this.props.onClose();
     }
 
+    let progress = this.props.loading ? (<ProgressBar indeterminate/>) : null;
+
     return (
-      <Dialog open={this.props.open} onCancel={this.props.onCancel}>
+      <Dialog open={this.props.open} onCancel={this.props.onClose}>
         <DialogTitle>Create new Law Firm</DialogTitle>
-        <IconButton name="close" onClick={close} style={{top: "18px"}} onFocus={(event) => this.nameInput.inputRef.focus()}>Close</IconButton>
+        <IconButton disabled={this.props.loading} name="close" onClick={close} style={{top: "18px"}}
+                    onFocus={(event) => this.nameInput.inputRef.focus()}>Close</IconButton>
+        {progress}
         <form onSubmit={(event: Event) => {
           event.preventDefault();
           this.props.onSubmit(this.state);
@@ -74,32 +90,34 @@ class CreateFirmDialog extends React.Component {
           <DialogContent>
             <Grid>
               <Cell col={12}>
-                <Textfield style={{width: "100%"}} id={"name"} label={"Name"} ref={(input) => {
+                <Textfield disabled={this.props.loading} style={{width: "100%"}} id={"name"} label={"Name"} ref={(input) => {
                   this.nameInput = input;
                 }} onChange={this.createListener('name')}/>
               </Cell>
             </Grid>
             <Grid>
               <Cell col={12}>
-                <Textfield style={{width: "100%"}} id={"url"} label={"Firm URL"} onChange={this.createListener('url')}/>
+                <Textfield disabled={this.props.loading} style={{width: "100%"}} id={"url"} label={"Firm URL"}
+                           onChange={this.createListener('url')}/>
               </Cell>
             </Grid>
             <Grid>
               <Cell col={6}>
-                <SelectField label={"Select state"} onChange={this.createListener('state')}>
+                <SelectField disabled={this.props.loading} label={"Select state"} onChange={this.createListener('state')}>
                   {statesList}
                 </SelectField>
               </Cell>
               <Cell col={6}>
-                <SelectField label={"Select country"} onChange={this.createListener('country')}>
+                <SelectField disabled={this.props.loading} label={"Select country"}
+                             onChange={this.createListener('country')}>
                   {countriesList}
                 </SelectField>
               </Cell>
             </Grid>
           </DialogContent>
           <DialogActions>
-            <Button type="button" onClick={close}>Cancel</Button>
-            <Button type="submit">Save</Button>
+            <Button type="button" disabled={this.props.loading} onClick={close}>Cancel</Button>
+            <Button type="submit" disabled={this.props.loading}>Save</Button>
           </DialogActions>
         </form>
       </Dialog>

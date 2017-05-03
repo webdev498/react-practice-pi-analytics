@@ -2,9 +2,11 @@
 //jshint esversion:6
 //@flow
 import Root from "../components/Root";
-import {closeFirmDialog, createFirm} from "../reducers/root";
+import {createFirm, getNextUnsortedServiceAddress} from "../reducers/root";
+import * as FetchActions from "../actions/FetchActions";
 import {Dispatch, State} from "redux";
 import {connect} from "react-redux";
+import Authentication from "../services/Authentication";
 
 const mapStateToProps = (state: State) => ({
   firm: state.root.firm,
@@ -16,8 +18,14 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onCreateFirm: () => {
     dispatch(createFirm());
   },
-  onCloseFirmDialog: () => {
-    dispatch(closeFirmDialog());
+  onSkip: () => {
+    dispatch(getNextUnsortedServiceAddress());
+  },
+  onGetNextServiceAddress: () => {
+    dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());
+  },
+  onDismiss: () => {
+    dispatch({type: FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM, payload: {loading: true}});
   }
 })
 

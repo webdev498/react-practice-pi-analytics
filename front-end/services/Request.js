@@ -6,8 +6,11 @@ import {Observable} from "rxjs/Observable";
 import "rxjs/add/operator/retryWhen";
 import "rxjs/add/operator/delay";
 import "rxjs/add/observable/dom/ajax";
+import Authentication from "./Authentication";
 
-export type Request = {
+export
+type
+Request = {
   url: string,
   method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE",
   body? : Object
@@ -22,7 +25,7 @@ export const Methods = {
 }
 
 export const fetch = (request: Request): Observable => {
-  return Observable.ajax(decorateRequest(methodCall.request))
+  return Observable.ajax(decorateRequest(request))
     .catch(error => {
       if (error.status === 401) {
         window.location = "login.jsp#agents";
@@ -40,9 +43,12 @@ export const fetch = (request: Request): Observable => {
  * for setting options.
  */
 const decorateRequest = (request: Request): Object => {
+  if (Authentication.user) {
+    request.body.requested_by = Authentication.user;
+  }
   return Object.assign({}, request, {
     responseType: "json",
     crossDomain: true,
-    body: JSON.stringify(request.body)
+    body: request.body ? JSON.stringify(request.body) : undefined
   });
 }

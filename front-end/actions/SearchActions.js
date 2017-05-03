@@ -2,4 +2,5 @@
 //jshint esversion:6
 //@flow
 export const NAMESPACE = "SEARCH";
-export const DO_SEARCH = NAMESPACE + "/DO_SEARCH";
+export const SEARCH_QUERY_FULFILLED = NAMESPACE + "/SEARCH_QUERY_FILFILLED";
+export const SEARCH_QUERY_ERROR = NAMESPACE + "/SEARCH_QUERY_ERROR";

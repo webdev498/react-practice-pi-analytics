@@ -3,17 +3,10 @@
 //@flow
 import createReducer, {Action} from "redux-updeep";
 import * as Actions from "../actions/RootActions";
-
-const firm = {
-  entity: "WILSON, Mark",
-  address: "Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
-  phone: "",
-  country: "US",
-  serviceAddressId: "1326958"
-}
+import * as FetchActions from "../actions/FetchActions";
 
 const initialState = {
-  firm: firm
+  loading: true
 }
 
 const root = createReducer(Actions.NAMESPACE, initialState)
@@ -41,7 +34,7 @@ export const sortServiceAddress = (address: Object): Action => ({
       serviceAddressId: address.serviceAddressId
     }
   }
-})
+});
 
 export const unsortedServiceAddressFulfilled = (address: Object): Action => ({
   type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED,
@@ -49,11 +42,33 @@ export const unsortedServiceAddressFulfilled = (address: Object): Action => ({
     firm: address,
     loading: false
   }
-})
+});
 
 export const unsortedServiceAddressFetchError = (): Action => ({
   type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
   payload: {
     loading: false
   }
-})
+});
+
+export const getNextUnsortedServiceAddress = (): Action => ({
+  type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS,
+  payload: {
+    request: {},
+    loading: true
+  }
+});
+
+export const serviceAddressAssigned = (): Action => ({
+  type: Actions.SERVICE_ADDRESS_ASSIGNED,
+  payload: {
+    mask: false
+  }
+});
+
+export const serviceAddressUnsorted = (): Action => ({
+  type: Actions.SERVICE_ADDRESS_UNSORTED,
+  payload: {
+    mask: false
+  }
+});
