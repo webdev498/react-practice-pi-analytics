@@ -4,7 +4,6 @@
 
 package pi.analytics.admin.serviceaddress.service;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
@@ -75,8 +74,7 @@ public class UnsortedServiceAddressFetcher {
     }
   }
 
-  @VisibleForTesting
-  Optional<StoredMsgUnit> fetchNextQueueItem(final QueueNameOnPrem queueNameOnPrem) {
+  private Optional<StoredMsgUnit> fetchNextQueueItem(final QueueNameOnPrem queueNameOnPrem) {
     UnitRequestOnPrem unitRequestOnPrem =
         UnitRequestOnPrem
             .newBuilder()
@@ -92,8 +90,7 @@ public class UnsortedServiceAddressFetcher {
     }
   }
 
-  @VisibleForTesting
-  QueuedServiceAddress fetchServiceAddress(final StoredMsgUnit storedMsgUnit) {
+  private QueuedServiceAddress fetchServiceAddress(final StoredMsgUnit storedMsgUnit) {
     final GetServiceAddressByIdRequest fetchRequest =
         GetServiceAddressByIdRequest
             .newBuilder()
@@ -113,9 +110,9 @@ public class UnsortedServiceAddressFetcher {
 
   /**
    * Delete queue items that we can't, or aren't interested in handling
+   * Contains Optional<ServiceAddress>.empty() if the service address is to be skipped
    */
-  @VisibleForTesting
-  QueuedServiceAddress pruneUnhandledQueueItem(final QueuedServiceAddress queuedServiceAddress) {
+  private QueuedServiceAddress pruneUnhandledQueueItem(final QueuedServiceAddress queuedServiceAddress) {
 
     if (!queuedServiceAddress.serviceAddress().isPresent()) {
       // Service address doesn't exist and we can't process it
@@ -129,6 +126,8 @@ public class UnsortedServiceAddressFetcher {
       if (!activeOfficeCodes.contains(queuedServiceAddress.serviceAddress().get().getCountry().toUpperCase())) {
         // We are not interested in this office code
         deleteQueueItem(queuedServiceAddress.queueId());
+        // Indicate that the service address should be skipped
+        return QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
       }
     }
     return queuedServiceAddress;
