@@ -8,7 +8,7 @@ import {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 
 const mapStateToProps = (state: State) => ({
-  firm: state.root.firm,
+  value: state.root.value,
   open: state.root.isCreateFirmDialogOpen,
   loading: state.createfirmdialog.loading
 })

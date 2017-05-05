@@ -4,12 +4,13 @@
 import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
 
-type
-FirmDisplayProps = {
-  firm: Object
+type FirmDisplayProps = {
+  value: Object
 }
 
 const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
+
+  let addressToSort = props.value.serviceAddressToSort;
 
   const renderGoogleSearchIcon = (value: string) => {
     var url = "https://www.google.com/search?q=".concat(value.replace(/ /g, "+"));
@@ -27,20 +28,23 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
 
   // TODO: Display en translation in second row if service address is not in English
   const mapRows = () => {
-    return [props.firm].map((firm) => ({
-      lawFirmId: firm.lawFirmId,
-      entity: firm.entity,
-      address: firm.address,
-      phone: firm.phone,
-      country: renderCountryEditIcon(firm.country, firm.serviceAddressId),
-      serviceAddressId: firm.serviceAddressId
+    return [addressToSort].map((address) => ({
+      lawFirmId: address.lawFirmId,
+      name: address.name,
+      address: address.address,
+      phone: address.phone,
+      country: renderCountryEditIcon(address.country, address.serviceAddressId),
+      serviceAddressId: address.serviceAddressId
     }));
   }
 
   return (
     <div>
+      {"en" !== addressToSort.languageType ? (
+        <h5>{props.value.enTranslation}</h5>
+      ) : (null)}
       <DataTable style={{width: "100%"}} rowKeyColumn="lawFirmId" rows={mapRows()}>
-        <TableHeader name="entity" cellFormatter={renderGoogleSearchIcon}>Name</TableHeader>
+        <TableHeader name="name" cellFormatter={renderGoogleSearchIcon}>Name</TableHeader>
         <TableHeader name="address" cellFormatter={renderGoogleSearchIcon}>Address</TableHeader>
         <TableHeader name="phone">Phone</TableHeader>
         <TableHeader name="country">Country</TableHeader>

@@ -2,16 +2,23 @@
 //jshint esversion:6
 //@flow
 import Root from "../components/Root";
-import {createFirm, getNextUnsortedServiceAddress} from "../reducers/root";
+import {
+  createFirm,
+  dismissServiceAddress,
+  getNextUnsortedServiceAddress,
+  skipServiceAddress,
+  undoServiceAddress
+} from "../reducers/root";
 import * as FetchActions from "../actions/FetchActions";
 import {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 import Authentication from "../services/Authentication";
 
 const mapStateToProps = (state: State) => ({
-  firm: state.root.firm,
+  value: state.root.value,
   isCreateFirmDialogOpen: state.root.isCreateFirmDialogOpen,
-  loading: state.root.loading
+  loading: state.root.loading,
+  undo: state.root.undo
 })
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
@@ -19,13 +26,16 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     dispatch(createFirm());
   },
   onSkip: () => {
-    dispatch(getNextUnsortedServiceAddress());
+    dispatch(skipServiceAddress());
   },
   onGetNextServiceAddress: () => {
     dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());
   },
-  onDismiss: () => {
-    dispatch({type: FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM, payload: {loading: true}});
+  onDismiss: (serviceAddressId: string) => {
+    dispatch(dismissServiceAddress(serviceAddressId));
+  },
+  onUndo: (serviceAddressId: string) => {
+    dispatch(undoServiceAddress(serviceAddressId));
   }
 })
 

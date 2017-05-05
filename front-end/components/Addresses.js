@@ -9,11 +9,11 @@ import AddressesList from "./AddressesList";
 type
 AddressesProps = {
   tab: number,
-  items: Array,
-  firmAddress: string,
+  agents: Array,
+  serviceAddress: Object,
   onTabChange: (tab: int) => void,
-  onSortServiceAddress: (address: Object) => void,
-  onUnsortServiceAddress: (address: Object) => void
+  onSortServiceAddress: (serviceAddressId: string, address: Object) => void,
+  onUnsortServiceAddress: (index: number, address: Object) => void
 }
 
 const Addresses = (props: AddressesProps): React.Element<Layout> =>
@@ -24,8 +24,9 @@ const Addresses = (props: AddressesProps): React.Element<Layout> =>
     </Tabs>
     <section>
       {props.tab == 0 ? (
-        <AddressesList addresses={props.items} serviceAddress={props.firmAddress}
-                       onSortServiceAddress={props.onSortServiceAddress}/>
+        <AddressesList agents={props.agents} serviceAddress={props.serviceAddress}
+                       onSortServiceAddress={props.onSortServiceAddress}
+                       onUnsortServiceAddress={props.onUnsortServiceAddress}/>
       ) : (
          <SearchContainer />
        )}

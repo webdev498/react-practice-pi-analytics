@@ -7,8 +7,9 @@ import "rxjs/add/operator/mergeMap";
 import {fetch, Methods} from "../services/Request";
 import {
   getNextUnsortedServiceAddress,
-  serviceAddressAssigned,
+  serviceAddressAssignError,
   serviceAddressUnsorted,
+  undoServiceAddressSuccess,
   unsortedServiceAddressFetchError,
   unsortedServiceAddressFulfilled
 } from "../reducers/root";
@@ -21,6 +22,7 @@ import {
   GET_CURRENT_USER,
   SEARCH_LAW_FIRMS,
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
+  UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
@@ -30,7 +32,7 @@ import camelcaseKeysDeep from "camelcase-keys-deep";
 const createRequest = (url: string, action: Action): Request => ({
   url: url,
   method: Methods.POST,
-  body: action.payload.request
+  body: action.payload.request ? action.payload.request : {}
 })
 
 export const fromResponse = (response: Object): Object => u.freeze(camelcaseKeysDeep(response))
@@ -49,13 +51,19 @@ export const searchLawFirm = (action$: ActionsObservable<Action>): ActionsObserv
 export const assignServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(ASSIGN_SERVICE_ADDRESS)
     .mergeMap(action => fetch(createRequest("api/v1/addressing/assignserviceaddress", action))
-      .map(response => serviceAddressAssigned())
-      .catch(error => serviceAddressAssigned()));
+      .map(response => getNextUnsortedServiceAddress())
+      .catch(error => serviceAddressAssignError()));
 
 export const unsortServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(UNSORT_SERVICE_ADDRESS)
     .mergeMap(action => fetch(createRequest("api/v1/addressing/unsortserviceaddress", action))
       .map(response => serviceAddressUnsorted())
+      .catch(error => serviceAddressUnsorted()));
+
+export const undoServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(UNDO_SERVICE_ADDRESS)
+    .mergeMap(action => fetch(createRequest("api/v1/addressing/unsortserviceaddress", action))
+      .map(response => undoServiceAddressSuccess())
       .catch(error => serviceAddressUnsorted()));
 
 export const createLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>

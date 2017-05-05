@@ -9,6 +9,7 @@ import {
   getCurrentUser,
   searchLawFirm,
   setServiceAddressAsNonLawFirm,
+  undoServiceAddress,
   unsortServiceAddress
 } from "./BackendStub";
 
@@ -16,6 +17,7 @@ const rootEpic = combineEpics(
   createLawFirm,
   searchLawFirm,
   getCurrentUser,
+  undoServiceAddress,
   assignServiceAddress,
   unsortServiceAddress,
   setServiceAddressAsNonLawFirm,

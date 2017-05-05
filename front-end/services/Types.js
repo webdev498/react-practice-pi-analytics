@@ -12,53 +12,61 @@ export type ServiceAddressBundle = {
 }
 
 export type ServiceAddress = {
-  service_address_id: number,
-  law_firm_id: number,
-  law_firm_entity_checked: boolean,
+  serviceAddressId: number,
+  lawFirmId: number,
+  lawFirmEntityChecked: boolean,
   name: string,
   address: string,
   country: string,
   telephone: string,
-  language_type: string
+  languageType: string
 }
 
-export type Agent {
-  law_firm: Object,
-  non_law_firm: Object,
-  service_addresses: Array<ServiceAddress>
+export type Agent = {
+  lawFirm: Object,
+  nonLawFirm: Object,
+  serviceAddresses: Array<ServiceAddress>
 }
 
-export type NonLawFirm {
+export type NonLawFirm = {
   name: string
 }
 
-export type SearchLawFirmsRequest {
+export type LawFirm = {
+  lawFirmId: number,
+  name: string,
+  stateStr: string,
+  country: string,
+  websiteUrl: string
+}
+
+export type SearchLawFirmsRequest = {
   requested_by: string,
   search_term: string
 }
 
-export type SearchResults {
+export type SearchResults = {
   law_firm_agents: Array<Agent>
 }
 
-export type AssignServiceAddressRequest {
+export type AssignServiceAddressRequest = {
   requested_by: string,
   service_address_id: number,
   law_firm_id: number
 }
 
-export type ServiceAddressAssigned {
+export type ServiceAddressAssigned = {
 }
 
-export type UnsortServiceAddressRequest {
+export type UnsortServiceAddressRequest = {
   requested_by: string,
   service_address_id: number
 }
 
-export type ServiceAddressUnsorted {
+export type ServiceAddressUnsorted = {
 }
 
-export type CreateLawFirmRequest {
+export type CreateLawFirmRequest = {
   requested_by: string,
   name: string,
   state: string,
@@ -67,14 +75,14 @@ export type CreateLawFirmRequest {
   service_address: ServiceAddress
 }
 
-export type LawFirmCreated {
+export type LawFirmCreated = {
   law_firm_id: number
 }
 
-export type SetServiceAddressAsNonLawFirmRequest {
+export type SetServiceAddressAsNonLawFirmRequest = {
   requested_by: string,
   service_address_id: int
 }
 
-export type ServiceAddressSetAsNonLawFirm {
+export type ServiceAddressSetAsNonLawFirm = {
 }

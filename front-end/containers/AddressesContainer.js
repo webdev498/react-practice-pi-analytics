@@ -3,22 +3,25 @@
 //@flow
 import Addresses from "../components/Addresses";
 import {changeTab} from "../reducers/addresses";
-import {sortServiceAddress} from "../reducers/root";
+import {sortServiceAddress, unsortServiceAddress} from "../reducers/root";
 import {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 
 const mapStateToProps = (state: State) => ({
   tab: state.addresses.tab,
-  items: state.root.firm.suggestedAgents,
-  firmAddress: state.root.firm.serviceAddressToSort
+  agents: state.root.value.suggestedAgents,
+  serviceAddress: state.root.value.serviceAddressToSort
 })
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onTabChange: (tab: number) => {
     dispatch(changeTab(tab));
   },
-  onSortServiceAddress: (address: Object) => {
-    dispatch(sortServiceAddress(address));
+  onSortServiceAddress: (serviceAddressId: string, address: Object) => {
+    dispatch(sortServiceAddress(serviceAddressId, address));
+  },
+  onUnsortServiceAddress: (serviceAddressId: string) => {
+    dispatch(unsortServiceAddress(serviceAddressId));
   }
 })
 

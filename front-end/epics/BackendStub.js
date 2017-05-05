@@ -6,8 +6,8 @@ import "rxjs/add/operator/mapTo";
 import "rxjs/add/operator/delay";
 import {
   getNextUnsortedServiceAddress,
-  serviceAddressAssigned,
   serviceAddressUnsorted,
+  undoServiceAddressSuccess,
   unsortedServiceAddressFulfilled
 } from "../reducers/root";
 import {searchQueryFulfilled} from "../reducers/search";
@@ -19,6 +19,7 @@ import {
   GET_CURRENT_USER,
   SEARCH_LAW_FIRMS,
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
+  UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
@@ -27,70 +28,74 @@ import Authentication from "../services/Authentication";
 const tableRows = [
   {
     lawFirm: {
-      lawFirmId: 58586
+      lawFirmId: 58586,
+      name: "Law Offices Of Mark A. Wilson, CA",
+      websiteUrl: "http://google.com"
     },
-    serviceAddress: {
-      entity: "Law Offices Of Mark A. Wilson, CA",
-      address: "WILSON, Mark, LawOffices of MarkWilson PMB: 348 2530 Berryessa Rd San Jose,CA 95132 Mark WilsonPMB: 348 2530 BerryessaRoad SanJose, California 95132",
-      website: "http://google.com",
+    serviceAddresses: [{
+      name: "Law Offices Of Mark A. Wilson, CA",
+      address: "WILSON, Mark, LawOffices of MarkWilson PMB: 348 2530 Berryessa Rd San Jose,CA 95132",
       serviceAddressId: "1036990"
-    }
+    }, {
+      name: "Law Offices Of Mark A. Wilson, CA",
+      address: "Mark Wilson PMB: 348 2530 BerryessaRoad SanJose, California 95132",
+      serviceAddressId: "1036991"
+    }]
   },
   {
     nonLawFirm: {
       name: "NEL R. FONTANILLA"
     },
-    serviceAddress: {
-      entity: "NEL R. FONTANILLA",
+    serviceAddresses: [{
+      name: "NEL R. FONTANILLA",
       address: "1536 HEMMINGWAY ROAD, SAN JOSE CA 95132",
-      website: "",
       serviceAddressId: "1051425"
-    }
+    }]
   },
   {
     nonLawFirm: {
       name: "INTERACTIV CORPORATION"
     },
-    serviceAddress: {
-      entity: "INTERACTIV CORPORATION",
+    serviceAddresses: [{
+      name: "INTERACTIV CORPORATION",
       address: "1659 N CAPITOL AVE # 225, 1659 N CAPITOL AVE # 225, SAN JOSE,CA 95132",
-      website: "",
       serviceAddressId: "563472"
-    }
+    }]
   },
   {
     nonLawFirm: {
       name: "BEAUTYQQ INC"
     },
-    serviceAddress: {
-      entity: "BEAUTYQQ INC",
+    serviceAddresses: [{
+      name: "BEAUTYQQ INC",
       address: "2928 LAMBETH COURT, SAN JOSE, CA 95132",
-      website: "",
       serviceAddressId: "584214"
-    }
+    }]
   },
   {
     lawFirm: {
-      lawFirmId: 44161
+      lawFirmId: 44161,
+      name: "PEREZ, YVONNE, CA",
     },
-    serviceAddress: {
-      entity: "PEREZ, YVONNE, CA",
+    serviceAddresses: [{
+      name: "PEREZ, YVONNE, CA",
       address: "PEREZ, YVONNE, 2121 LIMEWOOD DR., SANJOSE, CA95132",
-      website: "",
       serviceAddressId: "610070"
-    }
+    }]
   },
 ]
 
 const firm = {
   serviceAddressToSort: {
-    entity: "WILSON, Mark",
+    name: "WILSON, Mark",
+    lawFirmId: 44161,
     address: "Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
     phone: "",
     country: "US",
     serviceAddressId: "1326958",
+    languageType: "en"
   },
-  enTranslation: "en",
+  enTranslation: "Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
   suggestedAgents: tableRows
 }
 
@@ -107,12 +112,17 @@ export const searchLawFirm = (action$: ActionsObservable<Action>): ActionsObserv
 export const assignServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(ASSIGN_SERVICE_ADDRESS)
     .delay(1000)
-    .mapTo(serviceAddressAssigned());
+    .mapTo(getNextUnsortedServiceAddress());
 
 export const unsortServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(UNSORT_SERVICE_ADDRESS)
     .delay(1000)
     .mapTo(serviceAddressUnsorted());
+
+export const undoServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(UNDO_SERVICE_ADDRESS)
+    .delay(1000)
+    .mapTo(undoServiceAddressSuccess());
 
 export const createLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(CREATE_LAW_FIRM)
