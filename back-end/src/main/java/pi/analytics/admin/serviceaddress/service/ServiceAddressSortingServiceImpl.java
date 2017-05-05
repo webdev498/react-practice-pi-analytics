@@ -4,6 +4,7 @@
 
 package pi.analytics.admin.serviceaddress.service;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.grpc.stub.StreamObserver;
@@ -27,10 +28,17 @@ import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 @Singleton
 public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServiceGrpc.ServiceAddressSortingServiceImplBase {
 
+  @Inject
+  private UnsortedServiceAddressFetcher unsortedServiceAddressFetcher;
+
   @Override
   public void nextUnsortedServiceAddress(final NextUnsortedServiceAddressRequest request,
                                          final StreamObserver<ServiceAddressBundle> responseObserver) {
-    // TODO(SX)
+//    unsortedServiceAddressFetcher.fetchNext(request.getRequestedBy())
+//        .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent())
+//        .map(queuedServiceAddress -> {
+//          // Get translation if not en
+//        });
   }
 
   @Override
