@@ -16,7 +16,7 @@ import io.grpc.ManagedChannelBuilder;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 
 /**
- * @author shane.xie
+ * @author shane.xie@practiceinsight.io
  */
 @Singleton
 public class QueueOnPremBlockingStubProvider implements Provider<QueueOnPremGrpc.QueueOnPremBlockingStub> {
