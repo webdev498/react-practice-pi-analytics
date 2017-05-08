@@ -52,14 +52,13 @@ class AddressesList extends React.Component {
         });
     }
     return (
-      <div><span dangerouslySetInnerHTML={{__html: result}}/><a href="#"><IconButton name="cancel" accent onClick={() => {
-        this.props.onUnsortServiceAddress(value.serviceAddressId);
-      }}/></a></div>
+      <div className="address-line"><span dangerouslySetInnerHTML={{__html: result}}/>
+      </div>
     );
   }
 
   renderServiceAddressWithInclusions(agent: Agent, testValue: String): Array<React.Element> {
-    return agent.serviceAddresses.map(value => this.renderAddressLine(value, testValue));
+    return agent.serviceAddresses.map((value, index) => this.renderAddressLine(value, testValue));
   }
 
   renderWebsite(agent: Agent): ?React.Element<any> {
@@ -72,8 +71,16 @@ class AddressesList extends React.Component {
   renderEntityId(agent: Agent): React.Element<any> {
     return agent.serviceAddresses
       .map(
-        (address, index) => <div>{address.serviceAddressId + (index < agent.serviceAddresses.length - 1 ? "," : "")}</div>)
+        (address, index) => <div className="address-line">{address.serviceAddressId}</div>)
   };
+
+  renderActions(agent: Agent): React.Element<any> {
+    return agent.serviceAddresses.map(
+      (address, index) => <div><a
+        href="#"><IconButton name="cancel" accent onClick={() => {
+        this.props.onUnsortServiceAddress(value.serviceAddressId);
+      }}/></a></div>)
+  }
 
   mapRows() {
     return this.props.agents.map((agent: Agent, index: number) => ({
@@ -82,19 +89,21 @@ class AddressesList extends React.Component {
       entity: this.renderEntity(agent),
       serviceAddress: this.renderServiceAddressWithInclusions(agent, this.props.serviceAddress.address),
       website: this.renderWebsite(agent),
-      serviceAddressId: this.renderEntityId(agent)
+      serviceAddressId: this.renderEntityId(agent),
+      actions: this.renderActions(agent)
     }))
   };
 
   render() {
 
     return (
-      <DataTable style={{width: "100%"}} rowKeyColumn="key" rows={this.mapRows()}>
-        <TableHeader name="lawFirmId">Law Firm ID</TableHeader>
-        <TableHeader name="entity">Firm</TableHeader>
-        <TableHeader name="serviceAddress">Service Addresses</TableHeader>
-        <TableHeader name="website">www</TableHeader>
-        <TableHeader name="serviceAddressId">Entity ID</TableHeader>
+      <DataTable style={{width: "100%", tableLayout: "fixed"}} rowKeyColumn="key" rows={this.mapRows()}>
+        <TableHeader style={{width: "9%"}} name="lawFirmId">Law Firm ID</TableHeader>
+        <TableHeader style={{width: "19%"}} name="entity">Firm</TableHeader>
+        <TableHeader style={{width: "55%"}} name="serviceAddress">Service Addresses</TableHeader>
+        <TableHeader style={{width: "6%"}} name="website">www</TableHeader>
+        <TableHeader style={{width: "6%"}} name="serviceAddressId">Entity ID</TableHeader>
+        <TableHeader style={{width: "5%"}} name="actions">Re-sort</TableHeader>
       </DataTable>
     )
   }
