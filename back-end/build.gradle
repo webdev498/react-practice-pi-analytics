@@ -1,0 +1,117 @@
+group 'pi.analytics'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'com.google.protobuf'
+apply plugin: 'application'
+apply plugin: 'distribution'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.1'
+        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.1"
+    }
+}
+
+distributions {
+    mainClassName = 'pi.analytics.admin.serviceaddress.server.ServiceAddressSortingServerLauncher'
+    archivesBaseName = 'service-address-sorting'
+    main {
+        baseName = 'service-address-sorting'
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        credentials {
+            username 'wtdev'
+            password 'c7Lp30m3n6'
+        }
+        url 'http://nexus.priv.practiceinsight.io/nexus/content/groups/internal/'
+    }
+}
+
+dependencies {
+    compile 'com.google.inject:guice:4.1.0'
+    compile 'io.grpc:grpc-netty:1.3.0'
+    compile 'io.grpc:grpc-protobuf:1.3.0'
+    compile 'io.grpc:grpc-stub:1.3.0'
+    compile('com.practice-insight:pi-common-core:1.2-SNAPSHOT') {
+        changing = true
+    }
+    compile('com.practice-insight:pi-common-config:1.2-SNAPSHOT') {
+        changing = true
+    }
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile 'com.github.javafaker:javafaker:0.12'
+    testCompile 'org.mockito:mockito-core:2.7.17'
+    testCompile 'org.assertj:assertj-core:3.5.2'
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/proto'
+        }
+        java {
+            srcDirs 'src/main/java', 'src/generated/main/java'
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.2.0"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.3.0'
+        }
+    }
+    generateProtoTasks.generatedFilesBaseDir = "${projectDir}/src/generated"
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+test {
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
+    }
+    useJUnit {
+        // run all except slow or disabled tests
+        excludeCategories 'com.pi.common.test.type.SlowTests'
+        excludeCategories 'com.pi.common.test.type.DisabledTests'
+    }
+}
+
+task slowTests(type: Test) {
+    beforeTest { descriptor ->
+        logger.lifecycle("Running slowTest: " + descriptor)
+    }
+    useJUnit {
+        // specific task to run slow tests (only)
+        includeCategories 'com.pi.common.test.type.SlowTests'
+    }
+}
+
+clean {
+    delete "${projectDir}/src/generated"
+}
+
+idea {
+    module {
+        sourceDirs += file("${projectDir}/src/generated/main/java");
+        sourceDirs += file("${projectDir}/src/generated/main/grpc");
+    }
+}
