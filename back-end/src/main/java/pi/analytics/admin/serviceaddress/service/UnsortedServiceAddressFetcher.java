@@ -6,6 +6,7 @@ package pi.analytics.admin.serviceaddress.service;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.pi.common.core.queue.OfficeCodeListsActive;
 
@@ -30,6 +31,7 @@ import pi.ip.proto.generated.ServiceAddress;
 /**
  * @author shane.xie@practiceinsight.io
  */
+@Singleton
 public class UnsortedServiceAddressFetcher {
 
   @Inject
