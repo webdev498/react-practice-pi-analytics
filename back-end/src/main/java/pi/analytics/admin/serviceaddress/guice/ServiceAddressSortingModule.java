@@ -25,6 +25,9 @@ public class ServiceAddressSortingModule extends AbstractModule {
     bind(LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub.class)
         .toProvider(LawFirmDbServiceBlockingStubProvider.class)
         .in(Singleton.class);
+    bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
+        .toProvider(ServiceAddressServiceBlockingStubProvider.class)
+        .in(Singleton.class);
     bind(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub.class)
         .toProvider(DatastoreSg3BlockingStubProvider.class)
         .in(Singleton.class);
