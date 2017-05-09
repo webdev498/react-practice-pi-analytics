@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
 
-package pi.analytics.admin.serviceaddress.service;
+package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -22,6 +22,7 @@ import io.grpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
+import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.queue.DeleteUnitRequest;

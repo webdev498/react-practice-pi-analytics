@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
 
-package pi.analytics.admin.serviceaddress.service;
+package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.queue.DeleteUnitRequest;

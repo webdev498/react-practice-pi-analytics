@@ -27,7 +27,8 @@ import pi.admin.service_address_sorting.generated.ServiceAddressSortingServiceGr
 import pi.admin.service_address_sorting.generated.ServiceAddressUnsorted;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
-import pi.ip.proto.generated.LangType;
+import pi.analytics.admin.serviceaddress.service.unsorted_service_address.ServiceAddressBundleFetcher;
+import pi.analytics.admin.serviceaddress.service.unsorted_service_address.UnsortedServiceAddressFetcher;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -41,7 +42,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   private UnsortedServiceAddressFetcher unsortedServiceAddressFetcher;
 
   @Inject
-  TranslationHelper translationHelper;
+  ServiceAddressBundleFetcher serviceAddressBundleFetcher;
 
   @Override
   public void nextUnsortedServiceAddress(final NextUnsortedServiceAddressRequest request,
@@ -51,9 +52,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
           unsortedServiceAddressFetcher
               .fetchNext(request.getRequestedBy())
               .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent())
-              .map(this::createServiceAddressBundle)
-              .map(this::addTranslationIfNecessary)
-              .map(this::addAgentSuggestions);
+              .map(serviceAddressBundleFetcher::fetch);
 
       if (!serviceAddressBundle.isPresent()) {
         // Nothing in queues
@@ -76,6 +75,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   public void assignServiceAddress(final AssignServiceAddressRequest request,
                                    final StreamObserver<ServiceAddressAssigned> responseObserver) {
     // TODO(SX)
+    // Remember to delete from queue
   }
 
   @Override
@@ -87,37 +87,14 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   @Override
   public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<LawFirmCreated> responseObserver) {
     // TODO(SX)
+    // Remember to delete from queue
   }
 
   @Override
   public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request,
                                             final StreamObserver<ServiceAddressSetAsNonLawFirm> responseObserver) {
     // TODO(SX)
+    // Remember to delete from queue
   }
 
-  private ServiceAddressBundle createServiceAddressBundle(final QueuedServiceAddress queuedServiceAddress) {
-    return ServiceAddressBundle
-        .newBuilder()
-        .setServiceAddressToSort(queuedServiceAddress.serviceAddress().get())
-        .setUnsortedServiceAddressQueueItemId(queuedServiceAddress.queueId())
-        .build();
-  }
-
-  private ServiceAddressBundle addTranslationIfNecessary(final ServiceAddressBundle bundle) {
-    if (bundle.getServiceAddressToSort().getLanguageType() == LangType.WESTERN_SCRIPT) {
-      // No translation required
-      return bundle;
-    }
-    final LangType sourceLanguage = bundle.getServiceAddressToSort().getLanguageType();
-    final String textToTranslate = bundle.getServiceAddressToSort().getAddress();
-    return ServiceAddressBundle
-        .newBuilder(bundle)
-        .setEnTranslation(translationHelper.toEn(textToTranslate, sourceLanguage))
-        .build();
-  }
-
-  private ServiceAddressBundle addAgentSuggestions(final ServiceAddressBundle bundle) {
-    // TODO(SX)
-    return bundle;
-  }
 }

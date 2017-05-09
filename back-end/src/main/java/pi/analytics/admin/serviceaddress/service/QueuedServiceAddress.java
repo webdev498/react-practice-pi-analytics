@@ -14,11 +14,11 @@ import pi.ip.proto.generated.ServiceAddress;
  * @author shane.xie@practiceinsight.io
  */
 @AutoValue
-abstract class QueuedServiceAddress {
-  static QueuedServiceAddress create(final String queueId, final Optional<ServiceAddress> serviceAddress) {
+public abstract class QueuedServiceAddress {
+  public static QueuedServiceAddress create(final String queueId, final Optional<ServiceAddress> serviceAddress) {
     return new AutoValue_QueuedServiceAddress(queueId, serviceAddress);
   }
-  abstract String queueId();
-  abstract Optional<ServiceAddress> serviceAddress();
+  public abstract String queueId();
+  public abstract Optional<ServiceAddress> serviceAddress();
 }
 

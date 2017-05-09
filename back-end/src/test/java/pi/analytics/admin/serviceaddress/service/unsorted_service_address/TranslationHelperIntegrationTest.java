@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
-package pi.analytics.admin.serviceaddress.service;
+package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
 
 import com.pi.common.test.type.DisabledTests;
 
