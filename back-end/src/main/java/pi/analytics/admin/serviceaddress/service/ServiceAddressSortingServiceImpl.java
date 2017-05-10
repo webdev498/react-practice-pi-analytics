@@ -27,6 +27,7 @@ import pi.admin.service_address_sorting.generated.ServiceAddressSortingServiceGr
 import pi.admin.service_address_sorting.generated.ServiceAddressUnsorted;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
+import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmHelper;
 import pi.analytics.admin.serviceaddress.service.unsorted_service_address.ServiceAddressBundleFetcher;
 import pi.analytics.admin.serviceaddress.service.unsorted_service_address.UnsortedServiceAddressFetcher;
 
@@ -43,6 +44,9 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
   @Inject
   ServiceAddressBundleFetcher serviceAddressBundleFetcher;
+
+  @Inject
+  LawFirmHelper lawFirmHelper;
 
   @Override
   public void nextUnsortedServiceAddress(final NextUnsortedServiceAddressRequest request,
@@ -68,7 +72,18 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
   @Override
   public void searchLawFirms(final SearchLawFirmsRequest request, final StreamObserver<SearchResults> responseObserver) {
-    // TODO(SX)
+    try {
+      final SearchResults searchResults =
+          SearchResults
+              .newBuilder()
+              .addAllLawFirmAgents(lawFirmHelper.searchLawFirms(request.getSearchTerm()))
+              .build();
+      responseObserver.onNext(searchResults);
+      responseObserver.onCompleted();
+    } catch (Throwable th) {
+      log.error("Error searching law firms", th);
+      responseObserver.onError(th);
+    }
   }
 
   @Override
