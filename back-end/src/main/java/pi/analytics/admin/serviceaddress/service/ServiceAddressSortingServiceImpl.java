@@ -91,18 +91,21 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
                                    final StreamObserver<ServiceAddressAssigned> responseObserver) {
     // TODO(SX)
     // Remember to delete from queue
+    // Also record staff user action (IPFLOW-786)?
   }
 
   @Override
   public void unsortServiceAddress(final UnsortServiceAddressRequest request,
                                    final StreamObserver<ServiceAddressUnsorted> responseObserver) {
     // TODO(SX)
+    // Also record staff user action (IPFLOW-786)?
   }
 
   @Override
   public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<LawFirmCreated> responseObserver) {
     // TODO(SX)
     // Remember to delete from queue
+    // Also record staff user action (IPFLOW-786)?
   }
 
   @Override
@@ -110,6 +113,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
                                             final StreamObserver<ServiceAddressSetAsNonLawFirm> responseObserver) {
     // TODO(SX)
     // Remember to delete from queue
+    // Also record staff user action (IPFLOW-786)?
   }
 
 }
