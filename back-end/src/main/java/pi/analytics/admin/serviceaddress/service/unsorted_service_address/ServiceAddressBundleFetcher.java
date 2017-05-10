@@ -9,6 +9,9 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,8 @@ import static java.util.stream.Collectors.toList;
  */
 @Singleton
 public class ServiceAddressBundleFetcher {
+
+  private static final Logger log = LoggerFactory.getLogger(ServiceAddressBundleFetcher.class);
 
   @Inject
   LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
@@ -82,6 +87,7 @@ public class ServiceAddressBundleFetcher {
           .build();
     } catch (Exception e) {
       // Don't fail if the translation service is not available
+      log.error("Unable to translate service address {}", textToTranslate, e);
       return bundle;
     }
   };
