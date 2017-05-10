@@ -18,17 +18,16 @@ import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchS
 @Singleton
 public class LawFirmSearchServiceBlockingStubProvider implements Provider<LawFirmSearchServiceBlockingStub> {
 
-    @Override
-    public LawFirmSearchServiceBlockingStub get() {
-      final PiConfig piConfig = PiConfig.get();
-      final ManagedChannel channel =
-          ManagedChannelBuilder
-              .forAddress(
-                  piConfig.getServiceHostname(PiKubeServiceImpl.CITATION_SEARCH_SERVICE_HOST),
-                  piConfig.getInteger(PiKubeServicePort.CITATION_SEARCH_SERVICE_PORT)
-              )
-              .build();
-      return LawFirmSearchServiceGrpc.newBlockingStub(channel);
-    }
+  @Override
+  public LawFirmSearchServiceBlockingStub get() {
+    final PiConfig piConfig = PiConfig.get();
+    final ManagedChannel channel =
+        ManagedChannelBuilder
+            .forAddress(
+                piConfig.getServiceHostname(PiKubeServiceImpl.CITATION_SEARCH_SERVICE_HOST),
+                piConfig.getInteger(PiKubeServicePort.CITATION_SEARCH_SERVICE_PORT)
+            )
+            .build();
+    return LawFirmSearchServiceGrpc.newBlockingStub(channel);
   }
 }
