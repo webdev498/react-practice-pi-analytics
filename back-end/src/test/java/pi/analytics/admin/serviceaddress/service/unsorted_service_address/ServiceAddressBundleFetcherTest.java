@@ -6,6 +6,7 @@ package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.protobuf.Int64Value;
 
 import com.github.javafaker.Faker;
 
@@ -20,17 +21,30 @@ import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.stub.StreamObserver;
+import pi.admin.service_address_sorting.generated.Agent;
+import pi.admin.service_address_sorting.generated.NonLawFirm;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
 import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
+import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
+import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
+import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressRequest;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressResponse;
 import pi.ip.proto.generated.LangType;
+import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -121,18 +135,19 @@ public class ServiceAddressBundleFetcherTest {
   }
 
   @Test
-  public void addTranslationIfNecessary_skipped_no_source_language() throws Exception {
+  public void addTranslationIfNecessary_skip_no_source_language() throws Exception {
     final ServiceAddressBundle bundle =
         ServiceAddressBundle
             .newBuilder()
             .setServiceAddressToSort(ServiceAddress.getDefaultInstance())
             .build();
     assertThat(bundle)
-        .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(bundle));
+        .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(bundle))
+        .as("Bundle passed through unchanged since translation was skipped");
   }
 
   @Test
-  public void addTranslationIfNecessary_skipped_western_script() throws Exception {
+  public void addTranslationIfNecessary_skip_western_script() throws Exception {
     final ServiceAddressBundle bundle =
         ServiceAddressBundle
             .newBuilder()
@@ -144,7 +159,27 @@ public class ServiceAddressBundleFetcherTest {
             )
             .build();
     assertThat(bundle)
-        .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(bundle));
+        .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(bundle))
+        .as("Bundle passed through unchanged since translation was skipped");
+  }
+
+  @Test
+  public void addTranslationIfNecessary_skip_translation_error() throws Exception {
+    final ServiceAddressBundle bundle =
+        ServiceAddressBundle
+            .newBuilder()
+            .setServiceAddressToSort(
+                ServiceAddress
+                    .newBuilder()
+                    .setLanguageType(LangType.CYRILLIC)
+                    .build()
+            )
+            .build();
+    when(translationHelper.toEn(anyString(), any(LangType.class)))
+        .thenThrow(new RuntimeException());
+    assertThat(bundle)
+        .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(bundle))
+        .as("Bundle passed through unchanged since translation service failed");
   }
 
   @Test
@@ -155,7 +190,7 @@ public class ServiceAddressBundleFetcherTest {
     final ServiceAddress serviceAddress =
         ServiceAddress
             .newBuilder()
-            .setLanguageType(LangType.JAPANESE)
+            .setLanguageType(LangType.CHINESE)
             .setAddress(sourceText)
             .build();
 
@@ -171,20 +206,192 @@ public class ServiceAddressBundleFetcherTest {
             .setEnTranslation(translatedText)
             .build();
 
-    when(translationHelper.toEn(eq(sourceText), eq(LangType.JAPANESE)))
+    when(translationHelper.toEn(eq(sourceText), eq(LangType.CHINESE)))
         .thenReturn(translatedText);
 
     assertThat(translatedBundle)
-        .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(sourceBundle));
+        .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(sourceBundle))
+        .as("Translation was added to bundle since translation was required");
   }
 
   @Test
-  public void addAgentSuggestions() throws Exception {
-    // TODO(SX)
+  public void addAgentSuggestions_no_suggestions_found() throws Exception {
+    doAnswer(invocation -> {
+      StreamObserver<SuggestSimilarThinServiceAddressResponse> responseObserver =
+          (StreamObserver<SuggestSimilarThinServiceAddressResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(SuggestSimilarThinServiceAddressResponse.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(datastoreSg3Service)
+    .suggestSimilarThinServiceAddress(any(SuggestSimilarThinServiceAddressRequest.class), any(StreamObserver.class));
+
+    final ServiceAddressBundle originalBundle =
+        ServiceAddressBundle
+            .newBuilder()
+            .setUnsortedServiceAddressQueueItemId(faker.numerify("#####"))
+            .setServiceAddressToSort(createServiceAddressForNonLawFirm(faker.company().name()))
+            .build();
+
+    assertThat(originalBundle)
+        .isEqualTo(serviceAddressBundleFetcher.addAgentSuggestions.apply(originalBundle))
+        .as("Bundle is unchanged since no suggestions were found");
   }
 
   @Test
-  public void buildAgent() throws Exception {
-    // TODO(SX)
+  public void addAgentSuggestions_suggestions_found() throws Exception {
+
+    // Set up a law firm suggestion with two service addresses
+    final LawFirm lawFirm1 = createLawFirm();
+    setupGetLawFirmByIdAnswer(lawFirm1);
+    final ServiceAddress lawFirm1ServiceAddress1 = createServiceAddressToMatchLawFirm(lawFirm1);
+    final ServiceAddress lawFirm1ServiceAddress2 = createServiceAddressToMatchLawFirm(lawFirm1);
+    setupGetServiceAddressByIdAnswer(lawFirm1ServiceAddress1);
+    setupGetServiceAddressByIdAnswer(lawFirm1ServiceAddress2);
+    final ThinServiceAddress lawFirm1ThinServiceAddress1 =
+        createThinServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress1);
+    final ThinServiceAddress lawFirm1ThinServiceAddress2 =
+        createThinServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress2);
+
+    // Set up a non-law firm suggestion
+    final ServiceAddress nonLawFirmServiceAddress = createServiceAddressForNonLawFirm(faker.company().name());
+    setupGetServiceAddressByIdAnswer(nonLawFirmServiceAddress);
+    final ThinServiceAddress nonLawFirmThinServiceAddress =
+        createThinServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress);
+
+    // Set up a law firm suggestion with one service address
+    final LawFirm lawFirm2 = createLawFirm();
+    setupGetLawFirmByIdAnswer(lawFirm2);
+    final ServiceAddress lawFirm2ServiceAddress = createServiceAddressToMatchLawFirm(lawFirm2);
+    setupGetServiceAddressByIdAnswer(lawFirm2ServiceAddress);
+    final ThinServiceAddress lawFirm2ThinServiceAddress =
+        createThinServiceAddressMatchingServiceAddress(lawFirm2ServiceAddress);
+
+    // Prepare suggestions
+    final SuggestSimilarThinServiceAddressResponse suggestSimilarThinServiceAddressResponse =
+        SuggestSimilarThinServiceAddressResponse
+            .newBuilder()
+            .addSuggestions(lawFirm1ThinServiceAddress1)
+            .addSuggestions(lawFirm1ThinServiceAddress2)
+            .addSuggestions(nonLawFirmThinServiceAddress)
+            .addSuggestions(lawFirm2ThinServiceAddress)
+            .build();
+
+    doAnswer(invocation -> {
+      StreamObserver<SuggestSimilarThinServiceAddressResponse> responseObserver =
+          (StreamObserver<SuggestSimilarThinServiceAddressResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(suggestSimilarThinServiceAddressResponse);
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(datastoreSg3Service)
+    .suggestSimilarThinServiceAddress(any(SuggestSimilarThinServiceAddressRequest.class), any(StreamObserver.class));
+
+    final ServiceAddressBundle originalBundle = ServiceAddressBundle.getDefaultInstance();
+    final ServiceAddressBundle bundleWithSuggestions = serviceAddressBundleFetcher.addAgentSuggestions.apply(originalBundle);
+
+    assertThat(bundleWithSuggestions.getSuggestedAgentsList())
+        .containsExactly(
+            Agent
+                .newBuilder()
+                .setLawFirm(lawFirm1)
+                .addServiceAddresses(lawFirm1ServiceAddress1)
+                .addServiceAddresses(lawFirm1ServiceAddress2)
+                .build(),
+            Agent
+                .newBuilder()
+                .setNonLawFirm(NonLawFirm.newBuilder().setName(nonLawFirmServiceAddress.getName()))
+                .addServiceAddresses(nonLawFirmServiceAddress)
+                .build(),
+            Agent
+                .newBuilder()
+                .setLawFirm(lawFirm2)
+                .addServiceAddresses(lawFirm2ServiceAddress)
+                .build()
+        );
+  }
+
+
+  // Test Helpers
+
+  private LawFirm createLawFirm() {
+    return LawFirm
+        .newBuilder()
+        .setLawFirmId(faker.number().randomNumber())
+        .setName(faker.company().name())
+        .setStateStr(faker.address().state())
+        .setCountry(faker.address().countryCode())
+        .setWebsiteUrl(faker.internet().url())
+        .build();
+  }
+
+  private ServiceAddress createServiceAddressToMatchLawFirm(final LawFirm lawFirm) {
+    return createServiceAddress(Optional.of(lawFirm.getLawFirmId()), lawFirm.getName(), lawFirm.getCountry());
+  }
+
+  private ServiceAddress createServiceAddressForNonLawFirm(final String name) {
+    return createServiceAddress(Optional.empty(), name, faker.address().countryCode());
+  }
+
+  private ServiceAddress createServiceAddress(final Optional<Long> lawFirmId, final String name, final String country) {
+    ServiceAddress.Builder builder =
+        ServiceAddress
+            .newBuilder()
+            .setServiceAddressId(faker.number().randomNumber())
+            .setName(name)
+            .setAddress(faker.address().streetAddress(true))
+            .setCountry(country)
+            .setTelephone(faker.phoneNumber().phoneNumber())
+            .setLawFirmStatusDetermined(true)
+            .setLanguageType(LangType.WESTERN_SCRIPT);
+    if (lawFirmId.isPresent()) {
+      builder.setLawFirmId(Int64Value.newBuilder().setValue(lawFirmId.get()));
+    }
+    return builder.build();
+  }
+
+  private ThinServiceAddress createThinServiceAddressMatchingServiceAddress(final ServiceAddress serviceAddress) {
+    ThinServiceAddress.Builder builder =
+        ThinServiceAddress
+            .newBuilder()
+            .setServiceAddressId(serviceAddress.getServiceAddressId())
+            .setName(serviceAddress.getName())
+            .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
+            .setCountry(serviceAddress.getCountry())
+            .setLongitude(serviceAddress.getLongitude())
+            .setLatitude(serviceAddress.getLatitude());
+    if (serviceAddress.hasLawFirmId()) {
+      builder.setLawFirmId(serviceAddress.getLawFirmId().getValue());
+    } else {
+      builder.setNotALawFirm(true);
+    }
+    return builder.build();
+  }
+
+  private void setupGetLawFirmByIdAnswer(final LawFirm lawFirm) {
+    doAnswer(invocation -> {
+      StreamObserver<GetLawFirmByIdResponse> responseObserver =
+          (StreamObserver<GetLawFirmByIdResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(GetLawFirmByIdResponse.newBuilder().setLawFirm(lawFirm).build());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(lawFirmDbService)
+    .getLawFirmById(eq(GetLawFirmByIdRequest.newBuilder().setLawFirmId(lawFirm.getLawFirmId()).build()),
+        any(StreamObserver.class));
+  }
+
+  private void setupGetServiceAddressByIdAnswer(final ServiceAddress serviceAddress) {
+    doAnswer(invocation -> {
+      StreamObserver<ServiceAddress> responseObserver =
+          (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
+      responseObserver.onNext(serviceAddress);
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(serviceAddressService)
+    .getServiceAddressById(
+        eq(GetServiceAddressByIdRequest.newBuilder().setServiceAddressId(serviceAddress.getServiceAddressId()).build()),
+        any(StreamObserver.class));
   }
 }
