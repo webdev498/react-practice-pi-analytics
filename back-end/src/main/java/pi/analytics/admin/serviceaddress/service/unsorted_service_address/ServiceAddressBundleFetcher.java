@@ -75,10 +75,15 @@ public class ServiceAddressBundleFetcher {
       return bundle;
     }
     final String textToTranslate = bundle.getServiceAddressToSort().getAddress();
-    return ServiceAddressBundle
-        .newBuilder(bundle)
-        .setEnTranslation(translationHelper.toEn(textToTranslate, sourceLanguage))
-        .build();
+    try {
+      return ServiceAddressBundle
+          .newBuilder(bundle)
+          .setEnTranslation(translationHelper.toEn(textToTranslate, sourceLanguage))
+          .build();
+    } catch (Exception e) {
+      // Don't fail if the translation service is not available
+      return bundle;
+    }
   };
 
   @VisibleForTesting
@@ -88,7 +93,7 @@ public class ServiceAddressBundleFetcher {
     final SuggestSimilarThinServiceAddressRequest getSuggestionsRequest =
         SuggestSimilarThinServiceAddressRequest
             .newBuilder()
-            .setNameAddress(serviceAddress.getName().concat(" ").concat(serviceAddress.getAddress()))
+            .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
             .setCountry(serviceAddress.getCountry())
             .setLongitude(serviceAddress.getLongitude())
             .setLatitude(serviceAddress.getLatitude())
