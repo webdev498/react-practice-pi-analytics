@@ -14,15 +14,16 @@ import com.pi.common.config.PiKubeServicePort;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
+import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
 
 /**
  * @author shane.xie@practiceinsight.io
  */
 @Singleton
-public class DatastoreSg3BlockingStubProvider implements Provider<DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub> {
+public class DatastoreSg3ServiceBlockingStubProvider implements Provider<DatastoreSg3ServiceBlockingStub> {
 
     @Override
-    public DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub get() {
+    public DatastoreSg3ServiceBlockingStub get() {
       final PiConfig piConfig = PiConfig.get();
       final ManagedChannel channel =
           ManagedChannelBuilder
