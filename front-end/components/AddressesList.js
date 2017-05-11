@@ -10,7 +10,8 @@ type
 AddressesListProps = {
   serviceAddress: Object,
   agents: Array,
-  onSortServiceAddress: (serviceAddressId: string, agent: Agent) => void,
+  queueId: string,
+  onSortServiceAddress: (queueId: string, serviceAddressId: string, agent: Agent) => void,
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
@@ -33,7 +34,7 @@ class AddressesList extends React.Component {
     if (agent.lawFirm) {
       return <a href="#" onClick={(event: Event) => {
         event.preventDefault();
-        this.props.onSortServiceAddress(this.props.serviceAddress.serviceAddressId, agent);
+        this.props.onSortServiceAddress(this.props.queueId, this.props.serviceAddress.serviceAddressId, agent);
       }}>{agent.lawFirm.name}</a>
     }
     return <span>{agent.nonLawFirm.name}</span>
@@ -70,16 +71,17 @@ class AddressesList extends React.Component {
 
   renderEntityId(agent: Agent): React.Element<any> {
     return agent.serviceAddresses
-      .map(
-        (address, index) => <div className="address-line">{address.serviceAddressId}</div>)
+      .map(address => <div className="address-line">{address.serviceAddressId}</div>)
   };
 
   renderActions(agent: Agent): React.Element<any> {
-    return agent.serviceAddresses.map(
-      (address, index) => <div><a
-        href="#"><IconButton name="cancel" accent onClick={() => {
-        this.props.onUnsortServiceAddress(value.serviceAddressId);
-      }}/></a></div>)
+    return agent.serviceAddresses.map(address => <div>
+      <a href="#">
+        <IconButton name="cancel" accent onClick={() => {
+          this.props.onUnsortServiceAddress(value.serviceAddressId);
+        }}/>
+      </a>
+    </div>)
   }
 
   mapRows() {

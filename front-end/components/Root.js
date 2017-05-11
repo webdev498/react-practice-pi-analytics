@@ -17,7 +17,7 @@ RootProps = {
   loading: boolean,
   undo: Object,
   onCreateFirm: (event: Event) => void,
-  onDismiss: (serviceAddressId: string) => void,
+  onDismiss: (queueId: string, serviceAddressId: string) => void,
   onSkip: () => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void
@@ -45,7 +45,7 @@ class Root extends React.Component {
           <Cell col={10}>
             <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
             <Button raised onClick={() => {
-              this.props.onDismiss(this.props.value.serviceAddressToSort.serviceAddressId);
+              this.props.onDismiss(this.props.value.unsortedServiceAddressQueueItemId, this.props.value.serviceAddressToSort.serviceAddressId);
             }}><Icon name="not_interested"/> Not a Law Firm</Button>
             <Button raised onClick={this.props.onSkip}><Icon name="skip_next"/> Skip</Button>
           </Cell>

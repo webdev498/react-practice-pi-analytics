@@ -11,8 +11,9 @@ AddressesProps = {
   tab: number,
   agents: Array,
   serviceAddress: Object,
+  queueId: string,
   onTabChange: (tab: int) => void,
-  onSortServiceAddress: (serviceAddressId: string, address: Object) => void,
+  onSortServiceAddress: (queueId: string, serviceAddressId: string, address: Object) => void,
   onUnsortServiceAddress: (index: number, address: Object) => void
 }
 
@@ -24,7 +25,7 @@ const Addresses = (props: AddressesProps): React.Element<Layout> =>
     </Tabs>
     <section>
       {props.tab == 0 ? (
-        <AddressesList agents={props.agents} serviceAddress={props.serviceAddress}
+        <AddressesList agents={props.agents} queueId={props.queueId} serviceAddress={props.serviceAddress}
                        onSortServiceAddress={props.onSortServiceAddress}
                        onUnsortServiceAddress={props.onUnsortServiceAddress}/>
       ) : (
