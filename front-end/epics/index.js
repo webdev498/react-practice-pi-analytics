@@ -7,8 +7,10 @@ import {
   createLawFirm,
   fetchNextUnsortedServiceAddress,
   getCurrentUser,
+  preFetchNextUnsortedServiceAddress,
   searchLawFirm,
   setServiceAddressAsNonLawFirm,
+  skipServiceAddress,
   undoServiceAddress,
   unsortServiceAddress
 } from "./BackendStub";
@@ -17,11 +19,13 @@ const rootEpic = combineEpics(
   createLawFirm,
   searchLawFirm,
   getCurrentUser,
+  skipServiceAddress,
   undoServiceAddress,
   assignServiceAddress,
   unsortServiceAddress,
   setServiceAddressAsNonLawFirm,
-  fetchNextUnsortedServiceAddress
-)
+  fetchNextUnsortedServiceAddress,
+  preFetchNextUnsortedServiceAddress
+);
 
 export default rootEpic;

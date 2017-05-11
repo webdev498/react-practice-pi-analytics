@@ -6,6 +6,7 @@ import * as Actions from "../actions/RootActions";
 import * as FetchActions from "../actions/FetchActions";
 import ServiceAddressBundle from "../services/Types";
 import u from "updeep";
+import * as Queue from "../services/Queue";
 
 const initialState = {
   loading: true
@@ -45,13 +46,19 @@ export const closeFirmDialog = (): Action => ({
   }
 })
 
-export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): Action => ({
-  type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED,
-  payload: {
-    value: bundle,
-    loading: false
+export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
+  if (Queue.canPush()) {
+    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
   }
-});
+  dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: bundle, loading: false}});
+};
+
+export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
+  Queue.push(bundle);
+  if (Queue.canPush()) {
+    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  }
+}
 
 export const unsortedServiceAddressFetchError = (): Action => ({
   type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
@@ -83,13 +90,18 @@ export const undoServiceAddressSuccess = (): Action => ({
 })
 
 export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) => {
-  dispatch({type: Actions.START_FETCH, payload: {loading: true}});
-  dispatch({type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  var cached = Queue.pop();
+  if (cached) {
+    dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: cached, loading: false}});
+  } else {
+    dispatch({type: Actions.START_FETCH, payload: {loading: true}});
+    dispatch({type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  }
 };
 
 export const skipServiceAddress = (): Action => (dispatch: Dispatch) => {
-  dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}})
-  dispatch({type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}});
+  dispatch({type: FetchActions.SKIP_SERVICE_ADDRESS});
 };
 
 export const dismissServiceAddress = (queueId: string, serviceAddressId: string): Action => (dispatch: Dispatch) => {
