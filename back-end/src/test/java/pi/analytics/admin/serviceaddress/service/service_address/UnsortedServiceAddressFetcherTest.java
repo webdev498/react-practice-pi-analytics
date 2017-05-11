@@ -163,9 +163,17 @@ public class UnsortedServiceAddressFetcherTest {
             .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
             .build();
 
+    // Queue returns one item
     doAnswer(invocation -> {
       StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
       responseObserver.onNext(storedMsgUnit);
+      responseObserver.onCompleted();
+      return null;
+    })
+    // End of the queue
+    .doAnswer(invocation -> {
+      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
+      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
       responseObserver.onCompleted();
       return null;
     })
@@ -198,7 +206,7 @@ public class UnsortedServiceAddressFetcherTest {
 
     // Check that we delete the queue item for a service address that we can't find
     final DeleteUnitRequest deleteUnitRequest = DeleteUnitRequest.newBuilder().setDbId(storedMsgUnit.getDbId()).build();
-    verify(queueOnPrem, times(5))  // Once per queue since we made all queues return the same item
+    verify(queueOnPrem, times(1))
         .deleteQueueUnit(eq(deleteUnitRequest), any(StreamObserver.class));
   }
 
@@ -211,9 +219,17 @@ public class UnsortedServiceAddressFetcherTest {
             .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
             .build();
 
+    // Queue returns one item
     doAnswer(invocation -> {
       StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
       responseObserver.onNext(storedMsgUnit);
+      responseObserver.onCompleted();
+      return null;
+    })
+    // End of the queue
+    .doAnswer(invocation -> {
+      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
+      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
       responseObserver.onCompleted();
       return null;
     })
@@ -254,7 +270,72 @@ public class UnsortedServiceAddressFetcherTest {
 
     // Check that we delete the queue item for a service address that we don't care about
     final DeleteUnitRequest deleteUnitRequest = DeleteUnitRequest.newBuilder().setDbId(storedMsgUnit.getDbId()).build();
-    verify(queueOnPrem, times(4))  // Once per queue since we made all queues return the same item
+    verify(queueOnPrem, times(1))
+        .deleteQueueUnit(eq(deleteUnitRequest), any(StreamObserver.class));
+  }
+
+  @Test
+  public void fetchNextQueueItem_service_address_already_sorted() throws Exception {
+    final StoredMsgUnit storedMsgUnit =
+        StoredMsgUnit
+            .newBuilder()
+            .setDbId("111")
+            .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
+            .build();
+
+    // Queue returns one item
+    doAnswer(invocation -> {
+      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
+      responseObserver.onNext(storedMsgUnit);
+      responseObserver.onCompleted();
+      return null;
+    })
+    // End of the queue
+    .doAnswer(invocation -> {
+      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
+      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(queueOnPrem)
+    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+
+    doAnswer(invocation -> {
+      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(AckResponse.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(queueOnPrem)
+    .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+
+    final ServiceAddress serviceAddress =
+        ServiceAddress
+            .newBuilder()
+            .setServiceAddressId(222L)
+            .setLawFirmStatusDetermined(true)
+            .setCountry("AU")
+            .build();
+
+    doAnswer(invocation -> {
+      StreamObserver<ServiceAddress> responseObserver = (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
+      responseObserver.onNext(serviceAddress);
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(serviceAddressService)
+    .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+
+    final Optional<QueuedServiceAddress> queuedServiceAddress =
+        unsortedServiceAddressFetcher.fetchNext("user.with.4.queues");
+
+    assertThat(queuedServiceAddress)
+        .as("Queues return an item whose service address has already been sorted")
+        .isEmpty();
+
+    // Check that we delete the queue item for a service address that we don't care about
+    final DeleteUnitRequest deleteUnitRequest = DeleteUnitRequest.newBuilder().setDbId(storedMsgUnit.getDbId()).build();
+    verify(queueOnPrem, times(1))
         .deleteQueueUnit(eq(deleteUnitRequest), any(StreamObserver.class));
   }
 
@@ -267,9 +348,17 @@ public class UnsortedServiceAddressFetcherTest {
             .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
             .build();
 
+    // Queue returns one item
     doAnswer(invocation -> {
       StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
       responseObserver.onNext(storedMsgUnit);
+      responseObserver.onCompleted();
+      return null;
+    })
+    // End of the queue
+    .doAnswer(invocation -> {
+      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
+      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
       responseObserver.onCompleted();
       return null;
     })

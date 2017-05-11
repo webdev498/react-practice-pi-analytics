@@ -44,17 +44,10 @@ public class UnsortedServiceAddressFetcher {
   public Optional<QueuedServiceAddress> fetchNext(final String username) {
     return getQueueNamesForUser(username)
         .stream()
-        .map(this::fetchNextQueueItem)
-
+        .map(this::fetchNextValidQueuedServiceAddress)
         // Skip empty queues
         .filter(Optional::isPresent)
         .map(Optional::get)
-
-        .map(this::fetchServiceAddress)
-        .map(this::pruneUnhandledQueueItem)
-
-        // Keep trying until we get a non-empty service address
-        .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent())
         .findFirst();
   }
 
@@ -77,6 +70,21 @@ public class UnsortedServiceAddressFetcher {
     }
   }
 
+  private Optional<QueuedServiceAddress> fetchNextValidQueuedServiceAddress(final QueueNameOnPrem queueNameOnPrem) {
+    Optional<StoredMsgUnit> nextQueueItem = Optional.of(StoredMsgUnit.getDefaultInstance());
+    Optional<QueuedServiceAddress> validQueuedServiceAddress = Optional.empty();
+
+    while (nextQueueItem.isPresent() && !validQueuedServiceAddress.isPresent()) {
+      nextQueueItem = fetchNextQueueItem(queueNameOnPrem);
+      validQueuedServiceAddress =
+          nextQueueItem
+              .map(this::fetchServiceAddress)
+              .map(this::pruneUnhandledQueueItem)
+              .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent());
+    }
+    return validQueuedServiceAddress;
+  }
+
   private Optional<StoredMsgUnit> fetchNextQueueItem(final QueueNameOnPrem queueNameOnPrem) {
     UnitRequestOnPrem unitRequestOnPrem =
         UnitRequestOnPrem
@@ -91,7 +99,7 @@ public class UnsortedServiceAddressFetcher {
     } else {
       return Optional.of(storedMsgUnit);
     }
-  }
+  };
 
   private QueuedServiceAddress fetchServiceAddress(final StoredMsgUnit storedMsgUnit) {
     final GetServiceAddressByIdRequest fetchRequest =
@@ -109,17 +117,21 @@ public class UnsortedServiceAddressFetcher {
       // Any other status is an error
       throw sre;
     }
-  }
+  };
 
   /**
    * Delete queue items that we can't, or aren't interested in handling
    * Contains Optional<ServiceAddress>.empty() if the service address is to be skipped
    */
   private QueuedServiceAddress pruneUnhandledQueueItem(final QueuedServiceAddress queuedServiceAddress) {
-
     if (!queuedServiceAddress.serviceAddress().isPresent()) {
       // Service address doesn't exist and we can't process it
       deleteQueueItem(queuedServiceAddress.queueId());
+    } else if (queuedServiceAddress.serviceAddress().get().getLawFirmStatusDetermined()) {
+      // Service address has already been sorted
+      deleteQueueItem(queuedServiceAddress.queueId());
+      // Indicate that the service address should be skipped
+      return QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
     } else {
       final List<String> activeOfficeCodes =
           Arrays
@@ -134,7 +146,7 @@ public class UnsortedServiceAddressFetcher {
       }
     }
     return queuedServiceAddress;
-  }
+  };
 
   private long getServiceAddressId(final StoredMsgUnit storedMsgUnit) {
     return Long.parseLong(storedMsgUnit.getMsgUnit().getUniqueMsgKey());
