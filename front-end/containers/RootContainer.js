@@ -25,8 +25,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onCreateFirm: () => {
     dispatch(createFirm());
   },
-  onSkip: () => {
-    dispatch(skipServiceAddress());
+  onSkip: (queueId: string) => {
+    dispatch(skipServiceAddress(queueId));
   },
   onGetNextServiceAddress: () => {
     dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());
