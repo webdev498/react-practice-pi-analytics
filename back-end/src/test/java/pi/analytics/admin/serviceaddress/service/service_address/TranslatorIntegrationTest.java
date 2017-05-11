@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
-package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
+package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.pi.common.test.type.DisabledTests;
 
@@ -15,12 +15,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author shane.xie@practiceinsight.io
  */
-public class TranslationHelperIntegrationTest {
+public class TranslatorIntegrationTest {
 
   @Category(DisabledTests.class)
   @Test()
   public void toEn() throws Exception {
-    final TranslationHelper translationHelper = new TranslationHelper();
-    assertThat(translationHelper.toEn("武士", LangType.JAPANESE)).isEqualTo("samurai");
+    final Translator translator = new Translator();
+    assertThat(translator.toEn("武士", LangType.JAPANESE)).isEqualTo("samurai");
   }
 }

@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
 
-package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
+package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;

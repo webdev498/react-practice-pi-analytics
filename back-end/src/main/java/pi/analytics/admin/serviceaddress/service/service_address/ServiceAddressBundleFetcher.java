@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
 
-package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
+package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -53,7 +53,7 @@ public class ServiceAddressBundleFetcher {
   DatastoreSg3ServiceBlockingStub datastoreSg3ServiceBlockingStub;
 
   @Inject
-  TranslationHelper translationHelper;
+  Translator translator;
 
   public ServiceAddressBundle fetch(final QueuedServiceAddress queuedServiceAddress) {
     return createServiceAddressBundle
@@ -83,7 +83,7 @@ public class ServiceAddressBundleFetcher {
     try {
       return ServiceAddressBundle
           .newBuilder(bundle)
-          .setEnTranslation(translationHelper.toEn(textToTranslate, sourceLanguage))
+          .setEnTranslation(translator.toEn(textToTranslate, sourceLanguage))
           .build();
     } catch (Exception e) {
       // Don't fail if the translation service is not available

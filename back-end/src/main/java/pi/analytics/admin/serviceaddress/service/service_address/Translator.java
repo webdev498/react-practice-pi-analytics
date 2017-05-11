@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
 
-package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
+package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.translate.Translate;
@@ -15,15 +15,15 @@ import java.io.IOException;
 import pi.ip.proto.generated.LangType;
 
 /**
- * Translation helper service that uses the Google Cloud Translate API
+ * Translation service that uses the Google Cloud Translate API
  * @author shane.xie@practiceinsight.io
  */
 @Singleton
-public class TranslationHelper {
+public class Translator {
 
   private Translate translate;
 
-  public TranslationHelper() {
+  public Translator() {
     try {
       final GoogleCredentials credentials =
           GoogleCredentials

@@ -2,7 +2,7 @@
  * Copyright (c) 2017 Practice Insight Pty Ltd.
  */
 
-package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
+package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -59,7 +59,7 @@ public class ServiceAddressBundleFetcherTest {
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase datastoreSg3Service;
-  private TranslationHelper translationHelper;
+  private Translator translator;
   private Server server;
   private ManagedChannel channel;
   private ServiceAddressBundleFetcher serviceAddressBundleFetcher;
@@ -69,7 +69,7 @@ public class ServiceAddressBundleFetcherTest {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
     datastoreSg3Service = mock(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase.class);
-    translationHelper = mock(TranslationHelper.class);
+    translator = mock(Translator.class);
 
     final String serverName = "service-address-bundle-fetcher-test-".concat(UUID.randomUUID().toString());
     server =
@@ -96,8 +96,8 @@ public class ServiceAddressBundleFetcherTest {
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
         bind(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub.class)
             .toInstance(DatastoreSg3ServiceGrpc.newBlockingStub(channel));
-        bind(TranslationHelper.class)
-            .toInstance(translationHelper);
+        bind(Translator.class)
+            .toInstance(translator);
       }
     }).getInstance(ServiceAddressBundleFetcher.class);
   }
@@ -177,7 +177,7 @@ public class ServiceAddressBundleFetcherTest {
                     .build()
             )
             .build();
-    when(translationHelper.toEn(anyString(), any(LangType.class)))
+    when(translator.toEn(anyString(), any(LangType.class)))
         .thenThrow(new RuntimeException());
     assertThat(bundle)
         .isEqualTo(serviceAddressBundleFetcher.addTranslationIfNecessary.apply(bundle))
@@ -208,7 +208,7 @@ public class ServiceAddressBundleFetcherTest {
             .setEnTranslation(translatedText)
             .build();
 
-    when(translationHelper.toEn(eq(sourceText), eq(LangType.CHINESE)))
+    when(translator.toEn(eq(sourceText), eq(LangType.CHINESE)))
         .thenReturn(translatedText);
 
     assertThat(translatedBundle)

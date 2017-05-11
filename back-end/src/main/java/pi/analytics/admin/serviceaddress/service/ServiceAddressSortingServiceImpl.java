@@ -27,9 +27,9 @@ import pi.admin.service_address_sorting.generated.ServiceAddressSortingServiceGr
 import pi.admin.service_address_sorting.generated.ServiceAddressUnsorted;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
-import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmHelper;
-import pi.analytics.admin.serviceaddress.service.unsorted_service_address.ServiceAddressBundleFetcher;
-import pi.analytics.admin.serviceaddress.service.unsorted_service_address.UnsortedServiceAddressFetcher;
+import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
+import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressBundleFetcher;
+import pi.analytics.admin.serviceaddress.service.service_address.UnsortedServiceAddressFetcher;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -46,7 +46,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   ServiceAddressBundleFetcher serviceAddressBundleFetcher;
 
   @Inject
-  LawFirmHelper lawFirmHelper;
+  LawFirmRepository lawFirmRepository;
 
   @Override
   public void nextUnsortedServiceAddress(final NextUnsortedServiceAddressRequest request,
@@ -76,7 +76,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       final SearchResults searchResults =
           SearchResults
               .newBuilder()
-              .addAllLawFirmAgents(lawFirmHelper.searchLawFirms(request.getSearchTerm()))
+              .addAllLawFirmAgents(lawFirmRepository.searchLawFirms(request.getSearchTerm()))
               .build();
       responseObserver.onNext(searchResults);
       responseObserver.onCompleted();
@@ -90,6 +90,9 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   public void assignServiceAddress(final AssignServiceAddressRequest request,
                                    final StreamObserver<ServiceAddressAssigned> responseObserver) {
     // TODO(SX)
+    // Assign a service address to a law firm (Cloud SQL)
+    // Update lawfirm_service_address_v1 ES index at http://es-1.hatchedpi.com:9200/_cat/indices
+    // Also see rpc UpsertThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
     // Remember to delete from queue
     // Also record staff user action (IPFLOW-786)?
   }
@@ -98,12 +101,20 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   public void unsortServiceAddress(final UnsortServiceAddressRequest request,
                                    final StreamObserver<ServiceAddressUnsorted> responseObserver) {
     // TODO(SX)
+    // Unassign a service address from its law firm if any, set law_firm_entity_checked to false (Cloud SQL)
+    // Update lawfirm_service_address_v1 ES index at http://es-1.hatchedpi.com:9200/_cat/indices
+    // Also see rpc DeleteThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
     // Also record staff user action (IPFLOW-786)?
   }
 
   @Override
   public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<LawFirmCreated> responseObserver) {
     // TODO(SX)
+    // Create a new law firm and assign the service address to it (Cloud SQL)
+    // Update ES indexes at http://es-1.hatchedpi.com:9200/_cat/indices
+    // * lawfirm
+    // * lawfirm_service_address_v1
+    // Also see rpc UpsertThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
     // Remember to delete from queue
     // Also record staff user action (IPFLOW-786)?
   }

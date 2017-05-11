@@ -43,14 +43,14 @@ import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTe
 /**
  * @author shane.xie@practiceinsight.io
  */
-public class LawFirmHelperTest {
+public class LawFirmRepositoryTest {
 
   private Faker faker = new Faker();
   private LawFirmSearchServiceGrpc.LawFirmSearchServiceImplBase lawFirmSearchService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private Server server;
   private ManagedChannel channel;
-  private LawFirmHelper lawFirmHelper;
+  private LawFirmRepository lawFirmRepository;
 
   @Before
   public void setup() throws Exception {
@@ -72,7 +72,7 @@ public class LawFirmHelperTest {
             .directExecutor()
             .build();
 
-    lawFirmHelper = Guice.createInjector(new AbstractModule() {
+    lawFirmRepository = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
         bind(LawFirmSearchServiceGrpc.LawFirmSearchServiceBlockingStub.class)
@@ -80,7 +80,7 @@ public class LawFirmHelperTest {
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
       }
-    }).getInstance(LawFirmHelper.class);
+    }).getInstance(LawFirmRepository.class);
   }
 
   @After
@@ -119,7 +119,7 @@ public class LawFirmHelperTest {
         createServiceAddressToMatchLawFirm(lawFirm2), createServiceAddressToMatchLawFirm(lawFirm2));
     setupGetServiceAddressesForLawFirmAnswer(lawFirm2.getLawFirmId(), lawFirm2ServiceAddresses);
 
-    assertThat(lawFirmHelper.searchLawFirms("test query")).containsExactly(
+    assertThat(lawFirmRepository.searchLawFirms("test query")).containsExactly(
         Agent.newBuilder().setLawFirm(lawFirm1).addAllServiceAddresses(lawFirm1ServiceAddresses).build(),
         Agent.newBuilder().setLawFirm(lawFirm2).addAllServiceAddresses(lawFirm2ServiceAddresses).build()
     );

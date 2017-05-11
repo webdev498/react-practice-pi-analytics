@@ -21,7 +21,7 @@ import pi.ip.proto.generated.ServiceAddress;
  * @author shane.xie@practiceinsight.io
  */
 @Singleton
-public class LawFirmHelper {
+public class LawFirmRepository {
 
   @Inject
   LawFirmSearchServiceBlockingStub lawFirmSearchServiceBlockingStub;
