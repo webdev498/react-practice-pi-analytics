@@ -17,11 +17,20 @@ import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
+import io.grpc.stub.StreamObserver;
+import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
+import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc;
+import pi.ip.proto.generated.AckResponse;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -89,5 +98,32 @@ public class ServiceAddressSorterTest {
   @Test
   public void setServiceAddressAsNonLawFirm() throws Exception {
     // TODO
+  }
+
+  @Test
+  public void skipServiceAddress() throws Exception {
+    doAnswer(invocation -> {
+      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(AckResponse.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(queueOnPrem)
+    .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+
+    serviceAddressSorter.skipServiceAddress(
+        SkipServiceAddressRequest
+            .newBuilder()
+            .setUnsortedServiceAddressQueueItemId("123")
+            .setDelayMinutes(5)
+            .setRequestedBy("shane")
+            .build()
+    );
+
+    verify(queueOnPrem, times(1))
+        .delayQueueUnit(
+            eq(DelayUnitRequest.newBuilder().setDbId("123").setDelaySeconds(5 * 60).build()),
+            any(StreamObserver.class)
+        );
   }
 }

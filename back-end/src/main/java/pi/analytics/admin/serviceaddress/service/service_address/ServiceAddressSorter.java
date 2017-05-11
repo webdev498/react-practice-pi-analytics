@@ -15,10 +15,12 @@ import java.util.concurrent.TimeUnit;
 
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
 import pi.ip.generated.queue.AddUnitRequestOnPrem;
+import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.MsgUnit;
 import pi.ip.generated.queue.QueueNameOnPrem;
@@ -69,6 +71,10 @@ public class ServiceAddressSorter {
     throw new NotImplementedException();
   }
 
+  public void skipServiceAddress(final SkipServiceAddressRequest request) {
+    delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), request.getDelayMinutes());
+  }
+
   private void addQueueItem(final long serviceAddressId) {
     final AddUnitRequestOnPrem addUnitRequestOnPrem =
         AddUnitRequestOnPrem.newBuilder()
@@ -84,7 +90,21 @@ public class ServiceAddressSorter {
   }
 
   private void deleteQueueItem(final String queueId) {
-    final DeleteUnitRequest deleteUnitRequest = DeleteUnitRequest.newBuilder().setDbId(queueId).build();
+    final DeleteUnitRequest deleteUnitRequest =
+        DeleteUnitRequest
+            .newBuilder()
+            .setDbId(queueId)
+            .build();
     queueOnPremBlockingStub.deleteQueueUnit(deleteUnitRequest);
+  }
+
+  private void delayQueueItem(final String queueId, final int delayInMinutes) {
+    DelayUnitRequest delayUnitRequest =
+        DelayUnitRequest
+            .newBuilder()
+            .setDbId(queueId)
+            .setDelaySeconds((int) TimeUnit.MINUTES.toSeconds(delayInMinutes))
+            .build();
+    queueOnPremBlockingStub.delayQueueUnit(delayUnitRequest);
   }
 }
