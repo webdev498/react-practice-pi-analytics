@@ -22,15 +22,22 @@ public class ServiceAddressTestHelper {
   private static Faker faker = new Faker();
 
   public static ServiceAddress createServiceAddressToMatchLawFirm(final LawFirm lawFirm) {
-    return createServiceAddress(Optional.of(lawFirm.getLawFirmId()), lawFirm.getName(), lawFirm.getCountry());
+    return createServiceAddress(
+        Optional.of(lawFirm.getLawFirmId()), lawFirm.getName(), lawFirm.getCountry(), true);
   }
 
   public static ServiceAddress createServiceAddressForNonLawFirm(final String name) {
-    return createServiceAddress(Optional.empty(), name, faker.address().countryCode());
+    return createServiceAddress(
+        Optional.empty(), name, faker.address().countryCode(), true);
   }
 
-  public static ServiceAddress createServiceAddress(final Optional<Long> lawFirmId, final String name, final String
-      country) {
+  public static ServiceAddress createUnsortedServiceAddress(final String name) {
+    return createServiceAddress(
+        Optional.empty(), name, faker.address().countryCode(), false);
+  }
+
+  private static ServiceAddress createServiceAddress(final Optional<Long> lawFirmId, final String name,
+                                                     final String country, final boolean lawFirmStatusDetermined) {
     ServiceAddress.Builder builder =
         ServiceAddress
             .newBuilder()
@@ -39,7 +46,7 @@ public class ServiceAddressTestHelper {
             .setAddress(faker.address().streetAddress(true))
             .setCountry(country)
             .setTelephone(faker.phoneNumber().phoneNumber())
-            .setLawFirmStatusDetermined(true)
+            .setLawFirmStatusDetermined(lawFirmStatusDetermined)
             .setLanguageType(LangType.WESTERN_SCRIPT);
     if (lawFirmId.isPresent()) {
       builder.setLawFirmId(Int64Value.newBuilder().setValue(lawFirmId.get()));

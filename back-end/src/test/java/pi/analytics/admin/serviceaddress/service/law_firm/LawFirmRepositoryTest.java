@@ -26,13 +26,20 @@ import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchR
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchResult;
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchServiceGrpc;
 import pi.admin.service_address_sorting.generated.Agent;
+import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper;
+import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
+import pi.ip.data.relational.generated.CreateLawFirmResponse;
 import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmRequest;
 import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmResponse;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.LawFirmUpserted;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc;
+import pi.ip.proto.generated.AckResponse;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
@@ -41,7 +48,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
+import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createUnsortedServiceAddress;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -145,7 +155,137 @@ public class LawFirmRepositoryTest {
 
   @Test
   public void createLawFirm() throws Exception {
-    // TODO
+    final CreateLawFirmRequest createLawFirmRequest =
+        CreateLawFirmRequest
+            .newBuilder()
+            .setUnsortedServiceAddressQueueItemId(faker.numerify("#####"))
+            .setRequestedBy(faker.name().username())
+            .setName(faker.company().name())
+            .setState(faker.address().state())
+            .setCountryCode(faker.address().countryCode())
+            .setWebsiteUrl(faker.internet().url())
+            .setServiceAddress(createUnsortedServiceAddress(faker.company().name()))
+            .build();
+
+    final long newLawFirmId = faker.number().randomNumber();
+
+    // lawFirmDbService.createLawFirm()
+    doAnswer(invocation -> {
+      StreamObserver<CreateLawFirmResponse> responseObserver =
+          (StreamObserver<CreateLawFirmResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(
+          CreateLawFirmResponse
+              .newBuilder()
+              .setLawFirmId(newLawFirmId)
+              .build()
+      );
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(lawFirmDbService)
+    .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
+
+    // serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm()
+    doAnswer(invocation -> {
+      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(AckResponse.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(serviceAddressService)
+    .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
+
+    // datastoreSg3ServiceBlockingStub.upsertIntoLawFirmCaches()
+    doAnswer(invocation -> {
+      StreamObserver<LawFirmUpserted> responseObserver = (StreamObserver<LawFirmUpserted>) invocation.getArguments()[1];
+      responseObserver.onNext(LawFirmUpserted.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(datastoreSg3Service)
+    .upsertIntoLawFirmCaches(any(LawFirm.class), any(StreamObserver.class));
+
+    // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
+    doAnswer(invocation -> {
+      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(AckResponse.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(datastoreSg3Service)
+    .upsertThinLawFirmServiceAddress(any(ThinServiceAddress.class), any(StreamObserver.class));
+
+    // queueOnPremBlockingStub.deleteQueueUnit()
+    doAnswer(invocation -> {
+      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
+      responseObserver.onNext(AckResponse.getDefaultInstance());
+      responseObserver.onCompleted();
+      return null;
+    })
+    .when(queueOnPrem)
+    .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+
+    // Run test
+    lawFirmRepository.createLawFirm(createLawFirmRequest);
+
+    // Verify create law firm called
+    verify(lawFirmDbService, times(1))
+        .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
+
+    // Verify assign service address to law firm called
+    verify(serviceAddressService, times(1))
+        .assignServiceAddressToLawFirm(
+            eq(
+                AssignServiceAddressToLawFirmRequest
+                    .newBuilder()
+                    .setLawFirmId(newLawFirmId)
+                    .setServiceAddressId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
+                    .build()
+            ),
+            any(StreamObserver.class)
+        );
+
+    // Verify upsert into law firm caches called
+    verify(datastoreSg3Service, times(1))
+        .upsertIntoLawFirmCaches(
+            eq(
+                LawFirm
+                    .newBuilder()
+                    .setLawFirmId(newLawFirmId)
+                    .setName(createLawFirmRequest.getName())
+                    .setStateStr(createLawFirmRequest.getState())
+                    .setCountry(createLawFirmRequest.getCountryCode())
+                    .setWebsiteUrl(createLawFirmRequest.getWebsiteUrl())
+                    .build()
+            ),
+            any(StreamObserver.class)
+        );
+
+    // Verify upsert thin law firm service address called
+    verify(datastoreSg3Service, times(1))
+        .upsertThinLawFirmServiceAddress(
+            eq(
+                ThinServiceAddress
+                    .newBuilder()
+                    .setServiceAddressId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
+                    .setName(createLawFirmRequest.getServiceAddress().getName())
+                    .setNameAddress(createLawFirmRequest.getServiceAddress().getName() + " "
+                        + createLawFirmRequest.getServiceAddress().getAddress())
+                    .setCountry(createLawFirmRequest.getServiceAddress().getCountry())
+                    .setLongitude(createLawFirmRequest.getServiceAddress().getLongitude())
+                    .setLongitude(createLawFirmRequest.getServiceAddress().getLatitude())
+                    .setLawFirmId(newLawFirmId)
+                    .build()
+            ),
+            any(StreamObserver.class)
+        );
+
+    // Verify delete from queue called
+    verify(queueOnPrem, times(1))
+        .deleteQueueUnit(
+            eq(DeleteUnitRequest.newBuilder().setDbId(createLawFirmRequest.getUnsortedServiceAddressQueueItemId()).build()),
+            any(StreamObserver.class)
+        );
   }
 
   private void setupGetServiceAddressesForLawFirmAnswer(final long lawFirmId, final List<ServiceAddress> serviceAddresses) {
