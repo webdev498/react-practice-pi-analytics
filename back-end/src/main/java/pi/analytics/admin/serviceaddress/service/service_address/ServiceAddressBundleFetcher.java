@@ -56,6 +56,7 @@ public class ServiceAddressBundleFetcher {
   Translator translator;
 
   public ServiceAddressBundle fetch(final QueuedServiceAddress queuedServiceAddress) {
+    Preconditions.checkArgument(queuedServiceAddress.serviceAddress().isPresent());
     return createServiceAddressBundle
         .andThen(addTranslationIfNecessary)
         .andThen(addAgentSuggestions)
@@ -63,14 +64,12 @@ public class ServiceAddressBundleFetcher {
   }
 
   @VisibleForTesting
-  final Function<QueuedServiceAddress, ServiceAddressBundle> createServiceAddressBundle = queuedServiceAddress -> {
-    Preconditions.checkArgument(queuedServiceAddress.serviceAddress().isPresent());
-    return ServiceAddressBundle
+  final Function<QueuedServiceAddress, ServiceAddressBundle> createServiceAddressBundle = queuedServiceAddress ->
+    ServiceAddressBundle
         .newBuilder()
         .setServiceAddressToSort(queuedServiceAddress.serviceAddress().get())
         .setUnsortedServiceAddressQueueItemId(queuedServiceAddress.queueId())
         .build();
-  };
 
   @VisibleForTesting
   final Function<ServiceAddressBundle, ServiceAddressBundle> addTranslationIfNecessary = bundle -> {
