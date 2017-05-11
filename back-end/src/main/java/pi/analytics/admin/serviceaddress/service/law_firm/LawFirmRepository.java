@@ -7,12 +7,15 @@ package pi.analytics.admin.serviceaddress.service.law_firm;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchRequest;
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchServiceGrpc.LawFirmSearchServiceBlockingStub;
 import pi.admin.service_address_sorting.generated.Agent;
+import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.proto.generated.ServiceAddress;
@@ -61,8 +64,17 @@ public class LawFirmRepository {
         .collect(Collectors.toList());
   }
 
-  public long createLawFirm() {
+  public long createLawFirm(final CreateLawFirmRequest request) {
     // TODO(SX)
-    return 0;
+
+    // Create a new law firm and assign the service address to it (Cloud SQL)
+    // Update ES indexes at http://es-1.hatchedpi.com:9200/_cat/indices
+    // * lawfirm
+    // * lawfirm_service_address_v1
+    // Also see rpc UpsertThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
+    // Remember to delete from queue
+    // Also record staff user action (IPFLOW-786)?
+
+    throw new NotImplementedException();
   }
 }

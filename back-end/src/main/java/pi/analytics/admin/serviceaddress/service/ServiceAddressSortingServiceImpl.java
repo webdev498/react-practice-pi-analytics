@@ -29,6 +29,7 @@ import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmR
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressBundleFetcher;
+import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressSorter;
 import pi.analytics.admin.serviceaddress.service.service_address.UnsortedServiceAddressFetcher;
 
 /**
@@ -47,6 +48,9 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
   @Inject
   LawFirmRepository lawFirmRepository;
+
+  @Inject
+  ServiceAddressSorter serviceAddressSorter;
 
   @Override
   public void nextUnsortedServiceAddress(final NextUnsortedServiceAddressRequest request,
@@ -73,12 +77,12 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   @Override
   public void searchLawFirms(final SearchLawFirmsRequest request, final StreamObserver<SearchResults> responseObserver) {
     try {
-      final SearchResults searchResults =
+      responseObserver.onNext(
           SearchResults
               .newBuilder()
               .addAllLawFirmAgents(lawFirmRepository.searchLawFirms(request.getSearchTerm()))
-              .build();
-      responseObserver.onNext(searchResults);
+              .build()
+      );
       responseObserver.onCompleted();
     } catch (Throwable th) {
       log.error("Error searching law firms", th);
@@ -89,42 +93,55 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   @Override
   public void assignServiceAddress(final AssignServiceAddressRequest request,
                                    final StreamObserver<ServiceAddressAssigned> responseObserver) {
-    // TODO(SX)
-    // Assign a service address to a law firm (Cloud SQL)
-    // Update lawfirm_service_address_v1 ES index at http://es-1.hatchedpi.com:9200/_cat/indices
-    // Also see rpc UpsertThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
-    // Remember to delete from queue
-    // Also record staff user action (IPFLOW-786)?
+    try {
+      serviceAddressSorter.assignServiceAddress(request);
+      responseObserver.onNext(ServiceAddressAssigned.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Throwable th) {
+      log.error("Error assigning service address to law firm", th);
+      responseObserver.onError(th);
+    }
   }
 
   @Override
   public void unsortServiceAddress(final UnsortServiceAddressRequest request,
                                    final StreamObserver<ServiceAddressUnsorted> responseObserver) {
-    // TODO(SX)
-    // Unassign a service address from its law firm if any, set law_firm_entity_checked to false (Cloud SQL)
-    // Update lawfirm_service_address_v1 ES index at http://es-1.hatchedpi.com:9200/_cat/indices
-    // Also see rpc DeleteThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
-    // Also record staff user action (IPFLOW-786)?
+    try {
+      serviceAddressSorter.unsortServiceAddress(request);
+      responseObserver.onNext(ServiceAddressUnsorted.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Throwable th) {
+      log.error("Error unsorting service address (unassigning from law firm)", th);
+      responseObserver.onError(th);
+    }
   }
 
   @Override
   public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<LawFirmCreated> responseObserver) {
-    // TODO(SX)
-    // Create a new law firm and assign the service address to it (Cloud SQL)
-    // Update ES indexes at http://es-1.hatchedpi.com:9200/_cat/indices
-    // * lawfirm
-    // * lawfirm_service_address_v1
-    // Also see rpc UpsertThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
-    // Remember to delete from queue
-    // Also record staff user action (IPFLOW-786)?
+    try {
+      responseObserver.onNext(
+          LawFirmCreated
+              .newBuilder()
+              .setLawFirmId(lawFirmRepository.createLawFirm(request))
+              .build()
+      );
+      responseObserver.onCompleted();
+    } catch (Throwable th) {
+      log.error("Error creating new law firm using service address", th);
+      responseObserver.onError(th);
+    }
   }
 
   @Override
   public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request,
                                             final StreamObserver<ServiceAddressSetAsNonLawFirm> responseObserver) {
-    // TODO(SX)
-    // Remember to delete from queue
-    // Also record staff user action (IPFLOW-786)?
+    try {
+      serviceAddressSorter.setServiceAddressAsNonLawFirm(request);
+      responseObserver.onNext(ServiceAddressSetAsNonLawFirm.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Throwable th) {
+      log.error("Error setting service address as non law firm", th);
+      responseObserver.onError(th);
+    }
   }
-
 }
