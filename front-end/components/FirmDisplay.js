@@ -3,8 +3,10 @@
 //@flow
 import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
+import {OuterUrls} from "../services/Urls";
 
-type FirmDisplayProps = {
+type
+FirmDisplayProps = {
   value: Object
 }
 
@@ -13,14 +15,14 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
   let addressToSort = props.value.serviceAddressToSort;
 
   const renderGoogleSearchIcon = (value: string) => {
-    var url = "https://www.google.com/search?q=".concat(value.replace(/ /g, "+"));
+    var url = OuterUrls.googleSearch.concat(value.replace(/ /g, "+"));
     return (
       <span>{value} <a href={url} target="_blank"><IconButton accent name="search"/></a></span>
     )
   }
 
   const renderCountryEditIcon = (country: string, localId: string) => {
-    var url = "addressing/localCountryC.jsp?findLocalEntity=Find&localID=".concat(localId);
+    var url = OuterUrls.country.concat(localId);
     return (
       <span>{country} <a href={url}><IconButton accent name="edit"/></a></span>
     )

@@ -6,10 +6,14 @@ package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.protobuf.Int64Value;
+
+import com.github.javafaker.Faker;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.stubbing.Stubber;
 
 import java.util.UUID;
 
@@ -18,12 +22,18 @@ import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
+import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
+import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
+import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3;
 import pi.ip.generated.queue.DelayUnitRequest;
+import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 import pi.ip.proto.generated.AckResponse;
+import pi.ip.proto.generated.ServiceAddress;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -43,12 +53,14 @@ public class ServiceAddressSorterTest {
   private Server server;
   private ManagedChannel channel;
   private ServiceAddressSorter serviceAddressSorter;
+  private Faker faker;
 
   @Before
   public void setUp() throws Exception {
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
     datastoreSg3Service = mock(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase.class);
     queueOnPrem = mock(QueueOnPremGrpc.QueueOnPremImplBase.class);
+    faker = new Faker();
 
     final String serverName = "service-address-sorter-test-".concat(UUID.randomUUID().toString());
     server =
@@ -87,7 +99,57 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void assignServiceAddress() throws Exception {
-    // TODO
+    replyWithDummyResponse()
+        .when(serviceAddressService)
+        .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
+
+    replyWithDummyResponse()
+        .when(datastoreSg3Service)
+        .upsertThinLawFirmServiceAddress(any(IpDatastoreSg3.ThinServiceAddress.class), any(StreamObserver.class));
+
+    replyWithDummyResponse()
+        .when(queueOnPrem)
+        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+
+    replyWith(
+        ServiceAddress.newBuilder()
+            .setServiceAddressId(1L)
+            .setLawFirmId(Int64Value.newBuilder().setValue(1L).build())
+            .build()
+    )
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+
+    serviceAddressSorter.assignServiceAddress(
+        AssignServiceAddressRequest
+            .newBuilder()
+            .setUnsortedServiceAddressQueueItemId("123")
+            .setLawFirmId(1L)
+            .setServiceAddressId(1L)
+            .build()
+    );
+
+    verify(queueOnPrem).deleteQueueUnit(
+        eq(DeleteUnitRequest.newBuilder().setDbId("123").build()),
+        any(StreamObserver.class)
+    );
+    verify(serviceAddressService).assignServiceAddressToLawFirm(
+        eq(AssignServiceAddressToLawFirmRequest.newBuilder().setLawFirmId(1L).setServiceAddressId(1L).build()),
+        any(StreamObserver.class)
+    );
+  }
+
+  private Stubber replyWithDummyResponse() {
+    return replyWith(AckResponse.getDefaultInstance());
+  }
+
+  private <T> Stubber replyWith(T response) {
+    return doAnswer(invocation -> {
+      StreamObserver<T> responseObserver = (StreamObserver<T>) invocation.getArguments()[1];
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+      return null;
+    });
   }
 
   @Test
@@ -102,14 +164,9 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void skipServiceAddress() throws Exception {
-    doAnswer(invocation -> {
-      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(AckResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+    replyWithDummyResponse()
+        .when(queueOnPrem)
+        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
 
     serviceAddressSorter.skipServiceAddress(
         SkipServiceAddressRequest

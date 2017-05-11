@@ -5,6 +5,7 @@ import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
 import "../styles/main.scss";
 import {Agent, ServiceAddress} from "../services/Types";
+import {OuterUrls} from "../services/Urls";
 
 type
 AddressesListProps = {
@@ -24,7 +25,7 @@ class AddressesList extends React.Component {
 
   renderLawFirmId(agent: Agent): React.Element<any> {
     if (agent.lawFirm) {
-      var href = "".concat("dataServices/firmInfo.jsp?id=", agent.lawFirm.lawFirmId, "#agents");
+      var href = OuterUrls.firmInfo.concat(agent.lawFirm.lawFirmId, "#agents");
       return <span>{agent.lawFirm.lawFirmId}&nbsp;<a href={href} target="_blank"><IconButton accent name="open_in_new"/></a></span>
     }
     return <span style={{color: "#bbb"}}>Non law firm</span>

@@ -8,6 +8,7 @@ import "rxjs/add/operator/delay";
 import "rxjs/add/observable/dom/ajax";
 import Authentication from "./Authentication";
 import decamelizeKeysDeep from "decamelize-keys-deep";
+import {OuterUrls} from "./Urls";
 
 export type Request = {
   url: string,
@@ -27,7 +28,7 @@ export const fetch = (request: Request): Observable => {
   return Observable.ajax(decorateRequest(request))
     .catch(error => {
       if (error.status === 401) {
-        window.location = "login.jsp#agents";
+        window.location = OuterUrls.login;
       } else {
         throw error;
       }
