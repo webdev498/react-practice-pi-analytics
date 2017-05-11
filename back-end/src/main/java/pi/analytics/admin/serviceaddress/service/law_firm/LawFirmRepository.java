@@ -136,13 +136,6 @@ public class LawFirmRepository {
         .build();
   }
 
-  private ThinServiceAddress createThinServiceAddressForNonLawFirm(final ServiceAddress serviceAddress) {
-    return ThinServiceAddress
-        .newBuilder(createPartialThinServiceAddress(serviceAddress))
-        .setNotALawFirm(true)
-        .build();
-  }
-
   private ThinServiceAddress createPartialThinServiceAddress(final ServiceAddress serviceAddress) {
     return ThinServiceAddress
         .newBuilder()
