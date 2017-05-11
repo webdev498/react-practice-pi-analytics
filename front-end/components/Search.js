@@ -5,14 +5,14 @@ import {Content, Icon, Spinner, Textfield} from "react-mdl";
 import React from "react";
 import AddressesList from "./AddressesList";
 
-type
-SearchProps = {
+type SearchProps = {
   agents: Array,
   loading: boolean,
   query: string,
   serviceAddress: Object,
+  queueId: string,
   onSearch: (query: string) => void,
-  onSortServiceAddress: (serviceAddressId: string, address: Object) => void,
+  onSortServiceAddress: (queueId: string, serviceAddressId: string, address: Object) => void,
   onUnsortServiceAddress: (index: number, address: Object) => void
 }
 
@@ -21,7 +21,7 @@ const Search = (props: SearchProps): React.Element<Layout> => {
 
   if (!props.loading && props.agents && props.agents.length > 0) {
     content =
-      <AddressesList agents={props.agents} serviceAddress={props.serviceAddress}
+      <AddressesList agents={props.agents} queueId={props.queueId} serviceAddress={props.serviceAddress}
                      onSortServiceAddress={props.onSortServiceAddress}
                      onUnsortServiceAddress={props.onUnsortServiceAddress}/>;
   } else if (props.loading) {

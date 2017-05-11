@@ -6,7 +6,7 @@ import React from "react";
 import WebFont from "webfontloader";
 import {render} from "react-dom";
 import RootContainer from "./containers/RootContainer";
-import {applyMiddleware, createStore, Store} from "redux";
+import {applyMiddleware, createStore} from "redux";
 import {createEpicMiddleware} from "redux-observable";
 import rootReducer from "./reducers";
 import {Provider} from "react-redux";
@@ -22,12 +22,10 @@ WebFont.load({
                },
              })
 
-const configureStore = (): Store => {
-  return createStore(rootReducer, applyMiddleware(createEpicMiddleware(rootEpic), thunk))
-}
+export const store = createStore(rootReducer, applyMiddleware(createEpicMiddleware(rootEpic), thunk));
 
 render(
-  <Provider store={configureStore()}>
+  <Provider store={store}>
     <RootContainer />
   </Provider>,
   document.getElementById("root")

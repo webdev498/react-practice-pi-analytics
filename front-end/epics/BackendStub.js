@@ -8,7 +8,8 @@ import {
   getNextUnsortedServiceAddress,
   serviceAddressUnsorted,
   undoServiceAddressSuccess,
-  unsortedServiceAddressFulfilled
+  unsortedServiceAddressFulfilled,
+  unsortedServiceAddressPreFetched
 } from "../reducers/root";
 import {searchQueryFulfilled} from "../reducers/search";
 import {lawFirmCreated} from "../reducers/createfirmdialog";
@@ -17,8 +18,10 @@ import {
   CREATE_LAW_FIRM,
   FETCH_NEXT_UNSORTED_SERVICE_ADDRESS,
   GET_CURRENT_USER,
+  PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS,
   SEARCH_LAW_FIRMS,
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
+  SKIP_SERVICE_ADDRESS,
   UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS
 } from "../actions/FetchActions";
@@ -96,6 +99,7 @@ const firm = {
     languageType: "en"
   },
   enTranslation: "Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
+  unsortedServiceAddressQueueItemId: "123",
   suggestedAgents: tableRows
 }
 
@@ -103,6 +107,11 @@ export const fetchNextUnsortedServiceAddress = (action$: ActionsObservable<Actio
   action$.ofType(FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
     .delay(1000)
     .mapTo(unsortedServiceAddressFulfilled(firm));
+
+export const preFetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
+    .delay(1000)
+    .mapTo(unsortedServiceAddressPreFetched(firm));
 
 export const searchLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SEARCH_LAW_FIRMS)
@@ -132,7 +141,12 @@ export const createLawFirm = (action$: ActionsObservable<Action>): ActionsObserv
 export const setServiceAddressAsNonLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM)
     .delay(1000)
-    .mapTo(getNextUnsortedServiceAddress())
+    .mapTo(getNextUnsortedServiceAddress());
+
+export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(SKIP_SERVICE_ADDRESS)
+    .delay(1000)
+    .mapTo(getNextUnsortedServiceAddress());
 
 export const getCurrentUser = (acitons$: ActionsObservable<Action>): ActionsObservable<Action> =>
   acitons$.ofType(GET_CURRENT_USER)

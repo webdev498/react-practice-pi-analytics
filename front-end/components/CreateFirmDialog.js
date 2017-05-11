@@ -21,11 +21,11 @@ import {
 import onClickOutside from "react-onclickoutside";
 import {SelectField} from "react-mdl-selectfield";
 
-type
-CreateFirmDialogProps = {
-  firm: Object,
+type CreateFirmDialogProps = {
+  value: Object,
   open: boolean,
   loading: boolean,
+  queueId: string,
   onSubmit: (firm: Object) => void,
   onClose: () => void
 }
@@ -35,7 +35,13 @@ class CreateFirmDialog extends React.Component {
 
   constructor(props: CreateFirmDialogProps) {
     super(props);
-    this.state = {name: '', url: '', state: '', country: ''};
+    this.state = {
+      name: '',
+      websiteUrl: '',
+      state: '',
+      countryCode: '',
+      unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId
+    };
   }
 
   componentDidMount() {
@@ -98,7 +104,7 @@ class CreateFirmDialog extends React.Component {
             <Grid>
               <Cell col={12}>
                 <Textfield disabled={this.props.loading} style={{width: "100%"}} id={"url"} label={"Firm URL"}
-                           onChange={this.createListener('url')}/>
+                           onChange={this.createListener('websiteUrl')}/>
               </Cell>
             </Grid>
             <Grid>
@@ -109,7 +115,7 @@ class CreateFirmDialog extends React.Component {
               </Cell>
               <Cell col={6}>
                 <SelectField disabled={this.props.loading} label={"Select country"}
-                             onChange={this.createListener('country')}>
+                             onChange={this.createListener('countryCode')}>
                   {countriesList}
                 </SelectField>
               </Cell>

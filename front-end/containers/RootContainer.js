@@ -31,8 +31,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onGetNextServiceAddress: () => {
     dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());
   },
-  onDismiss: (serviceAddressId: string) => {
-    dispatch(dismissServiceAddress(serviceAddressId));
+  onDismiss: (queueId: string, serviceAddressId: string) => {
+    dispatch(dismissServiceAddress(queueId, serviceAddressId));
   },
   onUndo: (serviceAddressId: string) => {
     dispatch(undoServiceAddress(serviceAddressId));
