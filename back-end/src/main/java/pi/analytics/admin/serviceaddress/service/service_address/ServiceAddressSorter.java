@@ -9,22 +9,25 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.util.concurrent.TimeUnit;
 
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
+import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
+import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
+import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3;
 import pi.ip.generated.queue.AddUnitRequestOnPrem;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.MsgUnit;
 import pi.ip.generated.queue.QueueNameOnPrem;
 import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
+import pi.ip.proto.generated.ServiceAddress;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -43,32 +46,54 @@ public class ServiceAddressSorter {
   private QueueOnPremBlockingStub queueOnPremBlockingStub;
 
   public void assignServiceAddress(final AssignServiceAddressRequest request) {
-    // TODO
+    serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm(AssignServiceAddressToLawFirmRequest.newBuilder()
+        .setLawFirmId(request.getLawFirmId())
+        .setServiceAddressId(request.getServiceAddressId())
+        .build());
 
-    // serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm()
-    // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
-    // deleteQueueItem(request.getUnsortedServiceAddressQueueItemId())
+    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(getThinServiceAddress(request.getServiceAddressId()));
 
-    throw new NotImplementedException();
+    deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
+  }
+
+  private IpDatastoreSg3.ThinServiceAddress getThinServiceAddress(Long serviceAddressId) {
+    ServiceAddress serviceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(GetServiceAddressByIdRequest
+        .newBuilder()
+        .setServiceAddressId(serviceAddressId)
+        .build());
+
+    IpDatastoreSg3.ThinServiceAddress.Builder thinServiceAddressBuilder = IpDatastoreSg3.ThinServiceAddress.newBuilder();
+    if (serviceAddress.getLawFirmId() != null) {
+      thinServiceAddressBuilder.setLawFirmId(serviceAddress.getLawFirmId().getValue()).setNotALawFirm(false);
+    } else {
+      thinServiceAddressBuilder.setNotALawFirm(true);
+    }
+    thinServiceAddressBuilder.setServiceAddressId(serviceAddress.getServiceAddressId())
+        .setNameAddress(serviceAddress.getAddress())
+        .setName(serviceAddress.getName())
+        .setCountry(serviceAddress.getCountry())
+        .setLatitude(serviceAddress.getLatitude())
+        .setLongitude(serviceAddress.getLongitude());
+    return thinServiceAddressBuilder.build();
   }
 
   public void unsortServiceAddress(final UnsortServiceAddressRequest request) {
-    // TODO
+    serviceAddressServiceBlockingStub.unassignServiceAddressFromLawFirm(UnassignServiceAddressFromLawFirmRequest
+        .newBuilder()
+        .setServiceAddressId(request.getServiceAddressId())
+        .build());
 
-    // serviceAddressServiceBlockingStub.unassignServiceAddressFromLawFirm()
-    // datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress()
-    // addQueueItem(request.getServiceAddressId())
-
-    throw new NotImplementedException();
+    datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress(getThinServiceAddress(request.getServiceAddressId()));
+    addQueueItem(request.getServiceAddressId());
   }
 
   public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request) {
-    // TODO
-
-    // serviceAddressServiceBlockingStub.setServiceAddressAsNonLawFirm()
-    // deleteQueueItem(request.getUnsortedServiceAddressQueueItemId())
-
-    throw new NotImplementedException();
+    serviceAddressServiceBlockingStub.setServiceAddressAsNonLawFirm(
+        pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build());
+    deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }
 
   public void skipServiceAddress(final SkipServiceAddressRequest request) {
