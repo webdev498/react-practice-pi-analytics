@@ -6,7 +6,6 @@ package pi.analytics.admin.serviceaddress.service.unsorted_service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.google.protobuf.Int64Value;
 
 import com.github.javafaker.Faker;
 
@@ -32,9 +31,9 @@ import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressRequest;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressResponse;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -47,6 +46,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper.createLawFirm;
+import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressForNonLawFirm;
+import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -313,42 +315,6 @@ public class ServiceAddressBundleFetcherTest {
 
 
   // Test Helpers
-
-  private LawFirm createLawFirm() {
-    return LawFirm
-        .newBuilder()
-        .setLawFirmId(faker.number().randomNumber())
-        .setName(faker.company().name())
-        .setStateStr(faker.address().state())
-        .setCountry(faker.address().countryCode())
-        .setWebsiteUrl(faker.internet().url())
-        .build();
-  }
-
-  private ServiceAddress createServiceAddressToMatchLawFirm(final LawFirm lawFirm) {
-    return createServiceAddress(Optional.of(lawFirm.getLawFirmId()), lawFirm.getName(), lawFirm.getCountry());
-  }
-
-  private ServiceAddress createServiceAddressForNonLawFirm(final String name) {
-    return createServiceAddress(Optional.empty(), name, faker.address().countryCode());
-  }
-
-  private ServiceAddress createServiceAddress(final Optional<Long> lawFirmId, final String name, final String country) {
-    ServiceAddress.Builder builder =
-        ServiceAddress
-            .newBuilder()
-            .setServiceAddressId(faker.number().randomNumber())
-            .setName(name)
-            .setAddress(faker.address().streetAddress(true))
-            .setCountry(country)
-            .setTelephone(faker.phoneNumber().phoneNumber())
-            .setLawFirmStatusDetermined(true)
-            .setLanguageType(LangType.WESTERN_SCRIPT);
-    if (lawFirmId.isPresent()) {
-      builder.setLawFirmId(Int64Value.newBuilder().setValue(lawFirmId.get()));
-    }
-    return builder.build();
-  }
 
   private ThinServiceAddress createThinServiceAddressMatchingServiceAddress(final ServiceAddress serviceAddress) {
     ThinServiceAddress.Builder builder =
