@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 import pi.admin.service_address_sorting.generated.Agent;
@@ -73,8 +74,8 @@ public class ServiceAddressBundleFetcher {
 
   @VisibleForTesting
   final Function<ServiceAddressBundle, ServiceAddressBundle> addTranslationIfNecessary = bundle -> {
-    final LangType sourceLanguage = bundle.getServiceAddressToSort().getLanguageType();
-    if (sourceLanguage == null || sourceLanguage == LangType.WESTERN_SCRIPT) {
+    final Optional<LangType> sourceLanguage = Optional.ofNullable(bundle.getServiceAddressToSort().getLanguageType());
+    if (!sourceLanguage.isPresent() || sourceLanguage.get() == LangType.WESTERN_SCRIPT) {
       // We can't translate or no translation required
       return bundle;
     }
@@ -82,7 +83,7 @@ public class ServiceAddressBundleFetcher {
     try {
       return ServiceAddressBundle
           .newBuilder(bundle)
-          .setEnTranslation(translator.toEn(textToTranslate, sourceLanguage))
+          .setEnTranslation(translator.toEn(textToTranslate, sourceLanguage.get()))
           .build();
     } catch (Exception e) {
       // Don't fail if the translation service is not available
