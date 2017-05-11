@@ -37,10 +37,10 @@ class CreateFirmDialog extends React.Component {
     super(props);
     this.state = {
       name: '',
-      website_url: '',
+      websiteUrl: '',
       state: '',
-      country_code: '',
-      unsorted_service_address_queue_item_id: this.props.value.unsortedServiceAddressQueueItemId
+      countryCode: '',
+      unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId
     };
   }
 
@@ -104,7 +104,7 @@ class CreateFirmDialog extends React.Component {
             <Grid>
               <Cell col={12}>
                 <Textfield disabled={this.props.loading} style={{width: "100%"}} id={"url"} label={"Firm URL"}
-                           onChange={this.createListener('website_url')}/>
+                           onChange={this.createListener('websiteUrl')}/>
               </Cell>
             </Grid>
             <Grid>
@@ -115,7 +115,7 @@ class CreateFirmDialog extends React.Component {
               </Cell>
               <Cell col={6}>
                 <SelectField disabled={this.props.loading} label={"Select country"}
-                             onChange={this.createListener('country_code')}>
+                             onChange={this.createListener('countryCode')}>
                   {countriesList}
                 </SelectField>
               </Cell>

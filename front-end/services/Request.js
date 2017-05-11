@@ -7,10 +7,9 @@ import "rxjs/add/operator/retryWhen";
 import "rxjs/add/operator/delay";
 import "rxjs/add/observable/dom/ajax";
 import Authentication from "./Authentication";
+import decamelizeKeysDeep from "decamelize-keys-deep";
 
-export
-type
-Request = {
+export type Request = {
   url: string,
   method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE",
   body? : Object
@@ -44,11 +43,11 @@ export const fetch = (request: Request): Observable => {
  */
 const decorateRequest = (request: Request): Object => {
   if (Authentication.user) {
-    request.body.requested_by = Authentication.user;
+    request.body.requestedBy = Authentication.user;
   }
   return Object.assign({}, request, {
     responseType: "json",
     crossDomain: true,
-    body: JSON.stringify(request.body)
+    body: JSON.stringify(decamelizeKeysDeep(request.body))
   });
 }

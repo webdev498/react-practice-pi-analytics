@@ -36,5 +36,5 @@ export const searchQueryError = (): Action => ({
 
 export const doSearch = (query: string): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.START_SEARCH, payload: {query: query, loading: true}});
-  dispatch({type: FetchActions.SEARCH_LAW_FIRMS, payload: {request: {search_term: query}}});
+  dispatch({type: FetchActions.SEARCH_LAW_FIRMS, payload: {request: {searchTerm: query}}});
 };

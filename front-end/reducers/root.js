@@ -101,7 +101,7 @@ export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) 
 
 export const skipServiceAddress = (): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}});
-  dispatch({type: FetchActions.SKIP_SERVICE_ADDRESS});
+  dispatch({type: FetchActions.SKIP_SERVICE_ADDRESS, payload: {request: {delayMinutes: 1440}}});
 };
 
 export const dismissServiceAddress = (queueId: string, serviceAddressId: string): Action => (dispatch: Dispatch) => {
@@ -111,8 +111,8 @@ export const dismissServiceAddress = (queueId: string, serviceAddressId: string)
       type: FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
       payload: {
         request: {
-          unsorted_service_address_queue_item_id: queueId,
-          service_address_id: serviceAddressId
+          unsortedServiceAddressQueueItemId: queueId,
+          serviceAddressId: serviceAddressId
         }
       }
     });
@@ -120,7 +120,7 @@ export const dismissServiceAddress = (queueId: string, serviceAddressId: string)
 
 export const unsortServiceAddress = (serviceAddressId: string): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.UNSORT_SERVICE_ADDRESS, payload: {serviceAddressId: serviceAddressId}});
-  dispatch({type: FetchActions.UNSORT_SERVICE_ADDRESS, payload: {request: {service_address_id: serviceAddressId}}});
+  dispatch({type: FetchActions.UNSORT_SERVICE_ADDRESS, payload: {request: {serviceAddressId: serviceAddressId}}});
 };
 
 export const sortServiceAddress = (queueId: string, serviceAddressId: string,
@@ -131,9 +131,9 @@ export const sortServiceAddress = (queueId: string, serviceAddressId: string,
       type: FetchActions.ASSIGN_SERVICE_ADDRESS,
       payload: {
         request: {
-          unsorted_service_address_queue_item_id: queueId,
-          service_address_id: serviceAddressId,
-          law_firm_id: agent.lawFirm.lawFirmId
+          unsortedServiceAddressQueueItemId: queueId,
+          serviceAddressId: serviceAddressId,
+          lawFirmId: agent.lawFirm.lawFirmId
         }
       }
     });
@@ -141,5 +141,5 @@ export const sortServiceAddress = (queueId: string, serviceAddressId: string,
 
 export const undoServiceAddress = (serviceAddressId: string) => (dispatch: Dispatch) => {
   dispatch({type: Actions.START_FETCH, payload: {loading: true}});
-  dispatch({type: FetchActions.UNDO_SERVICE_ADDRESS, payload: {request: {service_address_id: serviceAddressId}}});
+  dispatch({type: FetchActions.UNDO_SERVICE_ADDRESS, payload: {request: {serviceAddressId: serviceAddressId}}});
 }
