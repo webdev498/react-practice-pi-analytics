@@ -109,10 +109,10 @@ public class ServiceAddressBundleFetcherTest {
   }
 
   @Test
-  public void createServiceAddressBundle_fails_no_service_address() throws Exception {
+  public void fetch_fails_no_service_address() throws Exception {
     final QueuedServiceAddress queuedServiceAddress = QueuedServiceAddress
         .create(faker.numerify("#####"), Optional.empty());
-    assertThatThrownBy(() -> { serviceAddressBundleFetcher.createServiceAddressBundle.apply(queuedServiceAddress); })
+    assertThatThrownBy(() -> { serviceAddressBundleFetcher.fetch(queuedServiceAddress); })
         .isInstanceOf(IllegalArgumentException.class)
         .as("Service address cannot be empty");
   }

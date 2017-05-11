@@ -99,7 +99,7 @@ public class UnsortedServiceAddressFetcher {
     } else {
       return Optional.of(storedMsgUnit);
     }
-  };
+  }
 
   private QueuedServiceAddress fetchServiceAddress(final StoredMsgUnit storedMsgUnit) {
     final GetServiceAddressByIdRequest fetchRequest =
@@ -117,7 +117,7 @@ public class UnsortedServiceAddressFetcher {
       // Any other status is an error
       throw sre;
     }
-  };
+  }
 
   /**
    * Delete queue items that we can't, or aren't interested in handling
@@ -146,7 +146,7 @@ public class UnsortedServiceAddressFetcher {
       }
     }
     return queuedServiceAddress;
-  };
+  }
 
   private long getServiceAddressId(final StoredMsgUnit storedMsgUnit) {
     return Long.parseLong(storedMsgUnit.getMsgUnit().getUniqueMsgKey());

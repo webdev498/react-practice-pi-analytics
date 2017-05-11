@@ -4,6 +4,7 @@
 
 package pi.analytics.admin.serviceaddress.service.service_address;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ import pi.ip.proto.generated.ServiceAddress;
 
 /**
  * @author shane.xie@practiceinsight.io
+ * @author pavel.sitnikov
  */
 public class ServiceAddressSorter {
 
@@ -46,58 +48,72 @@ public class ServiceAddressSorter {
   private QueueOnPremBlockingStub queueOnPremBlockingStub;
 
   public void assignServiceAddress(final AssignServiceAddressRequest request) {
-    serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm(AssignServiceAddressToLawFirmRequest.newBuilder()
-        .setLawFirmId(request.getLawFirmId())
-        .setServiceAddressId(request.getServiceAddressId())
-        .build());
-
+    Preconditions.checkArgument(request.getLawFirmId() != 0, "Law firm ID is required");
+    Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
+    serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm(
+        AssignServiceAddressToLawFirmRequest
+            .newBuilder()
+            .setLawFirmId(request.getLawFirmId())
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
     datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(getThinServiceAddress(request.getServiceAddressId()));
-
     deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }
 
-  private IpDatastoreSg3.ThinServiceAddress getThinServiceAddress(Long serviceAddressId) {
-    ServiceAddress serviceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(GetServiceAddressByIdRequest
-        .newBuilder()
-        .setServiceAddressId(serviceAddressId)
-        .build());
+  public void unsortServiceAddress(final UnsortServiceAddressRequest request) {
+    Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
+    serviceAddressServiceBlockingStub.unassignServiceAddressFromLawFirm(
+        UnassignServiceAddressFromLawFirmRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+    datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress(getThinServiceAddress(request.getServiceAddressId()));
+    addQueueItem(request.getServiceAddressId());
+  }
 
+  public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request) {
+    Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
+    serviceAddressServiceBlockingStub.setServiceAddressAsNonLawFirm(
+        pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+    deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
+  }
+
+  public void skipServiceAddress(final SkipServiceAddressRequest request) {
+    Preconditions.checkArgument(!request.getUnsortedServiceAddressQueueItemId().isEmpty(),
+        "Unsorted service address queue item ID is required");
+    Preconditions.checkArgument(request.getDelayMinutes() != 0, "Delay (in minutes) is required");
+    delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), request.getDelayMinutes());
+  }
+
+  private IpDatastoreSg3.ThinServiceAddress getThinServiceAddress(long serviceAddressId) {
+    ServiceAddress serviceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
+        GetServiceAddressByIdRequest
+            .newBuilder()
+            .setServiceAddressId(serviceAddressId)
+            .build()
+    );
     IpDatastoreSg3.ThinServiceAddress.Builder thinServiceAddressBuilder = IpDatastoreSg3.ThinServiceAddress.newBuilder();
     if (serviceAddress.getLawFirmId() != null) {
-      thinServiceAddressBuilder.setLawFirmId(serviceAddress.getLawFirmId().getValue()).setNotALawFirm(false);
+      thinServiceAddressBuilder
+          .setLawFirmId(serviceAddress.getLawFirmId().getValue())
+          .setNotALawFirm(false);
     } else {
       thinServiceAddressBuilder.setNotALawFirm(true);
     }
-    thinServiceAddressBuilder.setServiceAddressId(serviceAddress.getServiceAddressId())
+    thinServiceAddressBuilder
+        .setServiceAddressId(serviceAddress.getServiceAddressId())
         .setNameAddress(serviceAddress.getAddress())
         .setName(serviceAddress.getName())
         .setCountry(serviceAddress.getCountry())
         .setLatitude(serviceAddress.getLatitude())
         .setLongitude(serviceAddress.getLongitude());
     return thinServiceAddressBuilder.build();
-  }
-
-  public void unsortServiceAddress(final UnsortServiceAddressRequest request) {
-    serviceAddressServiceBlockingStub.unassignServiceAddressFromLawFirm(UnassignServiceAddressFromLawFirmRequest
-        .newBuilder()
-        .setServiceAddressId(request.getServiceAddressId())
-        .build());
-
-    datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress(getThinServiceAddress(request.getServiceAddressId()));
-    addQueueItem(request.getServiceAddressId());
-  }
-
-  public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request) {
-    serviceAddressServiceBlockingStub.setServiceAddressAsNonLawFirm(
-        pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest
-            .newBuilder()
-            .setServiceAddressId(request.getServiceAddressId())
-            .build());
-    deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
-  }
-
-  public void skipServiceAddress(final SkipServiceAddressRequest request) {
-    delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), request.getDelayMinutes());
   }
 
   private void addQueueItem(final long serviceAddressId) {
