@@ -7,8 +7,6 @@ package pi.analytics.admin.serviceaddress.service.law_firm;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,8 +14,15 @@ import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchR
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchServiceGrpc.LawFirmSearchServiceBlockingStub;
 import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
+import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmRequest;
+import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
+import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.queue.DeleteUnitRequest;
+import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
+import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
 /**
@@ -27,10 +32,19 @@ import pi.ip.proto.generated.ServiceAddress;
 public class LawFirmRepository {
 
   @Inject
-  LawFirmSearchServiceBlockingStub lawFirmSearchServiceBlockingStub;
+  private LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
 
   @Inject
-  ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
+  private LawFirmSearchServiceBlockingStub lawFirmSearchServiceBlockingStub;
+
+  @Inject
+  private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
+
+  @Inject
+  private DatastoreSg3ServiceBlockingStub datastoreSg3ServiceBlockingStub;
+
+  @Inject
+  private QueueOnPremBlockingStub queueOnPremBlockingStub;
 
   public List<Agent> searchLawFirms(final String searchTerm) {
     final LawFirmSearchRequest searchRequest =
@@ -65,16 +79,80 @@ public class LawFirmRepository {
   }
 
   public long createLawFirm(final CreateLawFirmRequest request) {
-    // TODO(SX)
+    // Create the new law firm record in MySQL
+    final LawFirm lawFirmToBeCreated =
+        LawFirm
+            .newBuilder()
+            .setName(request.getName())
+            .setStateStr(request.getState())
+            .setCountry(request.getCountryCode())
+            .setWebsiteUrl(request.getWebsiteUrl())
+            .build();
 
-    // Create a new law firm and assign the service address to it (Cloud SQL)
-    // Update ES indexes at http://es-1.hatchedpi.com:9200/_cat/indices
-    // * lawfirm
-    // * lawfirm_service_address_v1
-    // Also see rpc UpsertThinLawFirmServiceAddress RPC endpoint from DatastoreSg3Service
-    // Remember to delete from queue
-    // Also record staff user action (IPFLOW-786)?
+    final long lawFirmId = lawFirmDbServiceBlockingStub.createLawFirm(
+        pi.ip.data.relational.generated.CreateLawFirmRequest
+            .newBuilder()
+            .setLawFirm(lawFirmToBeCreated)
+            .setCreatedBy(request.getRequestedBy())
+            .build()
+    ).getLawFirmId();
 
-    throw new NotImplementedException();
+    final LawFirm newLawFirm =
+        LawFirm
+            .newBuilder(lawFirmToBeCreated)
+            .setLawFirmId(lawFirmId)
+            .build();
+
+    // Assign the service address to the new law firm (MySQL)
+    serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm(
+        AssignServiceAddressToLawFirmRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddress().getServiceAddressId())
+            .setLawFirmId(lawFirmId)
+            .build()
+    );
+
+    // Update Elasticsearch caches
+    datastoreSg3ServiceBlockingStub.upsertIntoLawFirmCaches(newLawFirm);  // Used by law firm search by name
+    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(
+        createThinServiceAddressForLawFirm(request.getServiceAddress(), lawFirmId)
+    );
+
+    // Remove service address from unsorted queue
+    queueOnPremBlockingStub.deleteQueueUnit(
+        DeleteUnitRequest
+            .newBuilder()
+            .setDbId(request.getUnsortedServiceAddressQueueItemId())
+            .build()
+    );
+
+    // TODO: Also record staff user action? (IPFLOW-786)
+    return lawFirmId;
+  }
+
+  private ThinServiceAddress createThinServiceAddressForLawFirm(final ServiceAddress serviceAddress, final long lawFirmId) {
+    return ThinServiceAddress
+        .newBuilder(createPartialThinServiceAddress(serviceAddress))
+        .setLawFirmId(lawFirmId)
+        .build();
+  }
+
+  private ThinServiceAddress createThinServiceAddressForNonLawFirm(final ServiceAddress serviceAddress) {
+    return ThinServiceAddress
+        .newBuilder(createPartialThinServiceAddress(serviceAddress))
+        .setNotALawFirm(true)
+        .build();
+  }
+
+  private ThinServiceAddress createPartialThinServiceAddress(final ServiceAddress serviceAddress) {
+    return ThinServiceAddress
+        .newBuilder()
+        .setServiceAddressId(serviceAddress.getServiceAddressId())
+        .setName(serviceAddress.getName())
+        .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
+        .setCountry(serviceAddress.getCountry())
+        .setLongitude(serviceAddress.getLongitude())
+        .setLatitude(serviceAddress.getLatitude())
+        .build();
   }
 }
