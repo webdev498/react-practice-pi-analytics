@@ -126,7 +126,6 @@ public class LawFirmRepository {
             .build()
     );
 
-    // TODO: Also record staff user action? (IPFLOW-786)
     return lawFirmId;
   }
 

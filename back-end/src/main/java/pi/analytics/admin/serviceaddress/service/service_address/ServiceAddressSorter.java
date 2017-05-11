@@ -46,7 +46,6 @@ public class ServiceAddressSorter {
     // serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm()
     // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
     // deleteQueueItem(request.getUnsortedServiceAddressQueueItemId())
-    // Also record staff user action? (IPFLOW-786)
 
     throw new NotImplementedException();
   }
@@ -57,7 +56,6 @@ public class ServiceAddressSorter {
     // serviceAddressServiceBlockingStub.unassignServiceAddressFromLawFirm()
     // datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress()
     // addQueueItem(request.getServiceAddressId())
-    // Also record staff user action? (IPFLOW-786)
 
     throw new NotImplementedException();
   }
@@ -67,7 +65,6 @@ public class ServiceAddressSorter {
 
     // serviceAddressServiceBlockingStub.setServiceAddressAsNonLawFirm()
     // deleteQueueItem(request.getUnsortedServiceAddressQueueItemId())
-    // Also record staff user action? (IPFLOW-786)
 
     throw new NotImplementedException();
   }
