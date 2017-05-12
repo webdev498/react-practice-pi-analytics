@@ -43,9 +43,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 import static pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper.createLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressForNonLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
@@ -218,15 +218,9 @@ public class ServiceAddressBundleFetcherTest {
 
   @Test
   public void addAgentSuggestions_no_suggestions_found() throws Exception {
-    doAnswer(invocation -> {
-      StreamObserver<SuggestSimilarThinServiceAddressResponse> responseObserver =
-          (StreamObserver<SuggestSimilarThinServiceAddressResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(SuggestSimilarThinServiceAddressResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(datastoreSg3Service)
-    .suggestSimilarThinServiceAddress(any(SuggestSimilarThinServiceAddressRequest.class), any(StreamObserver.class));
+    replyWith(SuggestSimilarThinServiceAddressResponse.getDefaultInstance())
+        .when(datastoreSg3Service)
+        .suggestSimilarThinServiceAddress(any(SuggestSimilarThinServiceAddressRequest.class), any(StreamObserver.class));
 
     final ServiceAddressBundle originalBundle =
         ServiceAddressBundle
@@ -279,15 +273,9 @@ public class ServiceAddressBundleFetcherTest {
             .addSuggestions(lawFirm2ThinServiceAddress)
             .build();
 
-    doAnswer(invocation -> {
-      StreamObserver<SuggestSimilarThinServiceAddressResponse> responseObserver =
-          (StreamObserver<SuggestSimilarThinServiceAddressResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(suggestSimilarThinServiceAddressResponse);
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(datastoreSg3Service)
-    .suggestSimilarThinServiceAddress(any(SuggestSimilarThinServiceAddressRequest.class), any(StreamObserver.class));
+    replyWith(suggestSimilarThinServiceAddressResponse)
+        .when(datastoreSg3Service)
+        .suggestSimilarThinServiceAddress(any(SuggestSimilarThinServiceAddressRequest.class), any(StreamObserver.class));
 
     final ServiceAddressBundle originalBundle = ServiceAddressBundle.getDefaultInstance();
     final ServiceAddressBundle bundleWithSuggestions = serviceAddressBundleFetcher.addAgentSuggestions.apply(originalBundle);
@@ -335,29 +323,17 @@ public class ServiceAddressBundleFetcherTest {
   }
 
   private void setupGetLawFirmByIdAnswer(final LawFirm lawFirm) {
-    doAnswer(invocation -> {
-      StreamObserver<GetLawFirmByIdResponse> responseObserver =
-          (StreamObserver<GetLawFirmByIdResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(GetLawFirmByIdResponse.newBuilder().setLawFirm(lawFirm).build());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(lawFirmDbService)
-    .getLawFirmById(eq(GetLawFirmByIdRequest.newBuilder().setLawFirmId(lawFirm.getLawFirmId()).build()),
-        any(StreamObserver.class));
+    replyWith(GetLawFirmByIdResponse.newBuilder().setLawFirm(lawFirm).build())
+        .when(lawFirmDbService)
+        .getLawFirmById(eq(GetLawFirmByIdRequest.newBuilder().setLawFirmId(lawFirm.getLawFirmId()).build()),
+            any(StreamObserver.class));
   }
 
   private void setupGetServiceAddressByIdAnswer(final ServiceAddress serviceAddress) {
-    doAnswer(invocation -> {
-      StreamObserver<ServiceAddress> responseObserver =
-          (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
-      responseObserver.onNext(serviceAddress);
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(serviceAddressService)
-    .getServiceAddressById(
-        eq(GetServiceAddressByIdRequest.newBuilder().setServiceAddressId(serviceAddress.getServiceAddressId()).build()),
-        any(StreamObserver.class));
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(
+            eq(GetServiceAddressByIdRequest.newBuilder().setServiceAddressId(serviceAddress.getServiceAddressId()).build()),
+            any(StreamObserver.class));
   }
 }

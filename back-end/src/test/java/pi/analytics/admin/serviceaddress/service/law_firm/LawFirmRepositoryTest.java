@@ -46,10 +46,10 @@ import pi.ip.proto.generated.ServiceAddress;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createUnsortedServiceAddress;
 
@@ -123,19 +123,13 @@ public class LawFirmRepositoryTest {
     final LawFirm lawFirm1 = LawFirmTestHelper.createLawFirm();
     final LawFirm lawFirm2 = LawFirmTestHelper.createLawFirm();
 
-    doAnswer(invocation -> {
-      StreamObserver<LawFirmSearchResult> responseObserver =
-          (StreamObserver<LawFirmSearchResult>) invocation.getArguments()[1];
-      responseObserver.onNext(
-          LawFirmSearchResult
-              .newBuilder()
-              .addLawFirms(lawFirm1)
-              .addLawFirms(lawFirm2)
-              .build()
-      );
-      responseObserver.onCompleted();
-      return null;
-    })
+    replyWith(
+        LawFirmSearchResult
+            .newBuilder()
+            .addLawFirms(lawFirm1)
+            .addLawFirms(lawFirm2)
+            .build()
+    )
     .when(lawFirmSearchService)
     .search(any(LawFirmSearchRequest.class), any(StreamObserver.class));
 
@@ -170,60 +164,34 @@ public class LawFirmRepositoryTest {
     final long newLawFirmId = faker.number().randomNumber();
 
     // lawFirmDbService.createLawFirm()
-    doAnswer(invocation -> {
-      StreamObserver<CreateLawFirmResponse> responseObserver =
-          (StreamObserver<CreateLawFirmResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(
-          CreateLawFirmResponse
-              .newBuilder()
-              .setLawFirmId(newLawFirmId)
-              .build()
-      );
-      responseObserver.onCompleted();
-      return null;
-    })
+    replyWith(
+        CreateLawFirmResponse
+            .newBuilder()
+            .setLawFirmId(newLawFirmId)
+            .build()
+    )
     .when(lawFirmDbService)
     .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
 
     // serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm()
-    doAnswer(invocation -> {
-      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(AckResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(serviceAddressService)
-    .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
+    replyWith(AckResponse.getDefaultInstance())
+        .when(serviceAddressService)
+        .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
 
     // datastoreSg3ServiceBlockingStub.upsertIntoLawFirmCaches()
-    doAnswer(invocation -> {
-      StreamObserver<LawFirmUpserted> responseObserver = (StreamObserver<LawFirmUpserted>) invocation.getArguments()[1];
-      responseObserver.onNext(LawFirmUpserted.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(datastoreSg3Service)
-    .upsertIntoLawFirmCaches(any(LawFirm.class), any(StreamObserver.class));
+    replyWith(LawFirmUpserted.getDefaultInstance())
+        .when(datastoreSg3Service)
+        .upsertIntoLawFirmCaches(any(LawFirm.class), any(StreamObserver.class));
 
     // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
-    doAnswer(invocation -> {
-      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(AckResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(datastoreSg3Service)
-    .upsertThinLawFirmServiceAddress(any(ThinServiceAddress.class), any(StreamObserver.class));
+    replyWith(AckResponse.getDefaultInstance())
+        .when(datastoreSg3Service)
+        .upsertThinLawFirmServiceAddress(any(ThinServiceAddress.class), any(StreamObserver.class));
 
     // queueOnPremBlockingStub.deleteQueueUnit()
-    doAnswer(invocation -> {
-      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(AckResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+    replyWith(AckResponse.getDefaultInstance())
+        .when(queueOnPrem)
+        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
     // Run test
     lawFirmRepository.createLawFirm(createLawFirmRequest);
@@ -289,19 +257,13 @@ public class LawFirmRepositoryTest {
   }
 
   private void setupGetServiceAddressesForLawFirmAnswer(final long lawFirmId, final List<ServiceAddress> serviceAddresses) {
-    doAnswer(invocation -> {
-      StreamObserver<GetServiceAddressesForLawFirmResponse> responseObserver =
-          (StreamObserver<GetServiceAddressesForLawFirmResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(
-          GetServiceAddressesForLawFirmResponse
-              .newBuilder()
-              .addAllServiceAddresses(serviceAddresses)
-              .build()
-      );
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(serviceAddressService)
+    replyWith(
+        GetServiceAddressesForLawFirmResponse
+            .newBuilder()
+            .addAllServiceAddresses(serviceAddresses)
+            .build()
+  )
+  .when(serviceAddressService)
     .getServiceAddressesForLawFirm(eq(GetServiceAddressesForLawFirmRequest.newBuilder().setLawFirmId(lawFirmId).build()),
         any(StreamObserver.class));
   }

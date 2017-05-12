@@ -37,10 +37,10 @@ import pi.ip.proto.generated.ServiceAddress;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -99,15 +99,15 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void assignServiceAddress() throws Exception {
-    replyWithDummyResponse()
+    replyWithAckResponse()
         .when(serviceAddressService)
         .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
 
-    replyWithDummyResponse()
+    replyWithAckResponse()
         .when(datastoreSg3Service)
         .upsertThinLawFirmServiceAddress(any(IpDatastoreSg3.ThinServiceAddress.class), any(StreamObserver.class));
 
-    replyWithDummyResponse()
+    replyWithAckResponse()
         .when(queueOnPrem)
         .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
@@ -117,8 +117,8 @@ public class ServiceAddressSorterTest {
             .setLawFirmId(Int64Value.newBuilder().setValue(1L).build())
             .build()
     )
-        .when(serviceAddressService)
-        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    .when(serviceAddressService)
+    .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
     serviceAddressSorter.assignServiceAddress(
         AssignServiceAddressRequest
@@ -139,19 +139,6 @@ public class ServiceAddressSorterTest {
     );
   }
 
-  private Stubber replyWithDummyResponse() {
-    return replyWith(AckResponse.getDefaultInstance());
-  }
-
-  private <T> Stubber replyWith(T response) {
-    return doAnswer(invocation -> {
-      StreamObserver<T> responseObserver = (StreamObserver<T>) invocation.getArguments()[1];
-      responseObserver.onNext(response);
-      responseObserver.onCompleted();
-      return null;
-    });
-  }
-
   @Test
   public void unsortServiceAddress() throws Exception {
     // TODO
@@ -164,7 +151,7 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void skipServiceAddress() throws Exception {
-    replyWithDummyResponse()
+    replyWithAckResponse()
         .when(queueOnPrem)
         .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
 
@@ -182,5 +169,9 @@ public class ServiceAddressSorterTest {
             eq(DelayUnitRequest.newBuilder().setDbId("123").setDelaySeconds(5 * 60).build()),
             any(StreamObserver.class)
         );
+  }
+
+  private Stubber replyWithAckResponse() {
+    return replyWith(AckResponse.getDefaultInstance());
   }
 }

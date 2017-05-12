@@ -37,11 +37,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
+import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWithError;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -94,17 +95,13 @@ public class UnsortedServiceAddressFetcherTest {
 
   @Test
   public void fetchNextQueueItem_empty_queue() throws Exception {
-    doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+    replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
 
     final Optional<QueuedServiceAddress> queuedServiceAddress =
         unsortedServiceAddressFetcher.fetchNext(faker.name().username());
+
     assertThat(queuedServiceAddress)
         .as("Queues are empty. We should get an empty Optional back")
         .isEmpty();
@@ -112,14 +109,9 @@ public class UnsortedServiceAddressFetcherTest {
 
   @Test
   public void fetchNextQueueItem_queue_fetch_error_results_in_exception() throws Exception {
-    doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onError(Status.INTERNAL.asRuntimeException());
-      return null;
-    })
-    .when(queueOnPrem)
-    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
-
+    replyWithError(Status.INTERNAL.asRuntimeException())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
     assertThatThrownBy(() -> { unsortedServiceAddressFetcher.fetchNext(faker.name().username()); })
         .as("Queue fetch error results in an exception being thrown");
   }
@@ -133,22 +125,13 @@ public class UnsortedServiceAddressFetcherTest {
             .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
             .build();
 
-    doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(storedMsgUnit);
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+    replyWith(storedMsgUnit)
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
 
-    doAnswer(invocation -> {
-      StreamObserver<ServiceAddress> responseObserver = (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
-      responseObserver.onError(new Exception());
-      return null;
-    })
-    .when(serviceAddressService)
-    .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWithError(new Exception())
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
     assertThatThrownBy(() -> { unsortedServiceAddressFetcher.fetchNext(faker.name().username()); })
         .as("Service address fetch error results in an exception being thrown");
@@ -164,38 +147,19 @@ public class UnsortedServiceAddressFetcherTest {
             .build();
 
     // Queue returns one item
-    doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(storedMsgUnit);
-      responseObserver.onCompleted();
-      return null;
-    })
-    // End of the queue
-    .doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+    replyWith(storedMsgUnit)
+        // End of the queue
+        .replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
 
-    doAnswer(invocation -> {
-      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(AckResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+    replyWith(AckResponse.getDefaultInstance())
+        .when(queueOnPrem)
+        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
-    doAnswer(invocation -> {
-      StreamObserver<ServiceAddress> responseObserver = (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
-      responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
-      return null;
-    })
-    .when(serviceAddressService)
-    .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWithError(Status.NOT_FOUND.asRuntimeException())
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
     final Optional<QueuedServiceAddress> queuedServiceAddress =
         unsortedServiceAddressFetcher.fetchNext("hellen");  // User has 5 queues
@@ -220,30 +184,15 @@ public class UnsortedServiceAddressFetcherTest {
             .build();
 
     // Queue returns one item
-    doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(storedMsgUnit);
-      responseObserver.onCompleted();
-      return null;
-    })
-    // End of the queue
-    .doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+    replyWith(storedMsgUnit)
+        // End of the queue
+        .replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
 
-    doAnswer(invocation -> {
-      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(AckResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+    replyWith(AckResponse.getDefaultInstance())
+        .when(queueOnPrem)
+        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
     final ServiceAddress serviceAddress =
         ServiceAddress
@@ -252,14 +201,9 @@ public class UnsortedServiceAddressFetcherTest {
             .setCountry("OFFICE_CODE_OF_NON_INTEREST")
             .build();
 
-    doAnswer(invocation -> {
-      StreamObserver<ServiceAddress> responseObserver = (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
-      responseObserver.onNext(serviceAddress);
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(serviceAddressService)
-    .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
     final Optional<QueuedServiceAddress> queuedServiceAddress =
         unsortedServiceAddressFetcher.fetchNext("user.with.4.queues");
@@ -284,30 +228,15 @@ public class UnsortedServiceAddressFetcherTest {
             .build();
 
     // Queue returns one item
-    doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(storedMsgUnit);
-      responseObserver.onCompleted();
-      return null;
-    })
-    // End of the queue
-    .doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+    replyWith(storedMsgUnit)
+        // End of the queue
+        .replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
 
-    doAnswer(invocation -> {
-      StreamObserver<AckResponse> responseObserver = (StreamObserver<AckResponse>) invocation.getArguments()[1];
-      responseObserver.onNext(AckResponse.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+    replyWith(AckResponse.getDefaultInstance())
+        .when(queueOnPrem)
+        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
     final ServiceAddress serviceAddress =
         ServiceAddress
@@ -317,14 +246,9 @@ public class UnsortedServiceAddressFetcherTest {
             .setCountry("AU")
             .build();
 
-    doAnswer(invocation -> {
-      StreamObserver<ServiceAddress> responseObserver = (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
-      responseObserver.onNext(serviceAddress);
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(serviceAddressService)
-    .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
     final Optional<QueuedServiceAddress> queuedServiceAddress =
         unsortedServiceAddressFetcher.fetchNext("user.with.4.queues");
@@ -349,21 +273,11 @@ public class UnsortedServiceAddressFetcherTest {
             .build();
 
     // Queue returns one item
-    doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(storedMsgUnit);
-      responseObserver.onCompleted();
-      return null;
-    })
-    // End of the queue
-    .doAnswer(invocation -> {
-      StreamObserver<StoredMsgUnit> responseObserver = (StreamObserver<StoredMsgUnit>) invocation.getArguments()[1];
-      responseObserver.onNext(StoredMsgUnit.getDefaultInstance());
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(queueOnPrem)
-    .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+    replyWith(storedMsgUnit)
+        // End of the queue
+        .replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
 
     final ServiceAddress serviceAddress =
         ServiceAddress
@@ -372,14 +286,9 @@ public class UnsortedServiceAddressFetcherTest {
             .setCountry("AU")
             .build();
 
-    doAnswer(invocation -> {
-      StreamObserver<ServiceAddress> responseObserver = (StreamObserver<ServiceAddress>) invocation.getArguments()[1];
-      responseObserver.onNext(serviceAddress);
-      responseObserver.onCompleted();
-      return null;
-    })
-    .when(serviceAddressService)
-    .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
     final Optional<QueuedServiceAddress> queuedServiceAddress =
         unsortedServiceAddressFetcher.fetchNext(faker.name().username());
