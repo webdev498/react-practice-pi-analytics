@@ -8,7 +8,7 @@ import org.mockito.internal.progress.MockingProgress;
 import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 /**
- * @author shane.xie
+ * @author shane.xie@practiceinsight.io
  */
 public class GrpcTestHelper {
 
