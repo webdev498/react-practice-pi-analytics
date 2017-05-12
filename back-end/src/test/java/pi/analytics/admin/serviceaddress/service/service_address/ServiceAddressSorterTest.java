@@ -8,8 +8,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.protobuf.Int64Value;
 
-import com.github.javafaker.Faker;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,14 +51,12 @@ public class ServiceAddressSorterTest {
   private Server server;
   private ManagedChannel channel;
   private ServiceAddressSorter serviceAddressSorter;
-  private Faker faker;
 
   @Before
   public void setUp() throws Exception {
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
     datastoreSg3Service = mock(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase.class);
     queueOnPrem = mock(QueueOnPremGrpc.QueueOnPremImplBase.class);
-    faker = new Faker();
 
     final String serverName = "service-address-sorter-test-".concat(UUID.randomUUID().toString());
     server =
