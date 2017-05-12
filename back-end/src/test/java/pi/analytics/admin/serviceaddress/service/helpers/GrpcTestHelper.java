@@ -12,7 +12,7 @@ import org.mockito.internal.progress.ThreadSafeMockingProgress;
  */
 public class GrpcTestHelper {
 
-  public static StreamObserverStubber stubber() {
+  private static StreamObserverStubber stubber() {
     MockingProgress mockingProgress = ThreadSafeMockingProgress.mockingProgress();
     mockingProgress.stubbingStarted();
     mockingProgress.resetOngoingStubbing();
