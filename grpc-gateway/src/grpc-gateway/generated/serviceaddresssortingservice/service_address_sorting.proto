@@ -1,0 +1,159 @@
+//
+// Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
+//
+
+syntax = "proto3";
+package service_address_sorting;
+option java_package = "pi.admin.service_address_sorting.generated";
+option java_multiple_files = true;
+
+import "patent_common.proto";
+import "google/api/annotations.proto";
+
+service ServiceAddressSortingService {
+
+    rpc NextUnsortedServiceAddress (NextUnsortedServiceAddressRequest) returns (ServiceAddressBundle) {
+        // Service addresses come from 5 queues onprem. See queue_onprem.proto
+        // Different queues sent to different admin users.
+        option (google.api.http) = {
+          post: "/int/api/v1/addressing/nextunsortedserviceaddress"
+          body: "*"
+        };
+    }
+
+    rpc SearchLawFirms (SearchLawFirmsRequest) returns (SearchResults) {
+        option (google.api.http) = {
+          post: "/int/api/v1/addressing/searchlawfirms"
+          body: "*"
+        };
+    }
+
+    rpc AssignServiceAddress (AssignServiceAddressRequest) returns (ServiceAddressAssigned) {
+        // Assign a service address to a law firm (MySQL)
+        // Updates lawfirm_service_address_v1 ES index at http://es-1.hatchedpi.com:9200/_cat/indices
+        option (google.api.http) = {
+          post: "/int/api/v1/addressing/assignserviceaddress"
+          body: "*"
+        };
+    }
+
+    rpc UnsortServiceAddress (UnsortServiceAddressRequest) returns (ServiceAddressUnsorted) {
+        // Unassign a service address from its law firm if any, set law_firm_entity_checked to false (MySQL)
+        // Updates lawfirm_service_address_v1 ES index at http://es-1.hatchedpi.com:9200/_cat/indices
+        option (google.api.http) = {
+          post: "/int/api/v1/addressing/unsortserviceaddress"
+          body: "*"
+        };
+    }
+
+    rpc CreateLawFirm (CreateLawFirmRequest) returns (LawFirmCreated) {
+        // Creates a new law firm and assigns the service address to it (MySQL)
+        // Updates ES indexes at http://es-1.hatchedpi.com:9200/_cat/indices
+        // * lawfirm
+        // * lawfirm_service_address_v1
+        option (google.api.http) = {
+          post: "/int/api/v1/addressing/createlawfirm"
+          body: "*"
+        };
+    }
+
+    rpc SetServiceAddressAsNonLawFirm (SetServiceAddressAsNonLawFirmRequest) returns (ServiceAddressSetAsNonLawFirm) {
+        // Mark the agent for a service address as a non law firm
+        // Updates ip-data-relational / MySQL
+        // lawfirm_service_address_v1 index used for suggestions
+        option (google.api.http) = {
+          post: "/int/api/v1/addressing/setserviceaddressasnonlawfirm"
+          body: "*"
+        };
+    }
+
+    rpc SkipServiceAddress (SkipServiceAddressRequest) returns (ServiceAddressSkipped) {
+        // Skip sorting this service address, putting it back in the queue with a delay
+        option (google.api.http) = {
+          post: "/int/api/v1/addressing/skipserviceaddress"
+          body: "*"
+        };
+    }
+}
+
+message NextUnsortedServiceAddressRequest {
+    string requested_by = 1;  // Username
+}
+
+message ServiceAddressBundle {
+    string unsorted_service_address_queue_item_id = 1;  // StoredMsgUnit.db_id
+    ServiceAddress service_address_to_sort = 2;
+    string en_translation = 3;
+    repeated Agent suggested_agents = 4;
+}
+
+message Agent {
+    oneof type {
+        LawFirm law_firm = 1;
+        NonLawFirm non_law_firm = 2;  // Self-filed
+    }
+    repeated ServiceAddress service_addresses = 3;
+}
+
+message NonLawFirm {
+    string name = 1;
+}
+
+message SearchLawFirmsRequest {
+    string requested_by = 1;
+    string search_term = 2;
+}
+
+message SearchResults {
+    repeated Agent law_firm_agents = 1;  // Will only contain Agents of type LawFirm
+}
+
+message AssignServiceAddressRequest {
+    string unsorted_service_address_queue_item_id = 1;
+    string requested_by = 2;
+    int64 service_address_id = 3;
+    int64 law_firm_id = 4;
+}
+
+message ServiceAddressAssigned {
+}
+
+message UnsortServiceAddressRequest {
+    string requested_by = 1;
+    int64 service_address_id = 2;
+}
+
+message ServiceAddressUnsorted {
+}
+
+message CreateLawFirmRequest {
+    string unsorted_service_address_queue_item_id = 1;
+    string requested_by = 2;
+    string name = 3;
+    string state = 4;
+    string country_code = 5;
+    string website_url = 6;
+    ServiceAddress service_address = 7;
+}
+
+message LawFirmCreated {
+    int64 law_firm_id = 1;
+}
+
+message SetServiceAddressAsNonLawFirmRequest {
+    string unsorted_service_address_queue_item_id = 1;
+    string requested_by = 2;
+    int64 service_address_id = 3;
+}
+
+message ServiceAddressSetAsNonLawFirm {
+}
+
+message SkipServiceAddressRequest {
+    string unsorted_service_address_queue_item_id = 1;
+    string requested_by = 2;
+    int32 delay_minutes = 3;  // The service address will not be offered again until the delay has been elapsed
+}
+
+message ServiceAddressSkipped {
+}

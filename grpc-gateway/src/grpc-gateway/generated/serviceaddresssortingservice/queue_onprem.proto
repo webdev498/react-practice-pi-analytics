@@ -1,0 +1,145 @@
+//
+// Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
+//
+
+syntax = "proto3";
+option java_package = "pi.ip.generated.queue";
+option java_multiple_files = true;
+
+import "patent_common.proto";
+import "ip-datastore-common.proto";
+import "queue_common.proto";
+
+service QueueOnPrem {
+
+    // get work units up to specified limit
+    rpc GetQueueUnitBatch (UnitBatchRequestOnPrem) returns (stream StoredMsgUnit) {
+    }
+
+    // get next queue unit , useful for sort queue item which need human interaction.
+    rpc GetNextQueueUnit (UnitRequestOnPrem) returns (StoredMsgUnit) {
+
+    }
+
+    // push new item onto queue
+    rpc AddUnit (AddUnitRequestOnPrem) returns (AckResponse) {
+    }
+
+    // delete item from queue
+    rpc DeleteQueueUnit (DeleteUnitRequest) returns (AckResponse) {
+    }
+
+    rpc DelayQueueUnit (DelayUnitRequest) returns (AckResponse) {
+    }
+
+}
+
+service KeyQueueOnPrem {
+    // a simple key only queue service - no data storage is provided inside a key message,
+    // and the put will replace any previous row that existed for given KeyQueueName + msg_key_str combo
+
+    // get work units up to specified limit
+    rpc StreamQueueKeys (StreamQueueKeysRequest) returns (stream KeyQueueRow) {
+    }
+
+    // push new item onto queue
+    rpc AddKeyQueueRow (KeyQueueRow) returns (AckResponse) {
+    }
+
+    // delete item from queue
+    rpc DeleteKeyQueueRow (KeyQueueRow) returns (AckResponse) {
+    }
+
+}
+
+enum KeyQueueNameOnPrem {
+    UndefinedQueue = 0;
+
+    InventionTitleSource = 1;
+    CitationSourceSync = 2;
+    PrioritySourceSync = 3;
+    ApplicantSourceSync = 4;
+    RefNumberSourceSync = 5;
+    PrioritySourceFaDb = 6;
+    RefNumberFaDb = 7;
+    PatEventSourceSync = 8;
+    NatJournalSaved = 9;
+
+    // temporary queue to populate onPrem masterNum cache-1
+    RefNumMasterOnPremTmpSync = 500 [deprecated = true];
+    // temporary queue to populate onPrem masterNum cache-2
+    PriorityOnPremTmpSync = 501 [deprecated = true];
+}
+
+message StreamQueueKeysRequest {
+    KeyQueueNameOnPrem key_queue_name = 1;
+    SplitReader split_reader = 2;
+    uint64 result_limit = 3;
+    // optional
+    string start_row_key = 4;
+}
+
+message KeyQueueRow {
+    KeyQueueNameOnPrem key_queue_name = 1;
+    string row_key = 2;
+}
+
+message UnitBatchRequestOnPrem {
+    QueueNameOnPrem queue_name_on_prem = 1;
+    SplitReader split_reader = 3;
+
+    // duration of time before messages become visible for consumption
+    uint64 lock_time_seconds = 4;
+
+    // use zero for unlimited
+    uint64 result_limit = 5;
+}
+
+message UnitRequestOnPrem {
+    QueueNameOnPrem queue_name_on_prem = 1;
+    // duration of time before messages become visible for consumption
+    uint64 lock_time_seconds = 2;
+}
+
+message AddUnitRequestOnPrem {
+    QueueNameOnPrem queue_name_on_prem = 1;
+
+    // number of seconds before messages are visible for consumption measured as delay from insert time
+    uint64 delay_seconds = 2;
+
+    repeated MsgUnit msg_unit = 3;
+}
+
+enum QueueNameOnPrem {
+    UndefinedGroup = 0;
+
+    // -- MySQL Trigger Consumers -- //
+    ServiceAddr_SYNC_SERVADDR = 1;
+    PatFetchIncoming = 38;
+    PatSetApplicant = 39;
+    PatSetApplicantFull = 46;
+    PatSetClassification = 40;
+    AppBasicIdUpdate = 41;
+    LawFirmUpdate = 42;
+    AppBasicJoinUpdate = 43;
+    PatSqlRowCacheUpdate = 44;
+
+    // -- Queue for admin sorting of unknown service address -- //
+    // for any DE country code
+    ServiceAddrSort_de = 45;
+    // for language type latin codes
+    ServiceAddrSort_en = 2;
+    // Chinese
+    ServiceAddrSort_zh = 3;
+    // Japanese
+    ServiceAddrSort_ja = 4;
+    // Korean
+    ServiceAddrSort_kr = 5;
+
+    // -- Retired 6-37 -- //
+
+    //queue to hold patent discovered by citation process, will sync back to mysql
+    PatentDiscoveredInCitationS3 = 47;
+    //used to update pat+applicant link as much as possible
+    JpaUpdateApplicantFamily = 48;
+}

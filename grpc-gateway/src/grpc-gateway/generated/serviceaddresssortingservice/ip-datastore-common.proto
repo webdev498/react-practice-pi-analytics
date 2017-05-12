@@ -1,0 +1,221 @@
+syntax = "proto3";
+option java_package = "pi.ip.proto.generated";
+option java_multiple_files = true;
+option go_package = "licensingalert";
+
+import "patent_common.proto";
+
+service SaveCacheService {
+
+    rpc SaveLawFirm (LawFirm) returns (AckResponse) {
+        option deprecated = true;
+    }
+
+    rpc DeleteLawFirm (LawFirm) returns (AckResponse) {
+        option deprecated = true;
+    }
+
+    // saves any unpublished reference numbers into our RefNumber table - receives as stream
+    rpc PersistPriorityNodeToCacheStream (stream DocDbXmlNodeResponse) returns (AckResponse) {
+    }
+
+    // saves any unpublished reference numbers into our RefNumber table - receives as blocking
+    rpc PersistPriorityNodeToCache (DocDbXmlNodeResponse) returns (AckResponse) {
+    }
+
+    rpc PersistRefNumToCacheStream (stream DocDbXmlNodeResponse) returns (AckResponse) {
+    }
+
+    rpc PersistRefNumToCache (DocDbXmlNodeResponse) returns (AckResponse) {
+    }
+
+    rpc PersistPatSqlRowCache (PatSqlRow) returns (AckResponse) {
+        option deprecated = true;
+    }
+
+    rpc DeletePatSqlRowCache (DeletePatSqlRowCacheRequest) returns (AckResponse) {
+        option deprecated = true;
+    }
+
+}
+
+message SqlCacheRequest {
+    option deprecated = true;
+    string uni_pat = 1;
+    TableType table_type = 2;
+    int64 db_id = 3;
+}
+
+enum TableType {
+    PatentApp = 0;
+    PatentArchive = 1;
+    RegApp = 2;
+    PctApp = 3;
+}
+
+message DeletePatSqlRowCacheRequest {
+    option deprecated = true;
+    string uni_pat = 1;
+    TableType table_type = 2;
+}
+
+message PatSqlRow {
+    string uni_pat = 1;
+    TableType table_type = 2;
+    int64 db_id = 3;
+    int32 law_firm_entity_checked = 4;
+    int64 law_firm_id = 5;
+    int64 parent_node_id = 6;
+    int64 address_service_id = 7;
+    int64 updated_ts = 8; // epoch time format
+}
+
+message DocDbXmlNode {
+    string uni_pat_num = 1;
+    int32 pub_date = 2;
+    int64 family_id = 3;
+    int64 update_id = 4;
+    string node_xml = 5;
+    string node_md5 = 6;
+    int64 app_doc_id = 7;
+    string app_no_ed = 8;
+    int64 pub_doc_id = 9;
+}
+
+enum PhoenixQueueType {
+    HEALTH_EXPIRY = 0;
+}
+
+enum DocDbXmlType {
+    PRIORITY_SOURCE = 0;
+    REF_NUMBER_SOURCE = 1;
+    APPLICANT_SOURCE = 2;
+    CITATION_SOURCE = 3;
+    INVENTION_TITLE_SOURCE = 4;
+}
+
+message DocDbSyncStreamRequest {
+    DocDbXmlType doc_db_xml_type = 1;
+    int32 limit = 2;
+}
+
+message DeleteDocDbSyncRequest {
+    repeated string sync_id = 1;
+    DocDbXmlType doc_db_xml_type = 2;
+}
+
+message DocDbXmlNodeUniPatCollection {
+    // all records should relate to a single uniPatNum
+    repeated DocDbXmlNode doc_db_xml_node = 1;
+
+    // the row key of the sync
+    string sync_id = 2;
+}
+
+message DocDbXmlNodeResponse {
+    // as rowKey is uniPatNum_pubDate, there may be zero, one or more results
+    repeated DocDbXmlNode doc_db_xml_node = 1;
+
+    // the row key of the sync
+    string sync_id = 2;
+}
+
+message PatHealthNode {
+    string uni_pat_num = 1;
+    int64 app_doc_id = 2;
+    int64 family_id = 3;
+    int32 date_produced = 4;
+    string node_xml = 5;
+    string node_md5 = 6;
+}
+
+message PatHealthNodeResponse {
+    // as rowKey is uniPatNum, there may be zero (not set) or one result (set)
+    PatHealthNode pat_health_node = 1;
+}
+
+message PatIdent {
+    // the uniPatNum is located at num_ref_app -> num_dd
+    // the famId will be the same for all entries (e.g. use num_ref_app -> fam_id )
+    NumRef num_ref_app = 1;
+    repeated NumRef num_ref_pub = 2;
+}
+
+message NumRefResultSingle {
+    NumRef num_ref = 1;
+}
+
+message LookupNumRefPubResponse {
+    NumRef num_ref = 1;
+    string uni_pat_num = 2;
+}
+
+message NumRefResultList {
+    repeated NumRef num_ref = 1;
+}
+
+message PatIdentResult {
+    // empty on no result
+    PatIdent pat_app_ident = 1;
+}
+
+message NumRef {
+    string num_dd = 1;
+    string num_ed = 2;
+    int64 doc_id = 3;
+    int64 fam_id = 4;
+
+    // note single string format ${officeCode}_${numOrig}
+    repeated string num_orig = 5;
+}
+
+message InventionTitle {
+    string title = 1;
+}
+
+message SyncKeysRequest {
+    int32 limit = 1;
+    // if set, requests that resulting list have rowKey > startKey
+    string start_key = 2;
+
+    // for single reader, use reader_number=0, number_of_readers=1
+
+    // use zero for first reader
+    int32 reader_number = 3;
+    // total number of readers
+    int32 number_of_readers = 4;
+}
+
+message SplitReader {
+    // use zero for first reader (and for singleton reader)
+    uint32 reader_number = 1;
+    // total number of readers, must be >=1
+    uint32 number_of_readers = 2;
+}
+
+message SyncKeysResponse {
+    repeated string sync_id = 1;
+    // whether the end of the row keys was reached
+    bool end_of_sync_key_source = 2;
+}
+
+message SyncKeys {
+    repeated string sync_id = 1;
+}
+
+message DocDbXmlBundle {
+    repeated DocDbXmlNodeResponse doc_db_node = 1;
+}
+
+message LookupSyncPrimaryRequest {
+    repeated string sync_id = 1;
+}
+
+// used to track xml changes of national journal source
+message NatJournalNode {
+    string uni_pat_num = 1;
+    UnitaryPatPageType page_type = 2;
+    int32 pub_date = 3;
+    // snappy compressed binary of national data xml string
+    bytes node_xml_snappy = 4;
+}

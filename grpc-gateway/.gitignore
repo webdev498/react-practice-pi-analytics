@@ -1,0 +1,6 @@
+src/la-grpc-rest-gateway/generated/
+src/github.com/
+bin/
+pkg/
+
+.idea/

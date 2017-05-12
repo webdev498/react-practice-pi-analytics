@@ -1,0 +1,619 @@
+//
+// Copyright (c) 2016 Practice Insight Pty Ltd. All rights reserved.
+//
+
+syntax = "proto3";
+option java_package = "pi.ip.proto.generated";
+option java_multiple_files = true;
+option go_package = "licensingalert";
+
+import "google/protobuf/wrappers.proto";
+
+enum PatNumType {
+    Application = 0;
+    Publication = 1;
+}
+
+enum SimpleResultType {
+    Success = 0;
+    Failure = 1;
+}
+
+message StructuredPatFormat {
+    string country = 1;
+    string number = 2;
+    string kind = 3;
+    int32 date = 4;
+}
+
+// row-key is familyId_uniPatNum
+message PatEventUpdate {
+
+    string uni_pat_num = 1;
+
+    int64 family_id = 2;
+
+    // this is the XML node representing one <legal-status-document> - stored as snappy compressed unindexed
+    string xml_update_fragment = 3;
+
+    // the date the patent event list was current
+    int32 date_produced = 4;
+
+    // ${filename}__${rowNo}
+    string file_name_row_id = 5;
+
+    int64 app_doc_id = 6;
+}
+
+enum SyncChangeType {
+    INS = 0;
+    UPD = 1;
+    DEL = 2;
+}
+
+message SyncApp {
+    int64 id = 1;
+    int64 table_id = 2; // The patent app id
+    string uni_pat = 3;
+    string change_type = 4; // INS, UPD or DEL
+    bool new_law_firm_entity_checked = 5;
+    bool old_law_firm_entity_checked = 6;
+    int64 new_law_firm_id = 7;
+    int64 old_law_firm_id = 8;
+    int64 new_parent_node_id = 9;
+    int64 old_parent_node_id = 10;
+    int64 new_address_service_id = 11;
+    int64 old_address_service_id = 12;
+    int64 event_ts = 13;
+}
+
+message SyncLawFirm {
+    int64 id = 1; // sync_id
+    int64 table_id = 2; // The law firm id
+    string change_type = 3; // INS, UPD or DEL
+    string new_name = 4;
+    string old_name = 5;
+    string new_state_str = 6;
+    string old_state_str = 7;
+    string new_country = 8;
+    string old_country = 9;
+    string new_website_url = 10;
+    string old_website_url = 11;
+    int64 event_ts = 12;
+}
+
+message SyncServiceAddress {
+    int64 id = 1; // sync_id
+    int64 table_id = 2; // The service address id
+    string change_type = 3; // INS, UPD or DEL
+    string new_address_1 = 4;
+    string old_address_1 = 5;
+    string new_address_2 = 6;
+    string old_address_2 = 7;
+    string new_address_3 = 8;
+    string old_address_3 = 9;
+    string new_address_4 = 10;
+    string old_address_4 = 11;
+    string new_address_5 = 12;
+    string old_address_5 = 13;
+    string new_country = 14;
+    string old_country = 15;
+    bool new_law_firm_entity_checked = 16;
+    bool old_law_firm_entity_checked = 17;
+    string new_name = 18;
+    string old_name = 19;
+    int64 new_law_firm_id = 20;
+    int64 old_law_firm_id = 21;
+    string new_telephone = 22;
+    string old_telephone = 23;
+    int64 new_jp_attorney_number = 24;
+    int64 old_jp_attorney_number = 25;
+    int32 new_language_type = 26;
+    int32 old_language_type = 27;
+    double new_latitude = 28;
+    double old_latitude = 29;
+    double new_longitude = 30;
+    double old_longitude = 31;
+    string new_postcode = 32;
+    string old_postcode = 33;
+    int64 event_ts = 34;
+}
+
+message LawFirm {
+    int64 law_firm_id = 1;
+    string name = 2;
+    string state_str = 3;
+    string country = 4;
+    string website_url = 5;
+}
+
+message ServiceAddress {
+    // Currently hydrated from data in the service_address Cloud SQL table
+    //
+    // A ServiceAddress is:
+    //   Unsorted if law_firm_id is null and law_firm_entity_checked is false
+    //   Not a law firm if law_firm_id is null and law_firm_entity_checked is true
+    int64 service_address_id = 1;
+    google.protobuf.Int64Value law_firm_id = 2; // Nullable
+    bool law_firm_status_determined = 3; // Whether this service address been sorted
+    string name = 4;
+    string address = 5; // Normalised address stored in address_1 db field
+    string country = 6;
+    string telephone = 7;
+
+    // Enum indexes from patent_common.proto and db values are offset by one:
+    //   WESTERN_SCRIPT (en): proto=0, db=1 (default)
+    //   JAPANESE (ja): proto=1, db=2
+    //   CHINESE (zh) proto=2, db=3
+    //   KOREAN (ko) proto=3, db=4
+    //   CYRILLIC (ru) proto=4, db=5
+    LangType language_type = 8;
+
+    double longitude = 9;
+    double latitude = 10;
+}
+
+message UniPatLawFirm {
+    string uni_pat_num = 1;
+    LawFirm law_firm = 2;
+}
+
+message UniPatLawFirms {
+    repeated UniPatLawFirm uni_pat_law_firms = 1;
+}
+
+message UniMsg {
+    string uni_pat_num = 1;
+}
+
+message UniFamilyMsg {
+    string uni_pat_num = 1;
+    int64 family_id = 2;
+}
+
+message FamilyMsg {
+    int64 family_id = 1;
+}
+
+message FamilyCountryMsg {
+    int64 family_id = 1;
+    string office_code = 2;
+}
+
+message AckResponse {
+    // Empty - for succeed/fail(exception) response
+}
+
+message NumOrigRequest {
+    string num_orig = 1;
+    string office_code = 2;
+}
+
+message NumEdRequest {
+    string num_ed = 1;
+}
+
+message DocIdRequest {
+    int64 doc_id = 1;
+}
+
+message FamIdRequest {
+    int64 fam_id = 1;
+}
+
+message NumDdPubRequest {
+    string num_dd = 1;
+}
+
+message GetSyncRequest {
+    int32 limit = 1;
+}
+
+message DeleteSyncRequest {
+    // the sync_id
+    string key = 1;
+}
+
+message DeleteBatchSyncRequest {
+    repeated string keys = 1;
+}
+
+message BooleanMsg {
+    bool result = 1;
+}
+
+enum LangType {
+    // Serialization of com.pi.common.core.correlated.LanguageType
+    WESTERN_SCRIPT = 0; // en
+    JAPANESE = 1; // ja
+    CHINESE = 2; // zh
+    KOREAN = 3; // ko
+    CYRILLIC = 4; // ru
+}
+
+message Identity {
+    // Serialization of com.pi.common.core.parser.EntityFullIpc
+    string name = 1;
+
+    // Serialization of com.pi.common.core.correlated.LanguageType
+    LangType languageType = 2;
+
+    string country = 3;
+    string addressLine1 = 4;
+    string addressLine2 = 5;
+    string addressLine3 = 6;
+    string addressLine4 = 7;
+    string addressLine5 = 8;
+    string telephone = 9;
+    string other = 10;
+    int64 attorneyNumber = 11;
+    string postcode = 12;
+    string databaseCode = 13;
+    string fileRef = 14;
+    string email = 15;
+    string website = 16;
+}
+
+enum ServiceAddrState {
+    // waiting for admin to determine whether applicantFiled or linked to law firm
+    CategorizationPending = 0;
+
+    // not a law firm (self-filed)
+    ApplicantFiled = 1;
+
+    // determined / linked to a LawFirm
+    Categorized = 2;
+}
+
+// These enums were previously defined in pi.ip.data.unitary.files.model.UnitaryPatPageType
+enum UnitaryPatPageType {
+
+    /**
+     * CSV fragment of this data type accessible at: gs://pi-dev-artifacts/samples_uni_pat_page_types/us-er-ad_sample1.csv
+     */
+    US_ExamResAppData = 0;
+
+    /**
+     * The fragment is a single line CSV line: application_number,correspondence_name_line_1,correspondence_name_line_2,
+     * correspondence_street_line_1,correspondence_street_line_2,correspondence_city,correspondence_postal_code,
+     * correspondence_region_code,correspondence_region_name,correspondence_country_code,correspondence_country_name,
+     * customer_number
+     *
+     * CSV fragment of this data type accessible at:
+     * gs://pi-dev-artifacts/samples_uni_pat_page_types/us-er-corr_sample1.csv
+     */
+    US_ExamResCorrespondence = 1;
+
+    US_PairSolr = 2;
+
+    /**
+     * XML fragment of this data type accessible at:
+     * gs://pi-dev-artifacts/samples_uni_pat_page_types/leg-evnt_sample1.xml
+     * gs://pi-dev-artifacts/samples_uni_pat_page_types/leg-evnt_sample2.xml
+     * gs://pi-dev-artifacts/samples_uni_pat_page_types/leg-evnt_sample3.xml
+     */
+    LegalEvent = 3 [deprecated = true];
+
+    /**
+     * Xml framgment of cn-bibs-abss-10-a accessible at:
+     * gs://pi-dev-artifacts/samples_uni_pat_page_types/cn-bibs-abss_sample1.xml
+     */
+    CnBibsAbss = 4;
+
+    /**
+     * Xml framgment of cn-bibs-imgs-30-s accessible at:
+     * gs://pi-dev-artifacts/samples_uni_pat_page_types/cn-bibs-imgs_sample1.xml
+     */
+    CnBibsImgs = 5;
+
+    /**
+     * Xml framgment of cn-bibts-absts-10-a accessible at:
+     * gs://pi-dev-artifacts/samples_uni_pat_page_types/cn-bibts-absts_sample1.xml
+     */
+    CnBibtsAbsts = 6;
+
+    /**
+     * Xml framgment of cn-txts-10-a accessible at: gs://pi-dev-artifacts/samples_uni_pat_page_types/cn-txts_sample1.xml
+     */
+    CnTxts = 7;
+
+    /**
+     * The primary docdb exchange XML format
+     */
+    DocDbXml = 8 [deprecated = true];
+
+    /**
+     * Registry XML returned from OPS REST service.
+     */
+    OpsRegisterXml = 9;
+
+    /**
+     * AusPat main page for biblio information
+     */
+    AU_WebBiblio = 10;
+
+    /**
+     * AU pat address for service detail html page
+     */
+    AU_WebServiceAddress = 11;
+
+    /**
+     * Biblio XML returned from OPS REST service.
+     */
+    OpsBiblio = 12;
+
+    /**
+     * WO main xml page for biblio information
+     */
+    WO_WebBiblio = 13;
+
+    /**
+     * Produced by dataflow consuming MX journal files.
+     */
+    MX_Journal = 14;
+
+    /**
+     * Produced by dataflow consuming IL journal files.
+     */
+    IL_Journal = 15;
+
+    /**
+     * Produced by dataflow consuming BR journal files.
+     */
+    BR_Journal = 16;
+
+    /**
+     * DE main html page for biblio information
+     */
+    DE_WebBiblio = 17;
+
+    /**
+     * CA main html page for biblio information
+     */
+    CA_WebBiblio = 18;
+
+    /**
+     * CA html page for legal status
+     */
+    CA_WebLegalStatus = 19;
+
+    /**
+     * CN json page for biblio information
+     */
+    CN_WebBiblio = 20;
+
+    /**
+     * AT html page for biblio information
+     */
+    AT_WebBiblio = 21;
+
+    /**
+     * US tsv page for address attorney agent
+     */
+    US_WebAgentAddress = 22;
+
+    /**
+     * US tsv page for application data
+     */
+    US_WebApplicationData = 23;
+
+    /**
+     * US tsv page for continuity data
+     */
+    US_WebContinuityData = 24;
+
+    /**
+     * US tsv page for foreign priority
+     */
+    US_WebForeignPriority = 25;
+
+    /**
+     * US tsv page for transaction history
+     */
+    US_WebTransactionHistory = 26;
+
+    /**
+     * US tsv page for patent term adjustments
+     */
+    US_WebTermAdjustments = 27;
+
+    /**
+     * US tsv page for patent term extension history
+     */
+    US_WebTermExtension = 28;
+
+    /**
+     * US tsv page for patent image file wrapper
+     */
+    US_WebImage = 29;
+
+    /**
+     * KR xml page for biblio information
+     */
+    KR_WebBiblio = 30;
+
+    /**
+     * FR html page for biblio information
+     */
+    FR_WebBiblio = 31;
+
+    /**
+     * GB html page for biblio information
+     */
+    GB_WebBiblio = 32;
+
+    /**
+     * SE html page for biblio information
+     */
+    SE_WebBiblio = 33;
+
+    /**
+     * SG html page for biblio information
+     */
+    SG_WebBiblio = 34;
+
+    /**
+     * TW html page for biblio information
+     */
+    TW_WebBiblio = 35;
+
+    /**
+     * NL html page for biblio information
+     */
+    NL_WebBiblio = 36;
+
+    /**
+     * NO html page for biblio information
+     */
+    NO_WebBiblio = 37;
+
+    /**
+     * NZ html page for biblio information
+     */
+    NZ_WebBiblio = 38;
+
+    /**
+     * DK html page for biblio information
+     */
+    DK_WebBiblio = 39;
+
+    /**
+     * CH html page for biblio information
+     */
+    CH_WebBiblio = 40;
+
+    /**
+     * EA html page for biblio information
+     */
+    EA_WebBiblio = 41;
+
+    /**
+     * ES html page for biblio information
+     */
+    ES_WebBiblio = 42;
+
+    /**
+     * FI html page for biblio information
+     */
+    FI_WebBiblio = 43;
+
+    /**
+     * HK html page for biblio information
+     */
+    HK_WebBiblio = 44;
+
+    /**
+     * IT html page for biblio information
+     */
+    IT_WebBiblio = 45;
+
+    /**
+     * RU html page for biblio information
+     */
+    RU_WebBiblio = 46;
+
+    /**
+     * ZA html page for biblio information
+     */
+    ZA_WebBiblio = 47;
+
+    /**
+     * CL html page for biblio information
+     */
+    CL_WebBiblio = 48;
+
+    /**
+     * From JP publications published at https://www.publication.jpo.go.jp/index.action
+     * Published Unexamined Patent Applications
+     *
+     * Use StandardCharsets.ISO_8859_1 for encoding.
+     */
+    JP_JPG_PubPat = 49;
+
+    /**
+     * From JP publications published at https://www.publication.jpo.go.jp/index.action
+     * Published Registered Patent Applications
+     *
+     * Use StandardCharsets.ISO_8859_1 for encoding.
+     */
+    JP_JPH_RegPat = 50;
+
+    /**
+     * From JP publications published at https://www.publication.jpo.go.jp/index.action
+     * Published Registered Utility Model Applications
+     *
+     * Use StandardCharsets.ISO_8859_1 for encoding.
+     */
+    JP_JPU_RegUtility = 51;
+
+    /**
+     * OPS + XML data returned from Legal service
+     */
+    OPS_Legal_Service = 52;
+
+    /**
+     * BE main html page for biblio information
+     */
+    BE_WebBiblio = 53;
+
+    // For data pages originating from a legacy db table
+    ImportLegacyDb = 54;
+
+}
+
+enum GeoLookupStateValue {
+    Pending = 0;
+    Succeeded = 1;
+    Failed = 2;
+}
+
+enum AddrField {
+    // *NB* do not re-use or modify proto numbers - instead mark fields as deprecated when no longer used
+
+    Undefined = 0;
+
+    Name1 = 100;
+    Address1 = 101;
+    Address2 = 102;
+    Address3 = 103;
+    Address4 = 104;
+    Address5 = 105;
+    CountryCode = 106;
+    AttorneyNumber = 107;
+    ConcatString = 108;
+    EntityName = 109;
+    CountryName = 110;
+    Postcode = 112;
+    Telephone = 114;
+    Email = 115;
+    Latitude = 117;
+    Longitude = 118;
+    Website = 119;
+
+    // LanguageType is stored as an Integer, according to below
+    // WESTERN_SCRIPT(1, "en"); JAPANESE(2, "ja"); CHINESE(3, "zh"); KOREAN(4, "ko"); CYRILLIC(5, "ru")
+    LanguageType = 150;
+
+    GeoLookupComplete = 160;
+    GeoLookupState = 161; // an integer of GeoLookupStateValue enum
+
+    SqlServiceAddrSortingState = 200; // an integer of ServiceAddrState enum
+    SqlLawFirmId = 201;
+    SqlLawFirmName = 202;
+    SqlLawFirmState = 203;
+    SqlLawFirmCountryCode = 204;
+    SqlLawFirmWebsiteUrl = 205;
+    SqlLawFirmLastUserEdit = 206;
+    SqlLawFirmResearchBasis = 207;
+
+    LegacySqlServiceAddrId = 301;
+    LegacySqlServiceAddrSortImportance = 302;
+    LegacyConcatString = 303;
+    LegacyFailedGeoAttemptDate = 304;
+    LegacyOther = 305;
+    LegacyStrHash = 306;
+    LegacyBatchImportDate = 307;
+    LegacyDatabaseCode = 308;
+
+    // *NB* do not re-use or modify proto numbers - instead mark fields as deprecated when no longer used
+}
