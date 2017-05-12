@@ -1,0 +1,5 @@
+ steps:
+ - name: 'gcr.io/cloud-builders/docker'
+   args: [ 'build', '-t', 'asia.gcr.io/pi-devops/service-address-admin-backend:{{.tag_name}}', '.' ]
+ images:
+ - 'asia.gcr.io/pi-devops/service-address-admin-backend:{{.tag_name}}'

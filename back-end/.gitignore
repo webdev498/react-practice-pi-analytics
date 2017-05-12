@@ -1,4 +1,5 @@
 src/generated/
 .gradle
 build/
+container_image/*.tar
 .idea/

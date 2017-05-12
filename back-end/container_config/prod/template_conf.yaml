@@ -1,0 +1,3 @@
+replica_count: 1
+image_pull_policy: Always
+memory_request: 512Mi

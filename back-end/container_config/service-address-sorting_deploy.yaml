@@ -1,0 +1,55 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: service-address-admin-backend
+spec:
+  replicas: {{.replica_count}}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9100'
+        prometheus.io/path: '/metrics'
+      labels:
+        app: service-address-admin-backend
+    spec:
+      imagePullSecrets:
+      - name: pi-devops-docker-registry
+      volumes:
+      - name: secret-volume
+        secret:
+          secretName: pisecret
+      - name: config-volume
+        configMap:
+          name: pi-cluster-config
+          items:
+          - key: picluster.properties
+            path: picluster.properties
+
+      containers:
+      - name: service-address-admin-backend
+        image: asia.gcr.io/pi-devops/service-address-admin-backend:{{.tag_name}}
+        imagePullPolicy: {{.image_pull_policy}}
+        resources:
+         requests:
+          memory: {{.memory_request}}
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 9100
+          initialDelaySeconds: 8
+          timeoutSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9100
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+        ports:
+        - name: grpc
+          containerPort: 8080
+        - name: metrics
+          containerPort: 9100
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/piconfig
