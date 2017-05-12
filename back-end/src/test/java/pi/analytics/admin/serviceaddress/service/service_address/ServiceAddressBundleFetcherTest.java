@@ -33,6 +33,8 @@ import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressRequest;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressResponse;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
@@ -244,33 +246,33 @@ public class ServiceAddressBundleFetcherTest {
     final ServiceAddress lawFirm1ServiceAddress2 = createServiceAddressToMatchLawFirm(lawFirm1);
     setupGetServiceAddressByIdAnswer(lawFirm1ServiceAddress1);
     setupGetServiceAddressByIdAnswer(lawFirm1ServiceAddress2);
-    final ThinServiceAddress lawFirm1ThinServiceAddress1 =
-        createThinServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress1);
-    final ThinServiceAddress lawFirm1ThinServiceAddress2 =
-        createThinServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress2);
+    final ThinLawFirmServiceAddress lawFirm1ThinAddress1 =
+        createThinLawFirmServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress1);
+    final ThinLawFirmServiceAddress lawFirm1ThinAddress2 =
+        createThinLawFirmServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress2);
 
     // Set up a non-law firm suggestion
     final ServiceAddress nonLawFirmServiceAddress = createServiceAddressForNonLawFirm(faker.company().name());
     setupGetServiceAddressByIdAnswer(nonLawFirmServiceAddress);
-    final ThinServiceAddress nonLawFirmThinServiceAddress =
-        createThinServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress);
+    final ThinLawFirmServiceAddress nonLawFirmThinAddress =
+        createThinLawFirmServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress);
 
     // Set up a law firm suggestion with one service address
     final LawFirm lawFirm2 = createLawFirm();
     setupGetLawFirmByIdAnswer(lawFirm2);
     final ServiceAddress lawFirm2ServiceAddress = createServiceAddressToMatchLawFirm(lawFirm2);
     setupGetServiceAddressByIdAnswer(lawFirm2ServiceAddress);
-    final ThinServiceAddress lawFirm2ThinServiceAddress =
-        createThinServiceAddressMatchingServiceAddress(lawFirm2ServiceAddress);
+    final ThinLawFirmServiceAddress lawFirm2ThinAddress =
+        createThinLawFirmServiceAddressMatchingServiceAddress(lawFirm2ServiceAddress);
 
     // Prepare suggestions
     final SuggestSimilarThinServiceAddressResponse suggestSimilarThinServiceAddressResponse =
         SuggestSimilarThinServiceAddressResponse
             .newBuilder()
-            .addSuggestions(lawFirm1ThinServiceAddress1)
-            .addSuggestions(lawFirm1ThinServiceAddress2)
-            .addSuggestions(nonLawFirmThinServiceAddress)
-            .addSuggestions(lawFirm2ThinServiceAddress)
+            .addSuggestions(lawFirm1ThinAddress1)
+            .addSuggestions(lawFirm1ThinAddress2)
+            .addSuggestions(nonLawFirmThinAddress)
+            .addSuggestions(lawFirm2ThinAddress)
             .build();
 
     replyWith(suggestSimilarThinServiceAddressResponse)
@@ -304,18 +306,29 @@ public class ServiceAddressBundleFetcherTest {
 
   // Test Helpers
 
-  private ThinServiceAddress createThinServiceAddressMatchingServiceAddress(final ServiceAddress serviceAddress) {
-    ThinServiceAddress.Builder builder =
-        ThinServiceAddress
+  private ThinLawFirmServiceAddress createThinLawFirmServiceAddressMatchingServiceAddress(
+      final ServiceAddress serviceAddress) {
+    ThinLawFirmServiceAddress.Builder builder =
+        ThinLawFirmServiceAddress
             .newBuilder()
-            .setServiceAddressId(serviceAddress.getServiceAddressId())
-            .setName(serviceAddress.getName())
-            .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
-            .setCountry(serviceAddress.getCountry())
-            .setLongitude(serviceAddress.getLongitude())
-            .setLatitude(serviceAddress.getLatitude());
+            .setThinServiceAddress(
+                ThinServiceAddress.
+                    newBuilder()
+                    .setServiceAddressId(serviceAddress.getServiceAddressId())
+                    .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
+                .setCountry(serviceAddress.getCountry())
+                .setLongitude(serviceAddress.getLongitude())
+                .setLatitude(serviceAddress.getLatitude())
+            );
     if (serviceAddress.hasLawFirmId()) {
-      builder.setLawFirmId(serviceAddress.getLawFirmId().getValue());
+      builder
+          .setNotALawFirm(false)
+          .setThinLawFirm(
+              ThinLawFirm.
+                  newBuilder()
+                  .setId(serviceAddress.getLawFirmId().getValue())
+                  .setName(serviceAddress.getName())
+          );
     } else {
       builder.setNotALawFirm(true);
     }

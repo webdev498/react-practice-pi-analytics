@@ -6,6 +6,7 @@ package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.protobuf.Int64Value;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,17 +18,22 @@ import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmR
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
+import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
+import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
 import pi.ip.generated.queue.AddUnitRequestOnPrem;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.MsgUnit;
 import pi.ip.generated.queue.QueueNameOnPrem;
 import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
+import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
 /**
@@ -37,6 +43,9 @@ import pi.ip.proto.generated.ServiceAddress;
 public class ServiceAddressSorter {
 
   private static final Logger log = LoggerFactory.getLogger(ServiceAddressSorter.class);
+
+  @Inject
+  LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
 
   @Inject
   private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
@@ -50,6 +59,7 @@ public class ServiceAddressSorter {
   public void assignServiceAddress(final AssignServiceAddressRequest request) {
     Preconditions.checkArgument(request.getLawFirmId() != 0, "Law firm ID is required");
     Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
+
     serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm(
         AssignServiceAddressToLawFirmRequest
             .newBuilder()
@@ -57,7 +67,41 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(getThinServiceAddress(request.getServiceAddressId()));
+
+    // Also update Elasticsearch index
+    final LawFirm lawFirm = lawFirmDbServiceBlockingStub.getLawFirmById(
+        GetLawFirmByIdRequest
+            .newBuilder()
+            .setLawFirmId(request.getLawFirmId())
+            .build()
+    ).getLawFirm();
+    final ServiceAddress serviceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
+        GetServiceAddressByIdRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+    final ThinLawFirmServiceAddress thinLawFirmServiceAddress =
+        ThinLawFirmServiceAddress
+            .newBuilder()
+            .setThinLawFirm(
+                ThinLawFirm
+                    .newBuilder()
+                    .setId(lawFirm.getLawFirmId())
+                    .setName(lawFirm.getName())
+            )
+            .setThinServiceAddress(
+                ThinServiceAddress
+                    .newBuilder()
+                    .setServiceAddressId(serviceAddress.getServiceAddressId())
+                    .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
+                    .setCountry(serviceAddress.getCountry())
+                    .setLongitude(serviceAddress.getLongitude())
+                    .setLatitude(serviceAddress.getLatitude())
+            )
+            .build();
+    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
+
     deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }
 
@@ -69,7 +113,12 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress(getThinServiceAddress(request.getServiceAddressId()));
+    datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress(
+        Int64Value
+            .newBuilder()
+            .setValue(request.getServiceAddressId())
+            .build()
+    );
     addQueueItem(request.getServiceAddressId());
   }
 
@@ -89,31 +138,6 @@ public class ServiceAddressSorter {
         "Unsorted service address queue item ID is required");
     Preconditions.checkArgument(request.getDelayMinutes() != 0, "Delay (in minutes) is required");
     delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), request.getDelayMinutes());
-  }
-
-  private IpDatastoreSg3.ThinServiceAddress getThinServiceAddress(long serviceAddressId) {
-    ServiceAddress serviceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
-        GetServiceAddressByIdRequest
-            .newBuilder()
-            .setServiceAddressId(serviceAddressId)
-            .build()
-    );
-    IpDatastoreSg3.ThinServiceAddress.Builder thinServiceAddressBuilder = IpDatastoreSg3.ThinServiceAddress.newBuilder();
-    if (serviceAddress.getLawFirmId() != null) {
-      thinServiceAddressBuilder
-          .setLawFirmId(serviceAddress.getLawFirmId().getValue())
-          .setNotALawFirm(false);
-    } else {
-      thinServiceAddressBuilder.setNotALawFirm(true);
-    }
-    thinServiceAddressBuilder
-        .setServiceAddressId(serviceAddress.getServiceAddressId())
-        .setNameAddress(serviceAddress.getAddress())
-        .setName(serviceAddress.getName())
-        .setCountry(serviceAddress.getCountry())
-        .setLatitude(serviceAddress.getLatitude())
-        .setLongitude(serviceAddress.getLongitude());
-    return thinServiceAddressBuilder.build();
   }
 
   private void addQueueItem(final long serviceAddressId) {

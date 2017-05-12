@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.NonLawFirm;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
@@ -28,7 +30,7 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBloc
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressRequest;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -107,13 +109,23 @@ public class ServiceAddressBundleFetcher {
 
     final List<Agent> suggestedAgents =
         datastoreSg3ServiceBlockingStub
+            // Fetch suggestions from Elasticsearch
             .suggestSimilarThinServiceAddress(getSuggestionsRequest)
             .getSuggestionsList()
             .stream()
-            // Group by agent name, preserving suggestion list order
-            .collect(groupingBy(ThinServiceAddress::getName, LinkedHashMap::new, toList()))
+
+            // Convert to service address from primary source and sanity check. We don't trust the ES index.
+            .map(this::fetchServiceAddress)
+            .map(this::pruneUnsortedServiceAddresses)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+
+            // Group by law firm, preserving suggestion list order
+            // Service addresses remain ungrouped as long as the suggestions list nas no duplicates
+            .collect(groupingBy(this::getAgentGroupingKey, LinkedHashMap::new, toList()))
             .entrySet()
             .stream()
+
             // Build Agent details
             .map(this::buildAgent)
             .collect(toList());
@@ -124,39 +136,64 @@ public class ServiceAddressBundleFetcher {
         .build();
   };
 
+  private Optional<ServiceAddress> fetchServiceAddress(final ThinLawFirmServiceAddress thinLawFirmServiceAddress) {
+    try {
+    return Optional.of(
+        serviceAddressServiceBlockingStub
+            .getServiceAddressById(
+                GetServiceAddressByIdRequest
+                    .newBuilder()
+                    .setServiceAddressId(thinLawFirmServiceAddress.getThinServiceAddress().getServiceAddressId())
+                    .build()
+            )
+        );
+    } catch (StatusRuntimeException sre) {
+      if (sre.getStatus().equals(Status.NOT_FOUND)) {
+        return Optional.empty();
+      }
+      // Any other status is an error
+      throw sre;
+    }
+  }
+
+  private Optional<ServiceAddress> pruneUnsortedServiceAddresses(final Optional<ServiceAddress> serviceAddress) {
+    return serviceAddress.flatMap(sa -> isUnsorted(sa) ? Optional.empty() : Optional.of(sa));
+  }
+
+  private String getAgentGroupingKey(final ServiceAddress serviceAddress) {
+    if (isLawFirm(serviceAddress)) {
+      return "lf_" + String.valueOf(serviceAddress.getLawFirmId().getValue());
+    } else {
+      return "sa_" + String.valueOf(serviceAddress.getServiceAddressId());
+    }
+  }
+
   @VisibleForTesting
-  Agent buildAgent(final Map.Entry<String, List<ThinServiceAddress>> entry) {
+  Agent buildAgent(final Map.Entry<String, List<ServiceAddress>> entry) {
     final Agent.Builder agentBuilder = Agent.newBuilder();
+    final List<ServiceAddress> serviceAddresses = entry.getValue();
 
     // If there are multiple service addresses, they will all refer to the same law firm.
     // Inspecting the first one will do.
-    if (entry.getValue().get(0).getNotALawFirm()) {
-      // Not a law firm
-      agentBuilder.setNonLawFirm(NonLawFirm.newBuilder().setName(entry.getKey()));
+    if (!isLawFirm(serviceAddresses.get(0))) {
+      // Not a law firm. There will only be one service address in this list
+      agentBuilder.setNonLawFirm(NonLawFirm.newBuilder().setName(serviceAddresses.get(0).getName()));
     } else {
       // This is a law firm. Fetch its details.
-      final long lawFirmId = entry.getValue().get(0).getLawFirmId();
+      final long lawFirmId = serviceAddresses.get(0).getLawFirmId().getValue();
       final GetLawFirmByIdRequest getLawFirmRequest = GetLawFirmByIdRequest.newBuilder().setLawFirmId(lawFirmId).build();
       final LawFirm lawFirm = lawFirmDbServiceBlockingStub.getLawFirmById(getLawFirmRequest).getLawFirm();
       agentBuilder.setLawFirm(lawFirm);
     }
-    // Fetch service addresses
-    final List<ServiceAddress> serviceAddresses =
-        entry
-            .getValue()
-            .stream()
-            .map(thinServiceAddress -> {
-              final GetServiceAddressByIdRequest getServiceAddressRequest =
-                  GetServiceAddressByIdRequest
-                      .newBuilder()
-                      .setServiceAddressId(thinServiceAddress.getServiceAddressId())
-                      .build();
-              return serviceAddressServiceBlockingStub.getServiceAddressById(getServiceAddressRequest);
-            })
-            .collect(toList());
-
     agentBuilder.addAllServiceAddresses(serviceAddresses);
-
     return agentBuilder.build();
+  }
+
+  private boolean isUnsorted(final ServiceAddress serviceAddress) {
+    return !serviceAddress.hasLawFirmId() && !serviceAddress.getLawFirmStatusDetermined();
+  }
+
+  private boolean isLawFirm(final ServiceAddress serviceAddress) {
+    return serviceAddress.hasLawFirmId();
   }
 }

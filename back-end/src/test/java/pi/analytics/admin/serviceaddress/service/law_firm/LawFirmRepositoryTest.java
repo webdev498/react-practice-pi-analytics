@@ -36,6 +36,8 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.LawFirmUpserted;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc;
@@ -186,7 +188,7 @@ public class LawFirmRepositoryTest {
     // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
     replyWith(AckResponse.getDefaultInstance())
         .when(datastoreSg3Service)
-        .upsertThinLawFirmServiceAddress(any(ThinServiceAddress.class), any(StreamObserver.class));
+        .upsertThinLawFirmServiceAddress(any(ThinLawFirmServiceAddress.class), any(StreamObserver.class));
 
     // queueOnPremBlockingStub.deleteQueueUnit()
     replyWith(AckResponse.getDefaultInstance())
@@ -233,16 +235,24 @@ public class LawFirmRepositoryTest {
     verify(datastoreSg3Service, times(1))
         .upsertThinLawFirmServiceAddress(
             eq(
-                ThinServiceAddress
+                ThinLawFirmServiceAddress
                     .newBuilder()
-                    .setServiceAddressId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
-                    .setName(createLawFirmRequest.getServiceAddress().getName())
-                    .setNameAddress(createLawFirmRequest.getServiceAddress().getName() + " "
-                        + createLawFirmRequest.getServiceAddress().getAddress())
-                    .setCountry(createLawFirmRequest.getServiceAddress().getCountry())
-                    .setLongitude(createLawFirmRequest.getServiceAddress().getLongitude())
-                    .setLongitude(createLawFirmRequest.getServiceAddress().getLatitude())
-                    .setLawFirmId(newLawFirmId)
+                    .setThinServiceAddress(
+                        ThinServiceAddress
+                            .newBuilder()
+                            .setServiceAddressId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
+                            .setNameAddress(createLawFirmRequest.getServiceAddress().getName() + " "
+                                + createLawFirmRequest.getServiceAddress().getAddress())
+                            .setCountry(createLawFirmRequest.getServiceAddress().getCountry())
+                            .setLongitude(createLawFirmRequest.getServiceAddress().getLongitude())
+                            .setLongitude(createLawFirmRequest.getServiceAddress().getLatitude())
+                    )
+                    .setNotALawFirm(false)
+                    .setThinLawFirm(
+                        ThinLawFirm.newBuilder()
+                            .setId(newLawFirmId)
+                            .setName(createLawFirmRequest.getName())
+                    )
                     .build()
             ),
             any(StreamObserver.class)

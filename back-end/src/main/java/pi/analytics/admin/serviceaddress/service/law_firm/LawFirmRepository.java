@@ -19,6 +19,8 @@ import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
@@ -115,7 +117,7 @@ public class LawFirmRepository {
     // Update Elasticsearch caches
     datastoreSg3ServiceBlockingStub.upsertIntoLawFirmCaches(newLawFirm);  // Used by law firm search by name
     datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(
-        createThinServiceAddressForLawFirm(request.getServiceAddress(), lawFirmId)
+        createThinLawFirmServiceAddressForLawFirm(request.getServiceAddress(), newLawFirm)
     );
 
     // Remove service address from unsorted queue
@@ -129,22 +131,25 @@ public class LawFirmRepository {
     return lawFirmId;
   }
 
-  private ThinServiceAddress createThinServiceAddressForLawFirm(final ServiceAddress serviceAddress, final long lawFirmId) {
-    return ThinServiceAddress
-        .newBuilder(createPartialThinServiceAddress(serviceAddress))
-        .setLawFirmId(lawFirmId)
-        .build();
-  }
-
-  private ThinServiceAddress createPartialThinServiceAddress(final ServiceAddress serviceAddress) {
-    return ThinServiceAddress
+  private ThinLawFirmServiceAddress createThinLawFirmServiceAddressForLawFirm(final ServiceAddress serviceAddress,
+                                                                              final LawFirm lawFirm) {
+    return ThinLawFirmServiceAddress
         .newBuilder()
-        .setServiceAddressId(serviceAddress.getServiceAddressId())
-        .setName(serviceAddress.getName())
-        .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
-        .setCountry(serviceAddress.getCountry())
-        .setLongitude(serviceAddress.getLongitude())
-        .setLatitude(serviceAddress.getLatitude())
+        .setThinLawFirm(
+            ThinLawFirm.newBuilder()
+                .setId(lawFirm.getLawFirmId())
+                .setName(lawFirm.getName())
+        )
+        .setNotALawFirm(false)
+        .setThinServiceAddress(
+            ThinServiceAddress
+                .newBuilder()
+                .setServiceAddressId(serviceAddress.getServiceAddressId())
+                .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
+                .setCountry(serviceAddress.getCountry())
+                .setLongitude(serviceAddress.getLongitude())
+                .setLatitude(serviceAddress.getLatitude())
+        )
         .build();
   }
 }
