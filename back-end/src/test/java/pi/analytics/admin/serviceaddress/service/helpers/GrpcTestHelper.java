@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2017 Practice Insight Pty Ltd.
+ */
+
 package pi.analytics.admin.serviceaddress.service.helpers;
 
 import org.mockito.internal.progress.MockingProgress;
