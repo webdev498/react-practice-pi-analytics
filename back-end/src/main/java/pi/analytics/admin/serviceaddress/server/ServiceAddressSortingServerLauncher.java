@@ -16,6 +16,9 @@ public class ServiceAddressSortingServerLauncher {
 
   public static void main(final String[] args) throws Exception {
     final Injector injector = Guice.createInjector(new ServiceAddressSortingModule());
+
+    injector.getInstance(MetricsWebServer.class).start();
+
     final ServiceAddressSortingServer server = injector.getInstance(ServiceAddressSortingServer.class);
     server.start().awaitTermination();
   }
