@@ -6,6 +6,7 @@ package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.protobuf.Int64Value;
 
 import com.github.javafaker.Faker;
 
@@ -15,6 +16,7 @@ import org.junit.Test;
 import org.mockito.stubbing.Stubber;
 
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
@@ -23,18 +25,24 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
+import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
+import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.queue.AddUnitRequestOnPrem;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
+import pi.ip.generated.queue.MsgUnit;
+import pi.ip.generated.queue.QueueNameOnPrem;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 import pi.ip.proto.generated.AckResponse;
 import pi.ip.proto.generated.LawFirm;
@@ -48,6 +56,8 @@ import static org.mockito.Mockito.verify;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 import static pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper.createLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
+
+//import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -181,12 +191,45 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void unsortServiceAddress() throws Exception {
-    // TODO
+    replyWithAckResponse()
+        .when(serviceAddressService).unassignServiceAddressFromLawFirm(
+            any(UnassignServiceAddressFromLawFirmRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(datastoreSg3Service).deleteThinLawFirmServiceAddress(any(Int64Value.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(queueOnPrem).addUnit(any(AddUnitRequestOnPrem.class), any(StreamObserver.class));
+    serviceAddressSorter.unsortServiceAddress(
+        UnsortServiceAddressRequest.newBuilder().setServiceAddressId(1L).build());
+    verify(serviceAddressService, times(1))
+        .unassignServiceAddressFromLawFirm(
+            eq(UnassignServiceAddressFromLawFirmRequest.newBuilder().setServiceAddressId(1L).build()),
+            any(StreamObserver.class)
+        );
+    verify(datastoreSg3Service, times(1))
+        .deleteThinLawFirmServiceAddress(eq(Int64Value.newBuilder().setValue(1L).build()), any(StreamObserver.class));
+    final AddUnitRequestOnPrem addUnitRequestOnPrem =
+        AddUnitRequestOnPrem
+            .newBuilder()
+            .setQueueNameOnPrem(QueueNameOnPrem.ServiceAddrSort_en)
+            .setDelaySeconds((int) TimeUnit.DAYS.toSeconds(1))
+            .addMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey(String.valueOf(1L)).build())
+            .build();
+    verify(queueOnPrem, times(1))
+        .addUnit(eq(addUnitRequestOnPrem), any(StreamObserver.class));
   }
 
   @Test
   public void setServiceAddressAsNonLawFirm() throws Exception {
-    // TODO
+    replyWithAckResponse()
+        .when(serviceAddressService).setServiceAddressAsNonLawFirm(
+        any(SetServiceAddressAsNonLawFirmRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(queueOnPrem).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+    serviceAddressSorter.setServiceAddressAsNonLawFirm(
+        pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
+            .newBuilder().setServiceAddressId(1L).build());
+    verify(queueOnPrem, times(1))
+        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
   }
 
   @Test
