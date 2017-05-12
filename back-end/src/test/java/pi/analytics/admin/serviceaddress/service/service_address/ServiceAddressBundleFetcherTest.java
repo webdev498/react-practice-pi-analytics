@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
+import io.grpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -48,9 +49,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
+import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWithError;
 import static pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper.createLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressForNonLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
+import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createUnsortedServiceAddress;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -251,11 +254,28 @@ public class ServiceAddressBundleFetcherTest {
     final ThinLawFirmServiceAddress lawFirm1ThinAddress2 =
         createThinLawFirmServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress2);
 
-    // Set up a non-law firm suggestion
-    final ServiceAddress nonLawFirmServiceAddress = createServiceAddressForNonLawFirm(faker.company().name());
-    setupGetServiceAddressByIdAnswer(nonLawFirmServiceAddress);
-    final ThinLawFirmServiceAddress nonLawFirmThinAddress =
-        createThinLawFirmServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress);
+    // Set up a service address that is unsorted and hence skipped
+    final ServiceAddress unsortedServiceAddress = createUnsortedServiceAddress(faker.company().name());
+    setupGetServiceAddressByIdAnswer(unsortedServiceAddress);
+    final ThinLawFirmServiceAddress unsortedThinAddress =
+        createThinLawFirmServiceAddressMatchingServiceAddress(unsortedServiceAddress);
+
+    // Set up a couple of non-law firm suggestion
+    final ServiceAddress nonLawFirmServiceAddress1 = createServiceAddressForNonLawFirm(faker.company().name());
+    setupGetServiceAddressByIdAnswer(nonLawFirmServiceAddress1);
+    final ThinLawFirmServiceAddress nonLawFirmThinAddress1 =
+        createThinLawFirmServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress1);
+
+    final ServiceAddress nonLawFirmServiceAddress2 = createServiceAddressForNonLawFirm(faker.company().name());
+    setupGetServiceAddressByIdAnswer(nonLawFirmServiceAddress2);
+    final ThinLawFirmServiceAddress nonLawFirmThinAddress2 =
+        createThinLawFirmServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress2);
+
+    // Set up a service address that is not found and hence skipped
+    final ServiceAddress notFoundServiceAddress = createServiceAddressForNonLawFirm(faker.company().name());
+    final ThinLawFirmServiceAddress notFoundThinAddress =
+        createThinLawFirmServiceAddressMatchingServiceAddress(notFoundServiceAddress);
+    setupGetServiceAddressByIdNotFoundAnswer(notFoundServiceAddress.getServiceAddressId());
 
     // Set up a law firm suggestion with one service address
     final LawFirm lawFirm2 = createLawFirm();
@@ -270,8 +290,11 @@ public class ServiceAddressBundleFetcherTest {
         SuggestSimilarThinServiceAddressResponse
             .newBuilder()
             .addSuggestions(lawFirm1ThinAddress1)
+            .addSuggestions(unsortedThinAddress)
             .addSuggestions(lawFirm1ThinAddress2)
-            .addSuggestions(nonLawFirmThinAddress)
+            .addSuggestions(nonLawFirmThinAddress1)
+            .addSuggestions(nonLawFirmThinAddress2)
+            .addSuggestions(notFoundThinAddress)
             .addSuggestions(lawFirm2ThinAddress)
             .build();
 
@@ -292,8 +315,13 @@ public class ServiceAddressBundleFetcherTest {
                 .build(),
             Agent
                 .newBuilder()
-                .setNonLawFirm(NonLawFirm.newBuilder().setName(nonLawFirmServiceAddress.getName()))
-                .addServiceAddresses(nonLawFirmServiceAddress)
+                .setNonLawFirm(NonLawFirm.newBuilder().setName(nonLawFirmServiceAddress1.getName()))
+                .addServiceAddresses(nonLawFirmServiceAddress1)
+                .build(),
+            Agent
+                .newBuilder()
+                .setNonLawFirm(NonLawFirm.newBuilder().setName(nonLawFirmServiceAddress2.getName()))
+                .addServiceAddresses(nonLawFirmServiceAddress2)
                 .build(),
             Agent
                 .newBuilder()
@@ -347,6 +375,14 @@ public class ServiceAddressBundleFetcherTest {
         .when(serviceAddressService)
         .getServiceAddressById(
             eq(GetServiceAddressByIdRequest.newBuilder().setServiceAddressId(serviceAddress.getServiceAddressId()).build()),
+            any(StreamObserver.class));
+  }
+
+  private void setupGetServiceAddressByIdNotFoundAnswer(final long serviceAddressId) {
+    replyWithError(Status.NOT_FOUND.asRuntimeException())
+        .when(serviceAddressService)
+        .getServiceAddressById(
+            eq(GetServiceAddressByIdRequest.newBuilder().setServiceAddressId(serviceAddressId).build()),
             any(StreamObserver.class));
   }
 }
