@@ -1,5 +1,5 @@
 dist:
-	./gradlew clean build publish -x test -x check distTar
+	./gradlew clean build -x test -x check distTar
 
 localdeploy: dist
 	rm -f container_image/service-address-admin-backend-latest.tar
