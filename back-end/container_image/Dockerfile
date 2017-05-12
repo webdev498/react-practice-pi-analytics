@@ -6,4 +6,4 @@ ADD service-address-admin-backend-latest.tar /
 RUN chmod +x /service-address-admin-backend-latest/bin/service-address-admin-backend
 
 # default command to start full server
-CMD ["/service-address-admin-latest/bin/service-address-admin-backend"]
+CMD ["/service-address-admin-backend-latest/bin/service-address-admin-backend"]
