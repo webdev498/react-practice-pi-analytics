@@ -1,4 +1,4 @@
-src/la-grpc-rest-gateway/generated/
+src/grpc-gateway/generated/
 src/github.com/
 bin/
 pkg/
