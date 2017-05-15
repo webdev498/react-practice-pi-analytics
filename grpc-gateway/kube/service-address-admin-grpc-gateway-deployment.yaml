@@ -13,7 +13,7 @@ spec:
       imagePullSecrets:
       - name: pi-devops-docker-registry
       containers:
-      - name: grpc-gateway
+      - name: service-address-admin-grpc-gateway
         image: asia.gcr.io/pi-devops/service-address-grpc-gateway:latest
         imagePullPolicy: Always
         ports:
