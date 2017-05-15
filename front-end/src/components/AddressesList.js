@@ -4,13 +4,13 @@
 import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
 import "../styles/main.scss";
-import {Agent, ServiceAddress} from "../services/Types";
+import type, {Agent, ServiceAddress} from "../services/Types";
 import {OuterUrls} from "../services/Urls";
 
 type
 AddressesListProps = {
   serviceAddress: Object,
-  agents: Array,
+  agents: Array < Agent >,
   queueId: string,
   onSortServiceAddress: (queueId: string, serviceAddressId: string, agent: Agent) => void,
   onUnsortServiceAddress: (serviceAddressId: string) => void
@@ -41,7 +41,7 @@ class AddressesList extends React.Component {
     return <span>{agent.nonLawFirm.name}</span>
   }
 
-  renderAddressLine(value: ServiceAddress, testValue: String): React.Element<Layout> {
+  renderAddressLine(value: ServiceAddress, testValue: String): React.Element<any> {
     var result = new String(value.address);
     if (testValue && testValue.length > 0) {
       testValue
@@ -59,7 +59,7 @@ class AddressesList extends React.Component {
     );
   }
 
-  renderServiceAddressWithInclusions(agent: Agent, testValue: String): Array<React.Element> {
+  renderServiceAddressWithInclusions(agent: Agent, testValue: String): ?React.Element<any> {
     return agent.serviceAddresses.map((value, index) => this.renderAddressLine(value, testValue));
   }
 

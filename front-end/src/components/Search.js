@@ -13,7 +13,7 @@ type SearchProps = {
   queueId: string,
   onSearch: (query: string) => void,
   onSortServiceAddress: (queueId: string, serviceAddressId: string, address: Object) => void,
-  onUnsortServiceAddress: (index: number, address: Object) => void
+  onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
 const Search = (props: SearchProps): React.Element<Layout> => {
