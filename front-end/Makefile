@@ -20,8 +20,8 @@ deploy:
 	kubectl set image deployment/$(APP_NAME) $(APP_NAME)=$(DOCKER_IMAGE) --context=$(KUBE_CONTEXT) --namespace=$(KUBE_NAMESPACE)
 	kubectl rollout status deployment/$(APP_NAME) --context=$(KUBE_CONTEXT) --namespace=$(KUBE_NAMESPACE)
 
-test:
-	cd src; npm install; npm test
+#test:
+#	cd src; npm install; npm test
 
 clean:
 	rm -rf build-artifacts/
