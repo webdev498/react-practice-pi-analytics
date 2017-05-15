@@ -3,14 +3,14 @@
 //@flow
 import type from "redux";
 import {Observable} from "rxjs/Observable";
-import "rxjs/add/operator/retryWhen";
-import "rxjs/add/operator/delay";
 import "rxjs/add/observable/dom/ajax";
 import Authentication from "./Authentication";
 import decamelizeKeysDeep from "decamelize-keys-deep";
 import {OuterUrls} from "./Urls";
 
-export type Request = {
+export
+type
+Request = {
   url: string,
   method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE",
   body? : Object
@@ -34,6 +34,20 @@ export const fetch = (request: Request): Observable => {
       }
     })
 }
+
+export const post = (url: string, payload: data) => fetch(
+  {
+    url: url,
+    method: Methods.POST,
+    body: payload && payload.request ? payload.request : {}
+  });
+
+export const get = (url: string) => fetch(
+  {
+    url: url,
+    method: Methods.GET,
+    body: {}
+  });
 
 /**
  * Takes an Rx.DOM.ajax() settings object and returns a clone of the settings with Citation Eagle
