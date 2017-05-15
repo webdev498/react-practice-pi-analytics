@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: service-address-admin-frontend
+  labels:
+    app: service-address-admin-frontend
+    project: licensing-alert
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /int/addressing
+        backend:
+          serviceName: service-address-admin-frontend
+          servicePort: http
+

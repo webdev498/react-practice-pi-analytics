@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: service-address-admin-frontend
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: service-address-admin-frontend
+        project: service-address-admin
+    spec:
+      imagePullSecrets:
+      - name: pi-devops-docker-registry
+      containers:
+      - name: service-address-admin-frontend
+        image: asia.gcr.io/pi-devops/service-address-admin-frontend:1.0-SNAPSHOT
+        imagePullPolicy: Always
+        # TODO: Add liveliness probe and resource limits
+        ports:
+        - name: http
+          containerPort: 3000
