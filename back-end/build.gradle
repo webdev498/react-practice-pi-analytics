@@ -62,7 +62,13 @@ dependencies {
     compileOnly "com.google.auto.value:auto-value:1.2"
     apt "com.google.auto.value:auto-value:1.2"
 
-    // metrics and liveness
+    // Logging related
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'org.codehaus.janino:janino:3.0.6'
+    compile 'ch.qos.logback:logback-classic:1.1.8'
+    compile 'org.codehaus.janino:commons-compiler:3.0.6'
+
+    // Metrics and liveness
     compile 'io.prometheus:simpleclient:0.0.21'
     compile 'io.prometheus:simpleclient_common:0.0.21'
     compile 'org.nanohttpd:nanohttpd:2.3.1'
