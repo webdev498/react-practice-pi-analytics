@@ -30,6 +30,7 @@ public class LawFirmDbServiceBlockingStubProvider implements Provider<LawFirmDbS
                 piConfig.getServiceHostname(PiKubeServiceImpl.IP_DATA_RELATIONAL_SERVICE_HOST),
                 piConfig.getInteger(PiKubeServicePort.IP_DATA_RELATIONAL_SERVICE_PORT)
             )
+            .usePlaintext(true)
             .build();
     return LawFirmDbServiceGrpc.newBlockingStub(channel);
   }

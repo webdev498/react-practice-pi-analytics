@@ -30,6 +30,7 @@ public class QueueOnPremBlockingStubProvider implements Provider<QueueOnPremGrpc
                 piConfig.getServiceHostname(PiKubeServiceImpl.DATASTORE_SERVICE_ONPREM_HOST),
                 piConfig.getInteger(PiKubeServicePort.DATASTORE_SERVICE_ONPREM_PORT)
             )
+            .usePlaintext(true)
             .build();
     return QueueOnPremGrpc.newBlockingStub(channel);
   }

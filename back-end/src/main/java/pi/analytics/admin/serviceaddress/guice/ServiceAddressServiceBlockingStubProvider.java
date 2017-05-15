@@ -31,6 +31,7 @@ public class ServiceAddressServiceBlockingStubProvider
                 piConfig.getServiceHostname(PiKubeServiceImpl.IP_DATA_RELATIONAL_SERVICE_HOST),
                 piConfig.getInteger(PiKubeServicePort.IP_DATA_RELATIONAL_SERVICE_PORT)
             )
+            .usePlaintext(true)
             .build();
     return ServiceAddressServiceGrpc.newBlockingStub(channel);
   }

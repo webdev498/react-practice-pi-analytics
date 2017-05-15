@@ -31,6 +31,7 @@ public class DatastoreSg3ServiceBlockingStubProvider implements Provider<Datasto
                   piConfig.getServiceHostname(PiKubeServiceImpl.DATASTORE_SERVICE_SG3_HOST),
                   piConfig.getInteger(PiKubeServicePort.DATASTORE_SERVICE_SG3_PORT)
               )
+              .usePlaintext(true)
               .build();
       return DatastoreSg3ServiceGrpc.newBlockingStub(channel);
     }

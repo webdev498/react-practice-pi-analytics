@@ -27,6 +27,7 @@ public class LawFirmSearchServiceBlockingStubProvider implements Provider<LawFir
                 piConfig.getServiceHostname(PiKubeServiceImpl.CITATION_SEARCH_SERVICE_HOST),
                 piConfig.getInteger(PiKubeServicePort.CITATION_SEARCH_SERVICE_PORT)
             )
+            .usePlaintext(true)
             .build();
     return LawFirmSearchServiceGrpc.newBlockingStub(channel);
   }
