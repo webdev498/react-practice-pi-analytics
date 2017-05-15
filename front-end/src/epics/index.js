@@ -13,7 +13,7 @@ import {
   skipServiceAddress,
   undoServiceAddress,
   unsortServiceAddress
-} from "./BackendStub";
+} from "./Backend";
 
 const rootEpic = combineEpics(
   createLawFirm,
