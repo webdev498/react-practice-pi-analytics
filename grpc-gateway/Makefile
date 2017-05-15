@@ -3,6 +3,7 @@ VERSION?=1.0
 BUILD?=SNAPSHOT
 DOCKER_IMAGE=asia.gcr.io/pi-devops/$(APP_NAME):$(VERSION)-$(BUILD)
 KUBE_CONTEXT?=''
+KUBE_NAMESPACE?='onprem-prod'
 
 docker:
 	rm -rf src/grpc-gateway/generated/
@@ -21,5 +22,5 @@ dockerrmi:
 	docker rmi -f $(DOCKER_IMAGE)
 
 deploy:
-	kubectl set image deployment/$(APP_NAME) $(APP_NAME)=$(DOCKER_IMAGE) --context=$(KUBE_CONTEXT)
-	kubectl rollout status deployment/$(APP_NAME) --context=$(KUBE_CONTEXT)
+	kubectl set image deployment/$(APP_NAME) $(APP_NAME)=$(DOCKER_IMAGE) --context=$(KUBE_CONTEXT) --namespace=${KUBE_NAMESPACE}
+	kubectl rollout status deployment/$(APP_NAME) --context=$(KUBE_CONTEXT) --namespace=${KUBE_NAMESPACE}
