@@ -3,6 +3,7 @@
 //@flow
 import {store} from "../index";
 import * as FetchActions from "../actions/FetchActions";
+import type {ServiceAddressBundle} from "./Types";
 
 const queue = [];
 

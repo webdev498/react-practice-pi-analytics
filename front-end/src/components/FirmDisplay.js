@@ -2,7 +2,7 @@
 //jshint esversion:6
 //@flow
 import React from "react";
-import {DataTable, IconButton, TableHeader} from "react-mdl";
+import {DataTable, IconButton, Layout, TableHeader} from "react-mdl";
 import {OuterUrls} from "../services/Urls";
 
 type

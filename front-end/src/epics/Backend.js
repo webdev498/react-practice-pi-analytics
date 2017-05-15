@@ -34,6 +34,8 @@ import {ActionsObservable} from "redux-observable";
 import Authentication from "../services/Authentication";
 import camelcaseKeysDeep from "camelcase-keys-deep";
 import {ApiUrls, OuterUrls} from "../services/Urls";
+import u from "updeep";
+import type {Action} from "redux";
 
 const mapResponse = method => response => Observable.of(response).mapTo(method(u.freeze(camelcaseKeysDeep(response))));
 const mapError = method => error => Observable.of(error).mapTo(method());

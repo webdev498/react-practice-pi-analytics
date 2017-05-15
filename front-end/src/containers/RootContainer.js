@@ -10,7 +10,7 @@ import {
   undoServiceAddress
 } from "../reducers/root";
 import * as FetchActions from "../actions/FetchActions";
-import {Dispatch, State} from "redux";
+import type {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 import Authentication from "../services/Authentication";
 

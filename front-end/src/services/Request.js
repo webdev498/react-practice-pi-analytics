@@ -8,9 +8,7 @@ import Authentication from "./Authentication";
 import decamelizeKeysDeep from "decamelize-keys-deep";
 import {OuterUrls} from "./Urls";
 
-export
-type
-Request = {
+export type Request = {
   url: string,
   method: "POST" | "GET" | "PUT" | "PATCH" | "DELETE",
   body? : Object
@@ -35,7 +33,7 @@ export const fetch = (request: Request): Observable => {
     })
 }
 
-export const post = (url: string, payload: data) => fetch(
+export const post = (url: string, payload: Object) => fetch(
   {
     url: url,
     method: Methods.POST,
@@ -57,7 +55,7 @@ export const get = (url: string) => fetch(
  * for setting options.
  */
 const decorateRequest = (request: Request): Object => {
-  if (Authentication.user) {
+  if (request.body && Authentication.user && Authentication.user.length > 0) {
     request.body.requestedBy = Authentication.user;
   }
   return Object.assign({}, request, {

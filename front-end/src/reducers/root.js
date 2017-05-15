@@ -1,10 +1,11 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import createReducer, {Action} from "redux-updeep";
+import createReducer from "redux-updeep";
+import type {Action, Dispatch} from "redux";
 import * as Actions from "../actions/RootActions";
 import * as FetchActions from "../actions/FetchActions";
-import ServiceAddressBundle from "../services/Types";
+import type {ServiceAddressBundle} from "../services/Types";
 import u from "updeep";
 import * as Queue from "../services/Queue";
 

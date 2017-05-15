@@ -4,7 +4,7 @@
 import Addresses from "../components/Addresses";
 import {changeTab} from "../reducers/addresses";
 import {sortServiceAddress, unsortServiceAddress} from "../reducers/root";
-import {Dispatch, State} from "redux";
+import type {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 
 const mapStateToProps = (state: State) => ({

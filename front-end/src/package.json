@@ -6,7 +6,8 @@
     "build": "NODE_ENV=production webpack -p --config ./webpack.production.config.js",
     "start": "node server.js",
     "test": "cross-env NODE_ENV=test mocha --recursive --compilers js:babel-register --require ./test/setup.js",
-    "test:watch": "npm test -- --watch"
+    "test:watch": "npm test -- --watch",
+    "flow": "flow"
   },
   "license": "private",
   "repository": {

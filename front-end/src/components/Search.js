@@ -1,12 +1,13 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import {Content, Icon, Spinner, Textfield} from "react-mdl";
+import {Content, Icon, Layout, Spinner, Textfield} from "react-mdl";
 import React from "react";
 import AddressesList from "./AddressesList";
 
-type SearchProps = {
-  agents: Array,
+type
+SearchProps = {
+  agents: Array < Object >,
   loading: boolean,
   query: string,
   serviceAddress: Object,
@@ -34,7 +35,7 @@ const Search = (props: SearchProps): React.Element<Layout> => {
         <Icon style={{verticalAlign: "sub"}} name="search"/>
         &nbsp;
         <Textfield style={{marginLeft: "5px"}} label="Search by law firm name..." value={props.query}
-                   onChange={(event: Event) => {
+                   onChange={(event) => {
                      props.onSearch(event.target.value);
                    }}/>
       </div>

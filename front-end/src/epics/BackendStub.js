@@ -27,6 +27,8 @@ import {
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
 import Authentication from "../services/Authentication";
+import type {Action} from "redux";
+import type {ServiceAddressBundle} from "../services/Types";
 
 const tableRows = [
   {

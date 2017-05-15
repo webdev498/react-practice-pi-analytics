@@ -4,7 +4,7 @@
 import CreateFirmDialog from "../components/CreateFirmDialog";
 import {closeFirmDialog} from "../reducers/root";
 import {submitNewFirm} from "../reducers/createfirmdialog";
-import {Dispatch, State} from "redux";
+import type {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 
 const mapStateToProps = (state: State) => ({

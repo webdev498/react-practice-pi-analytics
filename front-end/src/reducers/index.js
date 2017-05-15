@@ -6,6 +6,7 @@ import root from "./root";
 import search from "./search";
 import createfirmdialog from "./createfirmdialog";
 import {combineReducers} from "redux";
+import type {Reducer} from "redux";
 
 const rootReducer: Reducer<any, any> = combineReducers({
                                                          createfirmdialog,

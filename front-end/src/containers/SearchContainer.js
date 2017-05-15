@@ -3,7 +3,7 @@
 //@flow
 import Search from "../components/Search";
 import {doSearch, stopSearch} from "../reducers/search";
-import {Dispatch, State} from "redux";
+import type {Dispatch, State} from "redux";
 import {connect} from "react-redux";
 import {sortServiceAddress, unsortServiceAddress} from "../reducers/root";
 

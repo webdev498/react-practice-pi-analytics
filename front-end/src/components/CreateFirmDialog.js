@@ -16,10 +16,10 @@ import {
   Grid,
   IconButton,
   ProgressBar,
-  Textfield
+  Textfield,
 } from "react-mdl";
 import onClickOutside from "react-onclickoutside";
-import {SelectField} from "react-mdl-selectfield";
+import {SelectField, Option} from "react-mdl-selectfield";
 
 type CreateFirmDialogProps = {
   value: Object,
@@ -32,6 +32,8 @@ type CreateFirmDialogProps = {
 
 class CreateFirmDialog extends React.Component {
   props: CreateFirmDialogProps;
+  state: Object;
+  nameInput: any;
 
   constructor(props: CreateFirmDialogProps) {
     super(props);
@@ -60,7 +62,7 @@ class CreateFirmDialog extends React.Component {
   createOptions(values: Array<string>) {
     return values.map((value) => {
       return (
-        <Options value={value}>{value}</Options>
+        <Option value={value}>{value}</Option>
       )
     });
   }

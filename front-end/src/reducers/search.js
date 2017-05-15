@@ -1,7 +1,8 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import createReducer, {Action} from "redux-updeep";
+import createReducer from "redux-updeep";
+import type {Action, Dispatch} from "redux";
 import * as Actions from "../actions/SearchActions";
 import * as FetchActions from "../actions/FetchActions";
 

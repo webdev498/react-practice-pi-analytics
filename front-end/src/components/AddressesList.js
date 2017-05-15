@@ -4,7 +4,7 @@
 import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
 import "../styles/main.scss";
-import type, {Agent, ServiceAddress} from "../services/Types";
+import type {Agent, ServiceAddress} from "../services/Types";
 import {OuterUrls} from "../services/Urls";
 
 type
@@ -25,8 +25,9 @@ class AddressesList extends React.Component {
 
   renderLawFirmId(agent: Agent): React.Element<any> {
     if (agent.lawFirm) {
-      var href = OuterUrls.firmInfo.concat(agent.lawFirm.lawFirmId, "#agents");
-      return <span>{agent.lawFirm.lawFirmId}&nbsp;<a href={href} target="_blank"><IconButton accent name="open_in_new"/></a></span>
+      var lawFirmId = agent.lawFirm? agent.lawFirm.lawFirmId : 0;
+      var href = OuterUrls.firmInfo + lawFirmId + "#agents";
+      return <span>{lawFirmId}&nbsp;<a href={href} target="_blank"><IconButton accent name="open_in_new"/></a></span>
     }
     return <span style={{color: "#bbb"}}>Non law firm</span>
   }
@@ -38,7 +39,7 @@ class AddressesList extends React.Component {
         this.props.onSortServiceAddress(this.props.queueId, this.props.serviceAddress.serviceAddressId, agent);
       }}>{agent.lawFirm.name}</a>
     }
-    return <span>{agent.nonLawFirm.name}</span>
+    return <span>{agent.nonLawFirm ? agent.nonLawFirm.name : ""}</span>
   }
 
   renderAddressLine(value: ServiceAddress, testValue: String): React.Element<any> {
@@ -59,7 +60,7 @@ class AddressesList extends React.Component {
     );
   }
 
-  renderServiceAddressWithInclusions(agent: Agent, testValue: String): ?React.Element<any> {
+  renderServiceAddressWithInclusions(agent: Agent, testValue: String): Array<any> {
     return agent.serviceAddresses.map((value, index) => this.renderAddressLine(value, testValue));
   }
 
@@ -70,16 +71,16 @@ class AddressesList extends React.Component {
     return null
   }
 
-  renderEntityId(agent: Agent): React.Element<any> {
+  renderEntityId(agent: Agent): Array<any> {
     return agent.serviceAddresses
       .map(address => <div className="address-line">{address.serviceAddressId}</div>)
   };
 
-  renderActions(agent: Agent): React.Element<any> {
+  renderActions(agent: Agent): Array<any> {
     return agent.serviceAddresses.map(address => <div>
       <a href="#">
         <IconButton name="cancel" accent onClick={() => {
-          this.props.onUnsortServiceAddress(value.serviceAddressId);
+          this.props.onUnsortServiceAddress(address.serviceAddressId);
         }}/>
       </a>
     </div>)

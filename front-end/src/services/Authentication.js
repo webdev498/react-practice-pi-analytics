@@ -3,7 +3,7 @@
 //@flow
 
 const Authentication = {
-  user: undefined
+  user: ""
 };
 
 export default Authentication;
