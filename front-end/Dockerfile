@@ -18,7 +18,7 @@ RUN cd $(npm root -g)/npm \
     && npm install fs-extra \
     && sed -i -e s/graceful-fs/fs-extra/ -e s/fs.rename/fs.move/ ./lib/utils/rename.js
 
-# Install la-web-frontend
+# Install front-end
 RUN mkdir -p /usr/src/
 COPY src/ /usr/src/app/
 
