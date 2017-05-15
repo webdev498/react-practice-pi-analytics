@@ -2,14 +2,16 @@
 //jshint esversion:6
 //@flow
 
+const baseUrl = "http://172.16.44.212/int/api/v1/addressing";
+
 export const ApiUrls = {
-  nextUnsortedServiceAddress: "api/v1/addressing/nextunsortedserviceaddress",
-  searchLawFirms: "api/v1/addressing/searchlawfirms",
-  assignServiceAddress: "api/v1/addressing/assignserviceaddress",
-  unsortServiceAddress: "api/v1/addressing/unsortserviceaddress",
-  createLawFirm: "api/v1/addressing/createlawfirm",
-  setServiceAddressAsNonLawFirm: "api/v1/addressing/setserviceaddressasnonlawfirm",
-  skipServiceAddress: "api/v1/addressing/skipserviceaddress"
+  nextUnsortedServiceAddress: baseUrl.concat("/nextunsortedserviceaddress"),
+  searchLawFirms: baseUrl.concat("/searchlawfirms"),
+  assignServiceAddress: baseUrl.concat("/assignserviceaddress"),
+  unsortServiceAddress: baseUrl.concat("/unsortserviceaddress"),
+  createLawFirm: baseUrl.concat("/createlawfirm"),
+  setServiceAddressAsNonLawFirm: baseUrl.concat("/setserviceaddressasnonlawfirm"),
+  skipServiceAddress: baseUrl.concat("/skipserviceaddress")
 }
 
 export const OuterUrls = {

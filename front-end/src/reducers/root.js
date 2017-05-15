@@ -60,15 +60,8 @@ export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): 
   }
 }
 
-export const unsortedServiceAddressFetchError = (): Action => ({
+export const globalFetchError = (): Action => ({
   type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
-  payload: {
-    loading: false
-  }
-});
-
-export const serviceAddressAssignError = (): Action => ({
-  type: Actions.SERVICE_ADDRESS_ASSIGNED,
   payload: {
     loading: false
   }

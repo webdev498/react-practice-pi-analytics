@@ -4,13 +4,15 @@
 import "rxjs/add/operator/map";
 import "rxjs/add/operator/catch";
 import "rxjs/add/operator/mergeMap";
-import {fetch, Methods} from "../services/Request";
+import "rxjs/add/operator/mapTo";
+import "rxjs/add/observable/of";
+import {Observable} from "rxjs/Observable";
+import {get, post} from "../services/Request";
 import {
   getNextUnsortedServiceAddress,
-  serviceAddressAssignError,
+  globalFetchError,
   serviceAddressUnsorted,
   undoServiceAddressSuccess,
-  unsortedServiceAddressFetchError,
   unsortedServiceAddressFulfilled,
   unsortedServiceAddressPreFetched
 } from "../reducers/root";
@@ -33,78 +35,83 @@ import Authentication from "../services/Authentication";
 import camelcaseKeysDeep from "camelcase-keys-deep";
 import {ApiUrls, OuterUrls} from "../services/Urls";
 
-const createServiceRequest = (url: string, action: Action): Request => ({
-  url: url,
-  method: Methods.POST,
-  body: action.payload.request ? action.payload.request : {}
-})
-
-export const fromResponse = (response: Object): Object => u.freeze(camelcaseKeysDeep(response));
+const mapResponse = method => response => Observable.of(response).mapTo(method(u.freeze(camelcaseKeysDeep(response))));
+const mapError = method => error => Observable.of(error).mapTo(method());
 
 export const fetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.nextUnsortedServiceAddress, action))
-      .map(response => unsortedServiceAddressFulfilled(fromResponse(response)))
-      .catch(error => unsortedServiceAddressFetchError()));
+    .mergeMap(action => post(ApiUrls.nextUnsortedServiceAddress, action.payload)
+      .map(mapResponse(unsortedServiceAddressFulfilled))
+      .catch(mapError(globalFetchError))
+    );
 
 export const preFetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.nextUnsortedServiceAddress, action))
-      .map(response => unsortedServiceAddressPreFetched(fromResponse(response)));
+    .mergeMap(action => post(ApiUrls.nextUnsortedServiceAddress, action.payload)
+      .map(mapResponse(unsortedServiceAddressPreFetched))
+      .catch(mapError(globalFetchError))
+    );
 
 export const searchLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
-  action$.ofType(SEARCH_LAW_FIRMS).mergeMap(action => fetch(createServiceRequest(ApiUrls.searchLawFirms, action))
-    .map(response => searchQueryFulfilled(fromResponse(response)))
-    .catch(error => searchQueryError()));
+  action$.ofType(SEARCH_LAW_FIRMS).mergeMap(action => post(ApiUrls.searchLawFirms, action.payload)
+    .map(mapResponse(searchQueryFulfilled))
+    .catch(mapError(searchQueryError))
+  );
 
 export const assignServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(ASSIGN_SERVICE_ADDRESS)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.assignServiceAddress, action))
-      .map(response => getNextUnsortedServiceAddress())
-      .catch(error => serviceAddressAssignError()));
+    .mergeMap(action => post(ApiUrls.assignServiceAddress, action.payload)
+      .map(mapResponse(getNextUnsortedServiceAddress))
+      .catch(mapError(globalFetchError))
+    );
 
 export const unsortServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(UNSORT_SERVICE_ADDRESS)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.unsortServiceAddress, action))
-      .map(response => serviceAddressUnsorted())
-      .catch(error => serviceAddressUnsorted()));
+    .mergeMap(action => post(ApiUrls.unsortServiceAddress, action.payload)
+      .map(mapResponse(serviceAddressUnsorted))
+      .catch(mapError(globalFetchError))
+    );
 
 export const undoServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(UNDO_SERVICE_ADDRESS)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.unsortServiceAddress, action))
-      .map(response => undoServiceAddressSuccess())
-      .catch(error => serviceAddressUnsorted()));
+    .mergeMap(action => post(ApiUrls.unsortServiceAddress, action.payload)
+      .map(mapResponse(undoServiceAddressSuccess))
+      .catch(mapError(globalFetchError))
+    );
 
 export const createLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(CREATE_LAW_FIRM)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.createLawFirm, action))
-      .map(response => lawFirmCreated(fromResponse(response)))
-      .catch(error => firmCreationError()));
+    .mergeMap(action => post(ApiUrls.createLawFirm, action.payload)
+      .map(mapResponse(lawFirmCreated))
+      .catch(mapError(firmCreationError))
+    );
 
 export const setServiceAddressAsNonLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.setServiceAddressAsNonLawFirm, action))
-      .map(response => getNextUnsortedServiceAddress())
-      .catch(error => unsortedServiceAddressFetchError()));
+    .mergeMap(action => post(ApiUrls.setServiceAddressAsNonLawFirm, action.payload)
+      .map(mapResponse(getNextUnsortedServiceAddress))
+      .catch(mapError(globalFetchError))
+    );
 
 export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SKIP_SERVICE_ADDRESS)
-    .mergeMap(action => fetch(createServiceRequest(ApiUrls.skipServiceAddress, action))
-      .map(response => getNextUnsortedServiceAddress())
-      .catch(error => unsortedServiceAddressFetchError()));
+    .mergeMap(action => post(ApiUrls.skipServiceAddress, action.payload)
+      .map(mapResponse(getNextUnsortedServiceAddress))
+      .catch(mapError(globalFetchError))
+    );
 
 export const getCurrentUser = (acitons$: ActionsObservable<Action>): ActionsObservable<Action> =>
   acitons$.ofType(GET_CURRENT_USER)
-    .mergeMap(action => fetch({url: OuterUrls.sessionInfo, method: Methods.GET})
+    .mergeMap(action => get(OuterUrls.sessionInfo)
       .map(response => {
         Authentication.user = response.username;
-        return getNextUnsortedServiceAddress();
+        return Observable.of(response).mapTo(getNextUnsortedServiceAddress());
       })
       .catch(error => {
         var urlParams = new URLSearchParams(location.search);
         if (urlParams.has("username")) {
           Authentication.user = urlParams.get("username");
-          return getNextUnsortedServiceAddress();
+          return Observable.of(error).mapTo(getNextUnsortedServiceAddress());
         } else {
           window.location = OuterUrls.login;
           console.log(error);
