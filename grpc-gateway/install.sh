@@ -23,7 +23,7 @@ function generate_stubs {
         $proto_file
 }
 
-pushd src/grpc-gateway/generated/serviceaddresssortingservice/
+pushd src/grpc-gateway/generated/licensingalert/
 generate_stubs "*.proto"
 popd
 

@@ -15,14 +15,14 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	serviceAddressSortingServiceGrpc "grpc-gateway/generated/serviceaddresssortingservice"
+	grpcService "grpc-gateway/generated/licensingalert"
 )
 
 var (
 	// service-address-sorting-service
-	publicUserServiceEndpoint = flag.String("user_endpoint",
+	serviceAddressSortingServiceEndpoint = flag.String("service_address_sorting_endpoint",
 		os.Getenv("SERVICE_ADDRESS_SORTING_SERVICE_HOST")+":"+os.Getenv("SERVICE_ADDRESS_SORTING_SERVICE_PORT"),
-		"Public user Service endpoint")
+		"Service Address Sorting Service endpoint")
 )
 
 func run() error {
@@ -33,7 +33,7 @@ func run() error {
 	dialOptions := []grpc.DialOption{grpc.WithInsecure()}
 
 	// service-address-sorting-service
-	err := serviceAddressSortingServiceGrpc.RegisterwServiceAddressSortingServiceHandlerFromEndpoint(ctx, mux, *publicUserServiceEndpoint, dialOptions)
+	err := grpcService.RegisterServiceAddressSortingServiceHandlerFromEndpoint(ctx, mux, *serviceAddressSortingServiceEndpoint, dialOptions)
 	if err != nil {
 		return err
 	}

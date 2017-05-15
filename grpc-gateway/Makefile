@@ -7,17 +7,10 @@ KUBE_CONTEXT?=''
 docker:
 	rm -rf src/grpc-gateway/generated/
 	# service-address-admin-backend
-	mkdir -p src/grpc-gateway/generated/serviceaddresssortingservice/google/protobuf/
-	cp -r ../pi-shared-protobuf/src/google/protobuf/. src/grpc-gateway/generated/serviceaddresssortingservice/google/protobuf/
-	cp ../pi-shared-protobuf/src/citation_search.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/cite_service.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/ip-datastore-common.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/ip-datastore-sg3.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/patent_common.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/queue_common.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/queue_onprem.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/relational_db_service.proto src/grpc-gateway/generated/serviceaddresssortingservice/
-	cp ../pi-shared-protobuf/src/service_address_sorting.proto src/grpc-gateway/generated/serviceaddresssortingservice/
+	mkdir -p src/grpc-gateway/generated/licensingalert/google/protobuf/
+	cp -r ../pi-shared-protobuf/src/google/protobuf/. src/grpc-gateway/generated/licensingalert/google/protobuf/
+	cp ../pi-shared-protobuf/src/patent_common.proto src/grpc-gateway/generated/licensingalert/
+	cp ../pi-shared-protobuf/src/service_address_sorting.proto src/grpc-gateway/generated/licensingalert/
 	# Build Docker image
 	docker build -t asia.gcr.io/pi-devops/service-address-admin-grpc-gateway:$(VERSION)-$(BUILD) .
 
