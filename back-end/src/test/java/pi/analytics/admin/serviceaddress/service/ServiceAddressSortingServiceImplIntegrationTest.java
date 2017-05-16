@@ -7,8 +7,11 @@ package pi.analytics.admin.serviceaddress.service;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import com.pi.common.test.type.DisabledTests;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +27,7 @@ import pi.analytics.admin.serviceaddress.guice.ServiceAddressSortingModule;
  *
  *   -Dpi_custom_property_file_path=/Users/shane/work/config/onprem-prod.properties
  */
+@Category(DisabledTests.class)
 public class ServiceAddressSortingServiceImplIntegrationTest {
 
   private static final Logger log = LoggerFactory.getLogger(ServiceAddressSortingServiceImplIntegrationTest.class);
