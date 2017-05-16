@@ -7,7 +7,8 @@ import "../styles/main.scss";
 import type {Agent, ServiceAddress} from "../services/Types";
 import {OuterUrls} from "../services/Urls";
 
-type AddressesListProps = {
+type
+AddressesListProps = {
   serviceAddress: Object,
   agents: Array < Agent >,
   queueId: string,
@@ -17,9 +18,29 @@ type AddressesListProps = {
 
 class AddressesList extends React.Component {
   props: AddressesListProps;
+  state: Object;
 
   constructor(props: AddressesListProps) {
     super(props);
+    this.state = {selected: ""};
+  }
+
+  getSelectedClassName(agentIndex: number, addressIndex: number) {
+    return this.state.selected == agentIndex + ":" + addressIndex ? "selected" : "";
+  }
+
+  select(agentIndex: number, addressIndex: number, disabled: boolean) {
+    if (!disabled) {
+      this.setState(prevState => ({
+        selected: agentIndex + ":" + addressIndex
+      }));
+    }
+  }
+
+  unselect(agentIndex: number, addressIndex: number) {
+    if (this.state.selected == agentIndex + ":" + addressIndex) {
+      this.setState(prevState => ({selected: ""}));
+    }
   }
 
   renderLawFirmId(agent: Agent): React.Element<any> {
@@ -41,7 +62,7 @@ class AddressesList extends React.Component {
     return <span className="entity">{agent.nonLawFirm ? agent.nonLawFirm.name : ""}</span>
   }
 
-  renderAddressLine(value: ServiceAddress, testValue: string): React.Element<any> {
+  renderAddressLine(agentIndex: number, index: number, value: ServiceAddress, testValue: string): React.Element<any> {
     var result = new String(value.address),
       upperCase = result.toUpperCase();
     if (testValue && testValue.length > 0 && value.address) {
@@ -59,13 +80,18 @@ class AddressesList extends React.Component {
         });
     }
     return (
-      <div className="address-line"><span dangerouslySetInnerHTML={{__html: value.address ? result : "N/A"}}/>
+      <div onMouseOver={() => this.select(agentIndex, index, agentIndex < 0)}
+           onMouseLeave={() => this.unselect(agentIndex, index)}
+           className={"address-line " + this.getSelectedClassName(agentIndex, index)}><span
+        dangerouslySetInnerHTML={{__html: value.address ? result : "N/A"}}/>
       </div>
     );
   }
 
-  renderServiceAddressWithInclusions(agent: Agent, testValue: string): Array<any> {
-    return agent.serviceAddresses.map((value, index) => this.renderAddressLine(value, testValue));
+  renderServiceAddressWithInclusions(agentIndex: number, agent: Agent, testValue: string): Array<any> {
+    return agent.serviceAddresses.map(
+      (value, index) => this.renderAddressLine(agent.serviceAddresses.length > 1 ? agentIndex : -1, index, value,
+                                               testValue));
   }
 
   renderWebsite(agent: Agent): ?React.Element<any> {
@@ -75,19 +101,26 @@ class AddressesList extends React.Component {
     return null
   }
 
-  renderEntityId(agent: Agent): Array<any> {
+  renderEntityId(agentIndex: number, agent: Agent): Array<any> {
     return agent.serviceAddresses
-      .map(address => <div className="address-line">{address.serviceAddressId}</div>)
+      .map((address, index) => <div onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
+                                    onMouseLeave={() => this.unselect(agentIndex, index)}
+                                    className={
+                                      "address-line " + this.getSelectedClassName(agentIndex, index)
+                                    }>{address.serviceAddressId}</div>)
   };
 
-  renderActions(agent: Agent): Array<any> {
-    return agent.serviceAddresses.map(address => <div style={{marginBottom: "3px"}}>
-      <a href="#">
-        <IconButton name="cancel" accent onClick={() => {
-          this.props.onUnsortServiceAddress(address.serviceAddressId);
-        }}/>
-      </a>
-    </div>)
+  renderActions(agentIndex: number, agent: Agent): Array<any> {
+    return agent.serviceAddresses.map(
+      (address, index) => <div onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
+                               onMouseLeave={() => this.unselect(agentIndex, index)}
+                               className={this.getSelectedClassName(agentIndex, index)} style={{marginBottom: "3px"}}>
+        <a href="#">
+          <IconButton name="cancel" accent onClick={() => {
+            this.props.onUnsortServiceAddress(address.serviceAddressId);
+          }}/>
+        </a>
+      </div>)
   }
 
   mapRows() {
@@ -95,11 +128,11 @@ class AddressesList extends React.Component {
       key: index,
       lawFirmId: this.renderLawFirmId(agent),
       entity: this.renderEntity(agent),
-      serviceAddress: this.renderServiceAddressWithInclusions(agent, this.props.serviceAddress.name + " "
-                                                                     + this.props.serviceAddress.address),
+      serviceAddress: this.renderServiceAddressWithInclusions(index, agent, this.props.serviceAddress.name + " "
+                                                                            + this.props.serviceAddress.address),
       website: this.renderWebsite(agent),
-      serviceAddressId: this.renderEntityId(agent),
-      actions: this.renderActions(agent)
+      serviceAddressId: this.renderEntityId(index, agent),
+      actions: this.renderActions(index, agent)
     }))
   };
 
@@ -110,9 +143,9 @@ class AddressesList extends React.Component {
                  rows={this.mapRows()}>
         <TableHeader style={{width: "9%"}} name="lawFirmId">Law Firm ID</TableHeader>
         <TableHeader style={{width: "21%"}} name="entity">Firm</TableHeader>
-        <TableHeader style={{width: "53%"}} name="serviceAddress">Service Addresses</TableHeader>
+        <TableHeader style={{paddingLeft: "26px", width: "53%"}} name="serviceAddress">Service Addresses</TableHeader>
         <TableHeader style={{width: "6%"}} name="website">www</TableHeader>
-        <TableHeader style={{width: "6%"}} name="serviceAddressId">Entity ID</TableHeader>
+        <TableHeader style={{paddingLeft: "26px", width: "6%"}} name="serviceAddressId">Entity ID</TableHeader>
         <TableHeader style={{width: "5%"}} name="actions">Re-sort</TableHeader>
       </DataTable>
     )

@@ -1,5 +1,9 @@
+@import "../vendor/mdl/mixins";
+@import "../vendor/mdl/variables";
+
 .address-line {
   margin-bottom: 6px;
+  padding-left: $list-border;
 }
 
 .addresses-list.mdl-data-table {
@@ -7,11 +11,11 @@
   & td {
     vertical-align: top;
 
-    &>div, &>a, &>span, &>button {
+    & > div, & > a, & > span, & > button {
       line-height: 30px;
     }
 
-    &>span.entity {
+    & > span.entity {
       white-space: pre-wrap;
     }
 
@@ -19,6 +23,21 @@
 
   & td:nth-child(3) {
     overflow: hidden;
+  }
+
+  & td:last-child {
+    text-align: center;
+  }
+
+  & .selected {
+    transition: 0.3s;
+    background-color: $data-table-selection-color;
+
+    & .mdl-button {
+      transition: 0.3s;
+      background-color: $data-table-selection-color;
+    }
+
   }
 
 }
