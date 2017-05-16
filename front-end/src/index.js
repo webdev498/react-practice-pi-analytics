@@ -22,10 +22,7 @@ WebFont.load({
                },
              })
 
-export const store = createStore(rootReducer, compose(
-  applyMiddleware(thunk, createEpicMiddleware(rootEpic)),
-  window.devToolsExtension ? window.devToolsExtension() : f => f
-));
+export const store = createStore(rootReducer, applyMiddleware(thunk, createEpicMiddleware(rootEpic)));
 
 render(
   <Provider store={store}>
