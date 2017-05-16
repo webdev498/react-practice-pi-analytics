@@ -2,7 +2,7 @@
 //jshint esversion:6
 //@flow
 
-const API_BASE_URL = "http://172.16.44.212/int/"
+const API_BASE_URL = "http://172.16.44.212/int/";
 
 export const ApiUrls = {
   nextUnsortedServiceAddress: API_BASE_URL + "api/v1/addressing/nextunsortedserviceaddress",
@@ -15,9 +15,9 @@ export const ApiUrls = {
 }
 
 export const OuterUrls = {
-  sessionInfo: "addressing/sessionInfo.jsp",
-  login: "login.jsp#agents",
-  firmInfo: "dataServices/firmInfo.jsp?id=",
+  sessionInfo: "http://practiceinsight.io/int/addressing/sessionInfo.jsp",
+  login: "http://practiceinsight.io/int/login.jsp#agents",
+  firmInfo: "http://practiceinsight.io/int/addressing/dataServices/firmInfo.jsp?id=",
   googleSearch: "https://www.google.com/search?q=",
   country: "https://practiceinsight.io/int/addressing/localCountryC.jsp?findLocalEntity=Find&localID="
 }
