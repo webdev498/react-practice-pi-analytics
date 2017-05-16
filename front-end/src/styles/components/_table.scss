@@ -1,7 +1,24 @@
 .address-line {
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
-.address-line:first-child {
-  margin-top: 12px;
+.addresses-list.mdl-data-table {
+
+  & td {
+    vertical-align: top;
+
+    &>div, &>a, &>span, &>button {
+      line-height: 30px;
+    }
+
+    &>span.entity {
+      white-space: pre-wrap;
+    }
+
+  }
+
+  & td:nth-child(3) {
+    overflow: hidden;
+  }
+
 }

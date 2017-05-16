@@ -19,5 +19,5 @@ export const OuterUrls = {
   login: "login.jsp#agents",
   firmInfo: "dataServices/firmInfo.jsp?id=",
   googleSearch: "https://www.google.com/search?q=",
-  country: "addressing/localCountryC.jsp?findLocalEntity=Find&localID="
+  country: "https://practiceinsight.io/int/addressing/localCountryC.jsp?findLocalEntity=Find&localID="
 }
