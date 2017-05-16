@@ -37,7 +37,7 @@ import {ApiUrls, OuterUrls} from "../services/Urls";
 import u from "updeep";
 import type {Action} from "redux";
 
-const mapResponse = method => response => Observable.of(response).mapTo(method(u.freeze(camelcaseKeysDeep(response))));
+const mapResponse = method => ajax => method(u.freeze(camelcaseKeysDeep(ajax.response)));
 const mapError = method => error => Observable.of(error).mapTo(method());
 
 export const fetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
