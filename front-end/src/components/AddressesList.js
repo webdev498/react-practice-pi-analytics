@@ -4,11 +4,10 @@
 import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
 import "../styles/main.scss";
-import type, {Agent, ServiceAddress} from "../services/Types";
+import type {Agent, ServiceAddress} from "../services/Types";
 import {OuterUrls} from "../services/Urls";
 
-type
-AddressesListProps = {
+type AddressesListProps = {
   serviceAddress: Object,
   agents: Array < Agent >,
   queueId: string,
@@ -42,17 +41,21 @@ class AddressesList extends React.Component {
     return <span className="entity">{agent.nonLawFirm ? agent.nonLawFirm.name : ""}</span>
   }
 
-  renderAddressLine(value: ServiceAddress, testValue: String): React.Element<any> {
-    var result = new String(value.address);
+  renderAddressLine(value: ServiceAddress, testValue: string): React.Element<any> {
+    var result = new String(value.address),
+      upperCase = result.toUpperCase();
     if (testValue && testValue.length > 0 && value.address) {
+      testValue = testValue.toUpperCase()
       testValue
         .replace(/[;:.,]/g, " ")
         .replace(/  /g, " ")
         .split(" ")
         .sort((a, b) => b.length - a.length)
-        .filter(item => item.length > 1 && value.address.indexOf(item) >= 0)
+        .filter(item => item.length > 1 && upperCase.indexOf(item) >= 0)
         .forEach(item => {
-          result = result.split(item).join("<span class='highlighted'>" + item + "</span>");
+          [item, item.toLowerCase(), item.substr(0, 1) + item.substr(1).toLowerCase()].forEach(test => {
+            result = result.split(test).join("<span class='highlighted'>" + test + "</span>");
+          });
         });
     }
     return (
@@ -61,7 +64,7 @@ class AddressesList extends React.Component {
     );
   }
 
-  renderServiceAddressWithInclusions(agent: Agent, testValue: String): Array<any> {
+  renderServiceAddressWithInclusions(agent: Agent, testValue: string): Array<any> {
     return agent.serviceAddresses.map((value, index) => this.renderAddressLine(value, testValue));
   }
 
