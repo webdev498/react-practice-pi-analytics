@@ -6,6 +6,8 @@ import type {Action, Dispatch} from "redux";
 import * as Actions from "../actions/SearchActions";
 import * as FetchActions from "../actions/FetchActions";
 import type {SearchResults} from "../services/Types";
+import u from "updeep";
+import sampleSize from "lodash/sampleSize";
 
 const initialState = {}
 
@@ -25,7 +27,7 @@ export const searchQueryFulfilled = (searchResult: SearchResults): Action => ({
   type: Actions.SEARCH_QUERY_FULFILLED,
   payload: {
     loading: false,
-    agents: searchResult.lawFirmAgents
+    agents: u.map(agent => u({serviceAddresses: sampleSize(agent.serviceAddresses, 5)}, agent), searchResult.lawFirmAgents)
   }
 });
 

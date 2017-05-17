@@ -8,22 +8,32 @@ import * as FetchActions from "../actions/FetchActions";
 import type {ServiceAddressBundle} from "../services/Types";
 import u from "updeep";
 import * as Queue from "../services/Queue";
+import sampleSize from "lodash/sampleSize";
 
 const initialState = {
   loading: true
 }
 
+const mapServiceAddressBundle = (bundle: ServiceAddressBundle) => u({
+                                                                      suggestedAgents: u.map(
+                                                                        agent => u({
+                                                                                     serviceAddresses: sampleSize(
+                                                                                       agent.serviceAddresses,
+                                                                                       5)
+                                                                                   }, agent))
+                                                                    }, bundle);
+
 const root = createReducer(Actions.NAMESPACE, initialState, {
     [Actions.UNSORT_SERVICE_ADDRESS]: (state, action) => {
-      let newState = u({
-                         value: {
-                           suggestedAgents: u.map({
-                                                    serviceAddresses: u.reject(
-                                                      address => address.serviceAddressId == action.payload.serviceAddressId)
-                                                  })
-                         },
-                         loading: true
-                       }, state);
+      const newState = u({
+                           value: {
+                             suggestedAgents: u.map({
+                                                      serviceAddresses: u.reject(
+                                                        address => address.serviceAddressId == action.payload.serviceAddressId)
+                                                    })
+                           },
+                           loading: true
+                         }, state);
       return u({value: {suggestedAgents: u.reject(agent => agent.serviceAddresses.length == 0)}}, newState);
     },
     [Actions.SORT_SERVICE_ADDRESS]: (state, action) =>
@@ -51,7 +61,7 @@ export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): A
   if (Queue.canPush()) {
     dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
   }
-  dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: bundle, loading: false}});
+  dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(bundle), loading: false}});
 };
 
 export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
@@ -86,7 +96,7 @@ export const undoServiceAddressSuccess = (): Action => ({
 export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) => {
   var cached = Queue.pop();
   if (cached) {
-    dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: cached, loading: false}});
+    dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(cached), loading: false}});
   } else {
     dispatch({type: Actions.START_FETCH, payload: {loading: true}});
     dispatch({type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});

@@ -37,6 +37,6 @@ export type LawFirm = {
   websiteUrl: string
 }
 
-export type SearchResults {
-  lawFirmAgents: Array < Agent >
+export type SearchResults = {
+  lawFirmAgents: Array <Agent>
 }

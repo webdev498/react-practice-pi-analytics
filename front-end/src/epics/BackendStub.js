@@ -30,65 +30,67 @@ import Authentication from "../services/Authentication";
 import type {Action} from "redux";
 import type {ServiceAddressBundle} from "../services/Types";
 
-const tableRows = [
-  {
-    lawFirm: {
-      lawFirmId: 58586,
-      name: "Law Offices Of Mark A. Wilson, CA",
-      websiteUrl: "http://google.com"
+const tableRows = {
+  lawFirmAgents: [
+    {
+      lawFirm: {
+        lawFirmId: 58586,
+        name: "Law Offices Of Mark A. Wilson, CA",
+        websiteUrl: "http://google.com"
+      },
+      serviceAddresses: [{
+        name: "Law Offices Of Mark A. Wilson, CA",
+        address: "WILSON, Mark, LawOffices of MarkWilson PMB: 348 2530 Berryessa Rd San Jose,CA 95132",
+        serviceAddressId: "1036990"
+      }, {
+        name: "Law Offices Of Mark A. Wilson, CA",
+        address: "Mark Wilson PMB: 348 2530 BerryessaRoad SanJose, California 95132",
+        serviceAddressId: "1036991"
+      }]
     },
-    serviceAddresses: [{
-      name: "Law Offices Of Mark A. Wilson, CA",
-      address: "WILSON, Mark, LawOffices of MarkWilson PMB: 348 2530 Berryessa Rd San Jose,CA 95132",
-      serviceAddressId: "1036990"
-    }, {
-      name: "Law Offices Of Mark A. Wilson, CA",
-      address: "Mark Wilson PMB: 348 2530 BerryessaRoad SanJose, California 95132",
-      serviceAddressId: "1036991"
-    }]
-  },
-  {
-    nonLawFirm: {
-      name: "NEL R. FONTANILLA"
+    {
+      nonLawFirm: {
+        name: "NEL R. FONTANILLA"
+      },
+      serviceAddresses: [{
+        name: "NEL R. FONTANILLA",
+        address: "1536 HEMMINGWAY ROAD, SAN JOSE CA 95132",
+        serviceAddressId: "1051425"
+      }]
     },
-    serviceAddresses: [{
-      name: "NEL R. FONTANILLA",
-      address: "1536 HEMMINGWAY ROAD, SAN JOSE CA 95132",
-      serviceAddressId: "1051425"
-    }]
-  },
-  {
-    nonLawFirm: {
-      name: "INTERACTIV CORPORATION"
+    {
+      nonLawFirm: {
+        name: "INTERACTIV CORPORATION"
+      },
+      serviceAddresses: [{
+        name: "INTERACTIV CORPORATION",
+        address: "1659 N CAPITOL AVE # 225, 1659 N CAPITOL AVE # 225, SAN JOSE,CA 95132",
+        serviceAddressId: "563472"
+      }]
     },
-    serviceAddresses: [{
-      name: "INTERACTIV CORPORATION",
-      address: "1659 N CAPITOL AVE # 225, 1659 N CAPITOL AVE # 225, SAN JOSE,CA 95132",
-      serviceAddressId: "563472"
-    }]
-  },
-  {
-    nonLawFirm: {
-      name: "BEAUTYQQ INC"
+    {
+      nonLawFirm: {
+        name: "BEAUTYQQ INC"
+      },
+      serviceAddresses: [{
+        name: "BEAUTYQQ INC",
+        address: "2928 LAMBETH COURT, SAN JOSE, CA 95132",
+        serviceAddressId: "584214"
+      }]
     },
-    serviceAddresses: [{
-      name: "BEAUTYQQ INC",
-      address: "2928 LAMBETH COURT, SAN JOSE, CA 95132",
-      serviceAddressId: "584214"
-    }]
-  },
-  {
-    lawFirm: {
-      lawFirmId: 44161,
-      name: "PEREZ, YVONNE, CA",
+    {
+      lawFirm: {
+        lawFirmId: 44161,
+        name: "PEREZ, YVONNE, CA",
+      },
+      serviceAddresses: [{
+        name: "PEREZ, YVONNE, CA",
+        address: "PEREZ, YVONNE, 2121 LIMEWOOD DR., SANJOSE, CA95132",
+        serviceAddressId: "610070"
+      }]
     },
-    serviceAddresses: [{
-      name: "PEREZ, YVONNE, CA",
-      address: "PEREZ, YVONNE, 2121 LIMEWOOD DR., SANJOSE, CA95132",
-      serviceAddressId: "610070"
-    }]
-  },
-]
+  ]
+}
 
 const firm = {
   serviceAddressToSort: {
@@ -102,7 +104,7 @@ const firm = {
   },
   enTranslation: "Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
   unsortedServiceAddressQueueItemId: "123",
-  suggestedAgents: tableRows
+  suggestedAgents: tableRows.lawFirmAgents
 }
 
 export const fetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>

@@ -111,7 +111,8 @@ class AddressesList extends React.Component {
 
   renderWebsite(agent: Agent): ?React.Element<any> {
     if (agent.lawFirm && agent.lawFirm.websiteUrl) {
-      const href = (agent.lawFirm.websiteUrl.indexOf("http") == -1 ? "http://" : "") + agent.lawFirm.websiteUrl;
+      let href = agent.lawFirm.websiteUrl;
+      href = (agent.lawFirm.websiteUrl.indexOf("http") == -1 ? "http://" : "") + href;
       return (
         <a href={href} target="_blank">
           <IconButton name="public" accent/>
