@@ -18,25 +18,25 @@ SearchProps = {
 }
 
 const Search = (props: SearchProps): React.Element<Layout> => {
-  let content = <p className="voffset32">Your search did not match any law firms</p>
-
-  if (!props.loading && props.agents && props.agents.length > 0) {
+  let content = ""
+  if (!props.loading && props.query && props.query.length > 0 && props.agents && props.agents.length > 0) {
     content =
       <AddressesList agents={props.agents} queueId={props.queueId} serviceAddress={props.serviceAddress}
                      onSortServiceAddress={props.onSortServiceAddress}
-                     onUnsortServiceAddress={props.onUnsortServiceAddress}/>;
+                     onUnsortServiceAddress={props.onUnsortServiceAddress}/>
+  } else if (!props.loading && props.query && props.query.length > 0) {
+    content = <h4 className="voffset32" style={{color: "#bbb"}}>No matching law firms</h4>
   } else if (props.loading) {
     content = <Spinner singleColor/>
   }
 
   return (
     <div>
-      <div style={{textAlign: "center"}}>
+      <div style={{textAlign: "center", margin: "16px"}}>
         <Icon style={{verticalAlign: "sub"}} name="search"/>
-        &nbsp;
-        <Textfield style={{marginLeft: "5px"}} label="Search by law firm name..." value={props.query}
+        <Textfield style={{marginLeft: "8px"}} label="Search law firm by name" value={props.query}
                    onChange={(event) => {
-                     props.onSearch(event.target.value);
+                     props.onSearch(event.target.value)
                    }}/>
       </div>
       <Content className={"center"}>
