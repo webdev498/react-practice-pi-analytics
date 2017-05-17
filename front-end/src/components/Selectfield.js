@@ -31,7 +31,7 @@ const propTypes = {
   onChange: PropTypes.func,
   required: PropTypes.bool,
   style: PropTypes.object,
-  options: PropTypes.arrayOf(PropTypes.object).isRequired,
+  options: PropTypes.arrayOf(PropTypes.object),
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   defaultOption: PropTypes.string
 };

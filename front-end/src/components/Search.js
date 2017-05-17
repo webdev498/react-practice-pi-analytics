@@ -1,9 +1,12 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import {Content, Icon, Layout, Spinner, Textfield} from "react-mdl";
+import {Content, Icon, Spinner, Textfield} from "react-mdl";
 import React from "react";
 import AddressesList from "./AddressesList";
+import Rx from "rxjs";
+import "rxjs/add/operator/map";
+import "rxjs/add/operator/debounceTime";
 
 type
 SearchProps = {
@@ -17,33 +20,51 @@ SearchProps = {
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
-const Search = (props: SearchProps): React.Element<Layout> => {
-  let content = ""
-  if (!props.loading && props.query && props.query.length > 0 && props.agents && props.agents.length > 0) {
-    content =
-      <AddressesList agents={props.agents} queueId={props.queueId} serviceAddress={props.serviceAddress}
-                     onSortServiceAddress={props.onSortServiceAddress}
-                     onUnsortServiceAddress={props.onUnsortServiceAddress}/>
-  } else if (!props.loading && props.query && props.query.length > 0) {
-    content = <h4 className="voffset32" style={{color: "#bbb"}}>No matching law firms</h4>
-  } else if (props.loading) {
-    content = <Spinner singleColor/>
+class Search extends React.Component {
+  props: SearchProps;
+  bindSearchInputChange: function;
+
+  constructor(props: SearchProps) {
+    super(props)
+    this.bindSearchInputChange = this.bindSearchInputChange.bind(this);
   }
 
-  return (
-    <div>
-      <div style={{textAlign: "center", margin: "16px"}}>
-        <Icon style={{verticalAlign: "sub"}} name="search"/>
-        <Textfield style={{marginLeft: "8px"}} label="Search law firm by name" value={props.query}
-                   onChange={(event) => {
-                     props.onSearch(event.target.value)
-                   }}/>
+  bindSearchInputChange(input: any) {
+    if (!input) {
+      return;
+    }
+    Rx.Observable.fromEvent(input.inputRef, "keyup")
+      .map(event => event.target.value)
+      .debounceTime(200)
+      .subscribe(this.props.onSearch);
+  }
+
+  render() {
+    let content = ""
+    if (!this.props.loading && this.props.query && this.props.query.length > 0 && this.props.agents
+        && this.props.agents.length > 0) {
+      content =
+        <AddressesList agents={this.props.agents} queueId={this.props.queueId} serviceAddress={this.props.serviceAddress}
+                       onSortServiceAddress={this.props.onSortServiceAddress}
+                       onUnsortServiceAddress={this.props.onUnsortServiceAddress}/>
+    } else if (!this.props.loading && this.props.query && this.props.query.length > 0) {
+      content = <h4 className="voffset32" style={{color: "#bbb"}}>No matching law firms</h4>
+    } else if (this.props.loading) {
+      content = <Spinner singleColor/>
+    }
+
+    return (
+      <div>
+        <div style={{textAlign: "center", margin: "16px"}}>
+          <Icon style={{verticalAlign: "sub"}} name="search"/>
+          <Textfield ref={this.bindSearchInputChange} style={{marginLeft: "8px"}} label="Search law firm by name" />
+        </div>
+        <Content className={"center"}>
+          {content}
+        </Content>
       </div>
-      <Content className={"center"}>
-        {content}
-      </Content>
-    </div>
-  )
+    )
+  }
 }
 
 export default Search
