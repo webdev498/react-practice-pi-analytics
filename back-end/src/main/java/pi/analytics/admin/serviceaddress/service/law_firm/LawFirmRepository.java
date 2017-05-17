@@ -4,6 +4,7 @@
 
 package pi.analytics.admin.serviceaddress.service.law_firm;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -82,6 +83,9 @@ public class LawFirmRepository {
   }
 
   public long createLawFirm(final CreateLawFirmRequest request) {
+    Preconditions.checkArgument(!request.getName().isEmpty(), "Law firm name is required");
+    Preconditions.checkArgument(!request.getCountryCode().isEmpty(), "Law firm country code is required");
+
     // Create the new law firm record in MySQL
     final LawFirm lawFirmToBeCreated =
         LawFirm

@@ -78,6 +78,10 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
   @Override
   public void searchLawFirms(final SearchLawFirmsRequest request, final StreamObserver<SearchResults> responseObserver) {
+    if (request.getSearchTerm().isEmpty()) {
+      responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Search term is required").asRuntimeException());
+      return;
+    }
     try {
       responseObserver.onNext(
           SearchResults
