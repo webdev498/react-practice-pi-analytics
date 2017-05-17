@@ -18,7 +18,7 @@ SearchProps = {
 }
 
 const Search = (props: SearchProps): React.Element<Layout> => {
-  let content = <p>No data to display. Try alternate the search string.</p>
+  let content = <p className="voffset32">Your search did not match any law firms</p>
 
   if (!props.loading && props.agents && props.agents.length > 0) {
     content =
@@ -31,7 +31,7 @@ const Search = (props: SearchProps): React.Element<Layout> => {
 
   return (
     <div>
-      <div>
+      <div style={{textAlign: "center"}}>
         <Icon style={{verticalAlign: "sub"}} name="search"/>
         &nbsp;
         <Textfield style={{marginLeft: "5px"}} label="Search by law firm name..." value={props.query}

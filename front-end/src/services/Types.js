@@ -36,3 +36,7 @@ export type LawFirm = {
   country: string,
   websiteUrl: string
 }
+
+export type SearchResults {
+  lawFirmAgents: Array < Agent >
+}

@@ -5,6 +5,7 @@ import createReducer from "redux-updeep";
 import type {Action, Dispatch} from "redux";
 import * as Actions from "../actions/SearchActions";
 import * as FetchActions from "../actions/FetchActions";
+import type {SearchResults} from "../services/Types";
 
 const initialState = {}
 
@@ -15,15 +16,16 @@ export const stopSearch = (): Action => ({
   type: Actions.STOP_SEARCH,
   payload: {
     query: undefined,
-    loading: false
+    loading: false,
+    agents: undefined
   }
 })
 
-export const searchQueryFulfilled = (items: Array<Object>): Action => ({
+export const searchQueryFulfilled = (searchResult: SearchResults): Action => ({
   type: Actions.SEARCH_QUERY_FULFILLED,
   payload: {
     loading: false,
-    agents: items
+    agents: searchResult.lawFirmAgents
   }
 });
 
