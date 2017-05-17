@@ -1,14 +1,14 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 // @flow
 //jshint esversion:6
-import React from "react";
-import "react-mdl/extra/material.js";
-import "../styles/main.scss";
-import FirmDisplay from "./FirmDisplay";
-import {Button, Cell, Content, Grid, Header, HeaderRow, Icon, Layout, ProgressBar} from "react-mdl";
-import AddressesContainer from "../containers/AddressesContainer";
-import CreateFirmDialogContainer from "../containers/CreateFirmDialogContainer";
-import UndoFooter from "./UndoFooter";
+import React from "react"
+import "react-mdl/extra/material.js"
+import "../styles/main.scss"
+import FirmDisplay from "./FirmDisplay"
+import {Button, Cell, Content, Grid, Header, HeaderRow, Icon, Layout, ProgressBar} from "react-mdl"
+import AddressesContainer from "../containers/AddressesContainer"
+import CreateFirmDialogContainer from "../containers/CreateFirmDialogContainer"
+import UndoFooter from "./UndoFooter"
 
 type
 RootProps = {
@@ -24,46 +24,41 @@ RootProps = {
 }
 
 class Root extends React.Component {
-  props: RootProps;
-
-  constructor(props: RootProps) {
-    super(props);
-  }
+  props: RootProps
 
   componentDidMount() {
     if (!this.props.value) {
-      this.props.onGetNextServiceAddress();
+      this.props.onGetNextServiceAddress()
     }
   }
 
   render() {
-
-    let content = this.props.value ? (
+    const content = this.props.value ? (
       <Content style={{padding: "32px"}}>
         <FirmDisplay value={this.props.value}/>
         <Grid className="button-bar">
-          <Cell col={10}>
+          <Cell col={9}>
             <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
             <Button raised onClick={() => {
               this.props.onDismiss(this.props.value.unsortedServiceAddressQueueItemId,
-                                   this.props.value.serviceAddressToSort.serviceAddressId);
+                                   this.props.value.serviceAddressToSort.serviceAddressId)
             }}><Icon name="not_interested"/> Not a Law Firm</Button>
             <Button raised onClick={() => {
               this.props.onSkip(this.props.value.unsortedServiceAddressQueueItemId)
             }}><Icon name="skip_next"/> Skip</Button>
           </Cell>
-          <Cell col={2}>
-            <Button disabled accent style={{float: "right"}}><Icon name="description"/> View Sample Applications</Button>
+          <Cell col={3} style={{textAlign: "right"}}>
+            <Button disabled accent ><Icon name="description"/> View Sample Applications</Button>
           </Cell>
         </Grid>
         <AddressesContainer/>
         <CreateFirmDialogContainer/>
       </Content>
     ) : (
-                    <Content style={{padding: "32px"}}/>
-                  );
+      <Content style={{padding: "32px"}}/>
+    )
 
-    let progress = this.props.loading ? (<ProgressBar indeterminate/>) : null;
+    const progress = this.props.loading ? (<ProgressBar indeterminate/>) : null
 
     return (
       <Layout fixedHeader>
@@ -77,7 +72,6 @@ class Root extends React.Component {
       </Layout>
     )
   }
-
 }
 
 export default Root
