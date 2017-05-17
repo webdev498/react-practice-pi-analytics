@@ -90,9 +90,10 @@ class AddressesList extends React.Component {
         .filter(item => item.length > 1 && upperCase.indexOf(item) >= 0)
         .forEach(item => {
           [item, item.toLowerCase(), item.substr(0, 1) + item.substr(1).toLowerCase()].forEach(test => {
-            result = result.split(test).join("<span class='highlighted'>" + test + "</span>")
+            result = result.split(test).join("<==>" + test + "</==>")
           });
         });
+      result = result.replace(/<==>/g, "<span class='highlighted'>").replace(/<\/==>/g, "</span>");
     }
     return (
       <div onMouseOver={() => this.select(agentIndex, index, agentIndex < 0)}

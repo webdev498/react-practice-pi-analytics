@@ -16,12 +16,76 @@ import {
   Grid,
   IconButton,
   ProgressBar,
-  Textfield,
+  Textfield
 } from "react-mdl";
 import onClickOutside from "react-onclickoutside";
-import {SelectField, Option} from "react-mdl-selectfield";
+import "../styles/main.scss";
+import SelectField from "./Selectfield";
 
-type CreateFirmDialogProps = {
+const usStates = {
+  "AL": "Alabama",
+  "AK": "Alaska",
+  "AS": "American Samoa",
+  "AZ": "Arizona",
+  "AR": "Arkansas",
+  "CA": "California",
+  "CO": "Colorado",
+  "CT": "Connecticut",
+  "DE": "Delaware",
+  "DC": "District Of Columbia",
+  "FM": "Federated States Of Micronesia",
+  "FL": "Florida",
+  "GA": "Georgia",
+  "GU": "Guam",
+  "HI": "Hawaii",
+  "ID": "Idaho",
+  "IL": "Illinois",
+  "IN": "Indiana",
+  "IA": "Iowa",
+  "KS": "Kansas",
+  "KY": "Kentucky",
+  "LA": "Louisiana",
+  "ME": "Maine",
+  "MH": "Marshall Islands",
+  "MD": "Maryland",
+  "MA": "Massachusetts",
+  "MI": "Michigan",
+  "MN": "Minnesota",
+  "MS": "Mississippi",
+  "MO": "Missouri",
+  "MT": "Montana",
+  "NE": "Nebraska",
+  "NV": "Nevada",
+  "NH": "New Hampshire",
+  "NJ": "New Jersey",
+  "NM": "New Mexico",
+  "NY": "New York",
+  "NC": "North Carolina",
+  "ND": "North Dakota",
+  "MP": "Northern Mariana Islands",
+  "OH": "Ohio",
+  "OK": "Oklahoma",
+  "OR": "Oregon",
+  "PW": "Palau",
+  "PA": "Pennsylvania",
+  "PR": "Puerto Rico",
+  "RI": "Rhode Island",
+  "SC": "South Carolina",
+  "SD": "South Dakota",
+  "TN": "Tennessee",
+  "TX": "Texas",
+  "UT": "Utah",
+  "VT": "Vermont",
+  "VI": "Virgin Islands",
+  "VA": "Virginia",
+  "WA": "Washington",
+  "WV": "West Virginia",
+  "WI": "Wisconsin",
+  "WY": "Wyoming"
+}
+
+type
+CreateFirmDialogProps = {
   value: Object,
   open: boolean,
   loading: boolean,
@@ -41,7 +105,7 @@ class CreateFirmDialog extends React.Component {
       name: '',
       websiteUrl: '',
       state: '',
-      countryCode: '',
+      countryCode: this.props.value.serviceAddressToSort.country,
       unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId
     };
   }
@@ -59,31 +123,29 @@ class CreateFirmDialog extends React.Component {
     }
   }
 
-  createOptions(values: Array<string>) {
-    return values.map((value) => {
-      return (
-        <Option value={value}>{value}</Option>
-      )
-    });
-  }
-
   handleClickOutside = (event: Event) => {
     if (this.props.open) {
       this.props.onClose();
     }
   }
 
+  isValid = (): boolean => {
+    return this.state.name && (this.state.state || this.state.countryCode != "US")
+  }
+
   render(): ?React.Element<any> {
 
-    let statesList = this.createOptions([]);
-    let countriesList = this.createOptions([]);
-
-    let close = (event: Event) => {
+    const close = (event: Event) => {
       event.preventDefault();
       this.props.onClose();
     }
 
-    let progress = this.props.loading ? (<ProgressBar indeterminate/>) : null;
+    const options = this.props.value.serviceAddressToSort.country == "US" ? Object.entries(usStates).map(([key, value]) => ({
+      value: key,
+      name: key + " - " + new String(value).toString()
+    })) : null;
+
+    const progress = this.props.loading ? (<ProgressBar indeterminate/>) : null;
 
     return (
       <Dialog open={this.props.open} onCancel={this.props.onClose}>
@@ -111,21 +173,20 @@ class CreateFirmDialog extends React.Component {
             </Grid>
             <Grid>
               <Cell col={6}>
-                <SelectField disabled={this.props.loading} label={"Select state"} onChange={this.createListener('state')}>
-                  {statesList}
-                </SelectField>
+                <Textfield readOnly={true} label={"Select country"} value={this.props.value.serviceAddressToSort.country}
+                           onChange={this.createListener('countryCode')}/>
               </Cell>
-              <Cell col={6}>
-                <SelectField disabled={this.props.loading} label={"Select country"}
-                             onChange={this.createListener('countryCode')}>
-                  {countriesList}
-                </SelectField>
+              <Cell col={6} style={{textAlign: "right"}}>
+                <SelectField defaultOption={this.props.value.serviceAddressToSort.country == "US" ? "" : "All states"}
+                             label="Select state" id="countryState" name="countryState"
+                             options={options}
+                             onChange={this.createListener("state")}/>
               </Cell>
             </Grid>
           </DialogContent>
           <DialogActions>
             <Button type="button" disabled={this.props.loading} onClick={close}>Cancel</Button>
-            <Button type="submit" disabled={this.props.loading}>Save</Button>
+            <Button type="submit" disabled={this.props.loading || !this.isValid()}>Save</Button>
           </DialogActions>
         </form>
       </Dialog>

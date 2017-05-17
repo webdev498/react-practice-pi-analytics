@@ -6,13 +6,13 @@
   backface-visibility: hidden;
   box-sizing: border-box;
   height: calc(100% - 50px);
-  left: 0;
   line-height: 1.3;
   opacity: 1;
   overflow: hidden;
   padding: 0;
   position: fixed !important;
-  top: 50px !important;
+  left: 42% !important;
+  top: 50% !important;
   will-change: transform, opacity;
   width: 100%;
 
@@ -30,17 +30,14 @@
 
   @media(min-width: $grid-tablet-breakpoint) {
     height: 80%;
-    left: 50% !important;
     max-width: 800px;
     opacity: 0;
-    top: 50% !important;
     transform: translate(-50%,-50%);
     width: 80%;
     animation: dialog-open 0.3s cubic-bezier(0.41, 0.54, 0.43, 0.86) forwards 0.1s;
   }
 
   @media(min-width: $grid-desktop-breakpoint) {
-    margin-left: 120px;
     max-height: 570px;
     max-width: 800px;
     width: calc(100% - 240px);

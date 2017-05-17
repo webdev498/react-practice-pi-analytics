@@ -44,7 +44,6 @@
     "react": "^15.5.4",
     "react-dom": "^15.5.4",
     "react-mdl": "^1.10.1",
-    "react-mdl-selectfield": "^0.2.0",
     "react-onclickoutside": "^5.11.1",
     "react-redux": "^5.0.4",
     "redux": "^3.6.0",
@@ -60,8 +59,8 @@
     "webpack": "^2.4.1"
   },
   "devDependencies": {
-    "redux-devtools": "^3.4.0",
     "babel-eslint": "^7.2.3",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "cross-env": "^4.0.0",
     "empty": "^0.10.1",
     "eslint": "^3.19.0",
@@ -75,6 +74,7 @@
     "jsdom": "^10.0.0",
     "node-libs-browser": "^2.0.0",
     "react-addons-test-utils": "^15.5.1",
+    "redux-devtools": "^3.4.0",
     "webpack-dev-middleware": "^1.10.2",
     "webpack-hot-middleware": "^2.18.0",
     "webpack-shell-plugin": "^0.5.0"
