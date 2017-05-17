@@ -1,11 +1,11 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import React from "react"
-import {DataTable, IconButton, TableHeader} from "react-mdl"
-import "../styles/main.scss"
-import type {Agent, ServiceAddress} from "../services/Types"
-import {OuterUrls} from "../services/Urls"
+import React from "react";
+import {DataTable, IconButton, TableHeader} from "react-mdl";
+import "../styles/main.scss";
+import type {Agent, ServiceAddress} from "../services/Types";
+import {OuterUrls} from "../services/Urls";
 
 type
 AddressesListProps = {
@@ -50,7 +50,10 @@ class AddressesList extends React.Component {
       const website = this.renderWebsite(agent)
       return (
         <span>
-          {lawFirmId}&nbsp;<a href={href} target="_blank"><IconButton accent name="open_in_new"/></a>{website}
+          {lawFirmId}&nbsp;
+          <a href={href} target="_blank">
+            <IconButton accent name="open_in_new"/>
+          </a>{website}
         </span>
       )
     }
@@ -62,9 +65,9 @@ class AddressesList extends React.Component {
       return (
         <span>
         <a className="entity" href="#" onClick={(event: Event) => {
-            event.preventDefault()
-            this.props.onSortServiceAddress(this.props.queueId, this.props.serviceAddress.serviceAddressId, agent)
-          }
+          event.preventDefault()
+          this.props.onSortServiceAddress(this.props.queueId, this.props.serviceAddress.serviceAddressId, agent)
+        }
         }>
           {agent.lawFirm.name}
         </a>
@@ -108,8 +111,9 @@ class AddressesList extends React.Component {
 
   renderWebsite(agent: Agent): ?React.Element<any> {
     if (agent.lawFirm && agent.lawFirm.websiteUrl) {
+      const href = (agent.lawFirm.websiteUrl.indexOf("http") == -1 ? "http://" : "") + agent.lawFirm.websiteUrl;
       return (
-        <a href={agent.lawFirm.websiteUrl} target="_blank">
+        <a href={href} target="_blank">
           <IconButton name="public" accent/>
         </a>
       )
