@@ -17,15 +17,18 @@ import org.slf4j.LoggerFactory;
 
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.NextUnsortedServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.SearchLawFirmsRequest;
+import pi.admin.service_address_sorting.generated.SearchResults;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
 import pi.analytics.admin.serviceaddress.guice.ServiceAddressSortingModule;
 
 /**
  * @author shane.xie@practiceinsight.io
  *
- * To run these integration tests locally in IDEA, set the pi_custom_property_file_path VM option. E.g.:
+ * To run these integration tests locally in IDEA, set the appropriate VM options. E.g.:
  *
  *   -Dpi_custom_property_file_path=/Users/shane/work/config/onprem-prod.properties
+ *   -Dconf_default_service_dns_suffix=.hatchedpi.com
  */
 @Category(DisabledTests.class)
 public class ServiceAddressSortingServiceImplIntegrationTest {
@@ -51,6 +54,27 @@ public class ServiceAddressSortingServiceImplIntegrationTest {
       @Override
       public void onNext(ServiceAddressBundle bundle) {
         log.info("onNext: {}", bundle);
+      }
+
+      @Override
+      public void onError(Throwable throwable) {
+        log.error("onError: {}", throwable);
+      }
+
+      @Override
+      public void onCompleted() {
+        log.info("onCompleted");
+      }
+    });
+  }
+
+  @Test
+  public void searchLawFirms() throws Exception {
+    final SearchLawFirmsRequest request = SearchLawFirmsRequest.newBuilder().setSearchTerm("spruson").build();
+    serviceAddressSortingService.searchLawFirms(request, new StreamObserver<SearchResults>() {
+      @Override
+      public void onNext(SearchResults searchResults) {
+        log.info("onNext: {}", searchResults);
       }
 
       @Override
