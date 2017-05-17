@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchRequest;
-import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchServiceGrpc.LawFirmSearchServiceBlockingStub;
+import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSearchServiceGrpc
+    .NakedLawFirmSearchServiceBlockingStub;
 import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
@@ -37,7 +38,7 @@ public class LawFirmRepository {
   private LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
 
   @Inject
-  private LawFirmSearchServiceBlockingStub lawFirmSearchServiceBlockingStub;
+  private NakedLawFirmSearchServiceBlockingStub lawFirmSearchServiceBlockingStub;
 
   @Inject
   private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;

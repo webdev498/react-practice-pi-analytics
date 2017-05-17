@@ -24,7 +24,7 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchRequest;
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchResult;
-import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchServiceGrpc;
+import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSearchServiceGrpc;
 import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper;
@@ -62,7 +62,7 @@ public class LawFirmRepositoryTest {
 
   private Faker faker = new Faker();
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
-  private LawFirmSearchServiceGrpc.LawFirmSearchServiceImplBase lawFirmSearchService;
+  private NakedLawFirmSearchServiceGrpc.NakedLawFirmSearchServiceImplBase lawFirmSearchService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase datastoreSg3Service;
   private QueueOnPremGrpc.QueueOnPremImplBase queueOnPrem;
@@ -73,7 +73,7 @@ public class LawFirmRepositoryTest {
   @Before
   public void setup() throws Exception {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
-    lawFirmSearchService = mock(LawFirmSearchServiceGrpc.LawFirmSearchServiceImplBase.class);
+    lawFirmSearchService = mock(NakedLawFirmSearchServiceGrpc.NakedLawFirmSearchServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
     datastoreSg3Service = mock(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase.class);
     queueOnPrem = mock(QueueOnPremGrpc.QueueOnPremImplBase.class);
@@ -101,8 +101,8 @@ public class LawFirmRepositoryTest {
       protected void configure() {
         bind(LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub.class)
             .toInstance(LawFirmDbServiceGrpc.newBlockingStub(channel));
-        bind(LawFirmSearchServiceGrpc.LawFirmSearchServiceBlockingStub.class)
-            .toInstance(LawFirmSearchServiceGrpc.newBlockingStub(channel));
+        bind(NakedLawFirmSearchServiceGrpc.NakedLawFirmSearchServiceBlockingStub.class)
+            .toInstance(NakedLawFirmSearchServiceGrpc.newBlockingStub(channel));
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
         bind(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub.class)

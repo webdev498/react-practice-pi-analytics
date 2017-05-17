@@ -9,17 +9,18 @@ import com.pi.common.config.PiKubeServicePort;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchServiceGrpc;
-import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchServiceGrpc.LawFirmSearchServiceBlockingStub;
+import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSearchServiceGrpc;
+import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSearchServiceGrpc
+    .NakedLawFirmSearchServiceBlockingStub;
 
 /**
  * @author shane.xie@practiceinsigt.io
  */
 @Singleton
-public class LawFirmSearchServiceBlockingStubProvider implements Provider<LawFirmSearchServiceBlockingStub> {
+public class LawFirmSearchServiceBlockingStubProvider implements Provider<NakedLawFirmSearchServiceBlockingStub> {
 
   @Override
-  public LawFirmSearchServiceBlockingStub get() {
+  public NakedLawFirmSearchServiceBlockingStub get() {
     final PiConfig piConfig = PiConfig.get();
     final ManagedChannel channel =
         ManagedChannelBuilder
@@ -29,6 +30,6 @@ public class LawFirmSearchServiceBlockingStubProvider implements Provider<LawFir
             )
             .usePlaintext(true)
             .build();
-    return LawFirmSearchServiceGrpc.newBlockingStub(channel);
+    return NakedLawFirmSearchServiceGrpc.newBlockingStub(channel);
   }
 }
