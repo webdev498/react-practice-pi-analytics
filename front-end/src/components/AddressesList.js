@@ -59,16 +59,23 @@ class AddressesList extends React.Component {
 
   renderEntity(agent: Agent): React.Element<any> {
     if (agent.lawFirm) {
-      return <a className="entity" href="#" onClick={(event: Event) => {
-        event.preventDefault()
-        this.props.onSortServiceAddress(this.props.queueId, this.props.serviceAddress.serviceAddressId, agent)
-      }}>{agent.lawFirm.name}</a>
+      return (
+        <span>
+        <a className="entity" href="#" onClick={(event: Event) => {
+            event.preventDefault()
+            this.props.onSortServiceAddress(this.props.queueId, this.props.serviceAddress.serviceAddressId, agent)
+          }
+        }>
+          {agent.lawFirm.name}
+        </a>
+        </span>
+      )
     }
     return <span className="entity">{agent.nonLawFirm ? agent.nonLawFirm.name : ""}</span>
   }
 
   renderAddressLine(agentIndex: number, index: number, value: ServiceAddress, testValue: string): React.Element<any> {
-    let result = value.name + " " + value.address
+    let result = value.name + ", " + value.address
     const upperCase = result.toUpperCase()
     if (testValue && testValue.length > 0 && value.address) {
       testValue
@@ -101,7 +108,11 @@ class AddressesList extends React.Component {
 
   renderWebsite(agent: Agent): ?React.Element<any> {
     if (agent.lawFirm && agent.lawFirm.websiteUrl) {
-      return <a href={agent.lawFirm.websiteUrl} target="_blank"><IconButton name="public" accent/></a>
+      return (
+        <a href={agent.lawFirm.websiteUrl} target="_blank">
+          <IconButton name="public" accent/>
+        </a>
+      )
     }
     return null
   }
@@ -145,8 +156,8 @@ class AddressesList extends React.Component {
     return (
       <DataTable className="addresses-list" style={{width: "100%", tableLayout: "fixed"}} rowKeyColumn="key"
                  rows={this.mapRows()}>
-        <TableHeader style={{width: "15%"}} name="lawFirmId">Law Firm</TableHeader>
-        <TableHeader style={{width: "21%"}} name="entity">Firm</TableHeader>
+        <TableHeader style={{width: "15%"}} name="lawFirmId">Law Firm ID</TableHeader>
+        <TableHeader style={{width: "21%"}} name="entity">Firm Name</TableHeader>
         <TableHeader style={{paddingLeft: "26px", width: "53%"}} name="serviceAddress">Service Addresses</TableHeader>
         <TableHeader style={{paddingLeft: "26px", width: "6%"}} name="serviceAddressId">Entity ID</TableHeader>
         <TableHeader style={{width: "5%"}} name="actions">Re-sort</TableHeader>
