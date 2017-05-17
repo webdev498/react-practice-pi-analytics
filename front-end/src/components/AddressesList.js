@@ -68,7 +68,7 @@ class AddressesList extends React.Component {
   }
 
   renderAddressLine(agentIndex: number, index: number, value: ServiceAddress, testValue: string): React.Element<any> {
-    let result = new String(value.address)
+    let result = value.name + " " + value.address
     const upperCase = result.toUpperCase()
     if (testValue && testValue.length > 0 && value.address) {
       testValue
