@@ -4,6 +4,8 @@
 .address-line {
   margin-bottom: 6px;
   padding-left: $list-border;
+  padding-right: $list-border;
+  width: 100%;
 }
 
 .addresses-list.mdl-data-table {
@@ -18,7 +20,6 @@
     & > span.entity {
       white-space: pre-wrap;
     }
-
   }
 
   & td:nth-child(3) {
@@ -37,7 +38,5 @@
       transition: 0.3s;
       background-color: $data-table-selection-color;
     }
-
   }
-
 }
