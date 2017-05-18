@@ -55,9 +55,6 @@ public class UnsortedServiceAddressFetcher {
     if (StringUtils.equalsIgnoreCase(userName, "hellen")) {
       return ImmutableList.of(
           QueueNameOnPrem.ServiceAddrSort_zh,
-          QueueNameOnPrem.ServiceAddrSort_en,
-          QueueNameOnPrem.ServiceAddrSort_de,
-          QueueNameOnPrem.ServiceAddrSort_kr,
           QueueNameOnPrem.ServiceAddrSort_ja
       );
     } else {
