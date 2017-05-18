@@ -21,22 +21,22 @@ SearchProps = {
 }
 
 class Search extends React.Component {
-  props: SearchProps;
-  bindSearchInputChange: function;
+  props: SearchProps
+  bindSearchInputChange: () => void
 
   constructor(props: SearchProps) {
     super(props)
-    this.bindSearchInputChange = this.bindSearchInputChange.bind(this);
+    this.bindSearchInputChange = this.bindSearchInputChange.bind(this)
   }
 
   bindSearchInputChange(input: any) {
     if (!input) {
-      return;
+      return
     }
     Rx.Observable.fromEvent(input.inputRef, "keyup")
       .map(event => event.target.value)
       .debounceTime(200)
-      .subscribe(this.props.onSearch);
+      .subscribe(this.props.onSearch)
   }
 
   render() {
