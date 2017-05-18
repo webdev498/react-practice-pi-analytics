@@ -10,6 +10,8 @@ import u from "updeep";
 import * as Queue from "../services/Queue";
 import sampleSize from "lodash/sampleSize";
 
+const skipDelay = 10080;
+
 const initialState = {
   loading: true
 }
@@ -132,7 +134,7 @@ export const skipServiceAddress = (queueId: string): Action => (dispatch: Dispat
   dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}});
   dispatch({
              type: FetchActions.SKIP_SERVICE_ADDRESS,
-             payload: {request: {unsortedServiceAddressQueueItemId: queueId, delayMinutes: 1440}}
+             payload: {request: {unsortedServiceAddressQueueItemId: queueId, delayMinutes: skipDelay}}
            });
 };
 

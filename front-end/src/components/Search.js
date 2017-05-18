@@ -57,7 +57,7 @@ class Search extends React.Component {
       <div>
         <div style={{textAlign: "center", margin: "16px"}}>
           <Icon style={{verticalAlign: "sub"}} name="search"/>
-          <Textfield ref={this.bindSearchInputChange} style={{marginLeft: "8px"}} label="Search law firm by name" />
+          <Textfield value={this.props.query} ref={this.bindSearchInputChange} style={{marginLeft: "8px"}} label="Search law firm by name" />
         </div>
         <Content className={"center"}>
           {content}

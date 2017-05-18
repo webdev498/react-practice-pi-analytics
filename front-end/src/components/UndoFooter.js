@@ -19,7 +19,7 @@ const UndoFooter = (props: UndoFooterProps): React.Element<Layout> => {
 
   return (
     <Footer size="mini" className="undo-footer">
-      <FooterSection type="left" ><div style={{marginTop: "10px"}}>{text}</div></FooterSection>
+      <FooterSection type="left" ><div>{text}</div></FooterSection>
       <FooterSection type="right">
         <Button disabled={props.disabled} onClick={() => {
           props.onUndo(props.undo.value.serviceAddressToSort.serviceAddressId)

@@ -82,15 +82,13 @@ class Root extends React.Component {
       )
     }
 
-    const progress = this.props.loading ? (<ProgressBar indeterminate/>) : null
-
     return (
       <Layout fixedHeader>
         <Header>
           <HeaderRow title="Sort Entities into Firms">
           </HeaderRow>
         </Header>
-        {progress}
+        <ProgressBar style={{visibility: this.props.loading ? "visible" : "hidden"}} indeterminate/>
         {content}
         <Snackbar active={this.props.errorMessage ? true : false} onClick={this.hideSnackbar} onTimeout={this.hideSnackbar}
                   action="Close">

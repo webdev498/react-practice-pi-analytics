@@ -1,3 +1,21 @@
 .undo-footer {
-  padding: 5px 32px;
+  padding: 8px 50px 8px 32px;
+  line-height: 36px;
+}
+
+.undo-footer.mdl-mini-footer {
+  display: block;
+
+  & > .mdl-mini-footer__left-section, & > .mdl-mini-footer__right-section {
+    width: 50%;
+  }
+
+  & > .mdl-mini-footer__left-section {
+    float: left;
+  }
+
+  & > .mdl-mini-footer__right-section {
+    float: right;
+  }
+
 }
