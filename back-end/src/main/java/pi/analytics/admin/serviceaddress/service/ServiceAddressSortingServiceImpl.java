@@ -152,7 +152,8 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   }
 
   @Override
-  public void skipServiceAddress(SkipServiceAddressRequest request, StreamObserver<ServiceAddressSkipped> responseObserver) {
+  public void skipServiceAddress(final SkipServiceAddressRequest request,
+                                 final StreamObserver<ServiceAddressSkipped> responseObserver) {
     try {
       serviceAddressSorter.skipServiceAddress(request);
       responseObserver.onNext(ServiceAddressSkipped.getDefaultInstance());
