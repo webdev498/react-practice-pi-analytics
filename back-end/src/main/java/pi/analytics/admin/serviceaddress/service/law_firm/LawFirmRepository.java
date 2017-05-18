@@ -8,6 +8,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,8 +85,11 @@ public class LawFirmRepository {
   }
 
   public long createLawFirm(final CreateLawFirmRequest request) {
-    Preconditions.checkArgument(!request.getName().isEmpty(), "Law firm name is required");
-    Preconditions.checkArgument(!request.getCountryCode().isEmpty(), "Law firm country code is required");
+    Preconditions.checkArgument(StringUtils.isNotBlank(request.getName()), "Law firm name is required");
+    Preconditions.checkArgument(StringUtils.isNotBlank(request.getCountryCode()), "Law firm country code is required");
+    rreconditions.checkArgument(request.hasServiceAddress(), "Service address is required");
+    Preconditions.checkArgument(StringUtils.isNotBlank(request.getUnsortedServiceAddressQueueItemId()),
+        "Unsorted service address queue item ID is required");
 
     // Create the new law firm record in MySQL
     final LawFirm lawFirmToBeCreated =
