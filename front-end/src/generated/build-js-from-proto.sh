@@ -4,7 +4,7 @@ set -e
 # Clear previous run
 rm -rf from-proto/
 mkdir -p from-proto/tmp/
-cp -r ../protobuf/. from-proto/tmp/
+cp -r ../../../pi-shared-protobuf/src/. from-proto/tmp/
 
 cd from-proto/tmp/
 
