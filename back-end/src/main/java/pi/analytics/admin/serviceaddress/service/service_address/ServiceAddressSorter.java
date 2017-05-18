@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.Int64Value;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +135,7 @@ public class ServiceAddressSorter {
   }
 
   public void skipServiceAddress(final SkipServiceAddressRequest request) {
-    Preconditions.checkArgument(!request.getUnsortedServiceAddressQueueItemId().isEmpty(),
+    Preconditions.checkArgument(StringUtils.isNotBlank(request.getUnsortedServiceAddressQueueItemId()),
         "Unsorted service address queue item ID is required");
     Preconditions.checkArgument(request.getDelayMinutes() != 0, "Delay (in minutes) is required");
     delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), request.getDelayMinutes());
