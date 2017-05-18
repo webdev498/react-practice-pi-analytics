@@ -87,7 +87,7 @@ public class LawFirmRepository {
   public long createLawFirm(final CreateLawFirmRequest request) {
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getName()), "Law firm name is required");
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getCountryCode()), "Law firm country code is required");
-    rreconditions.checkArgument(request.hasServiceAddress(), "Service address is required");
+    Preconditions.checkArgument(request.hasServiceAddress(), "Service address is required");
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getUnsortedServiceAddressQueueItemId()),
         "Unsorted service address queue item ID is required");
 
