@@ -10,8 +10,11 @@ import {
   undoServiceAddressSuccess,
   unsortedServiceAddressFulfilled,
   unsortedServiceAddressFetchError,
-  unsortedServiceAddressPreFetched
+  unsortedServiceAddressPreFetched,
 } from "../reducers/root";
+import {
+  firmCreationError
+} from "../reducers/createfirmdialog";
 import {searchQueryFulfilled} from "../reducers/search";
 import {lawFirmCreated} from "../reducers/createfirmdialog";
 import {
@@ -111,7 +114,7 @@ const firm = {
 export const fetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
     .delay(1000)
-    .mapTo(unsortedServiceAddressFetchError());
+    .mapTo(unsortedServiceAddressFulfilled(firm));
 
 export const preFetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
@@ -141,7 +144,7 @@ export const undoServiceAddress = (action$: ActionsObservable<Action>): ActionsO
 export const createLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(CREATE_LAW_FIRM)
     .delay(1000)
-    .mapTo(lawFirmCreated({lawFirmId: 1}));
+    .mapTo(firmCreationError());
 
 export const setServiceAddressAsNonLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM)

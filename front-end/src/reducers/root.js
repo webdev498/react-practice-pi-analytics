@@ -55,27 +55,27 @@ export const closeFirmDialog = (): Action => ({
   payload: {
     isCreateFirmDialogOpen: false
   }
-})
+});
 
-export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
-  if (Queue.canPush()) {
-    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+export const showError = (errorMessage: string): Action => ({
+  type: Actions.ERROR,
+  payload: {
+    errorMessage: errorMessage
   }
-  dispatch(
-    {type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(bundle), loading: false}});
-};
+});
 
-export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
-  Queue.push(bundle);
-  if (Queue.canPush()) {
-    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+export const hideError = (): Action => ({
+  type: Actions.ERROR,
+  payload: {
+    errorMessage: undefined
   }
-}
+});
 
 export const globalFetchError = (): Action => ({
-  type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
+  type: Actions.ERROR,
   payload: {
-    loading: false
+    loading: false,
+    errorMessage: "Error fetching data"
   }
 });
 
@@ -101,6 +101,21 @@ export const undoServiceAddressSuccess = (): Action => ({
     undo: undefined
   }
 })
+
+export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
+  if (Queue.canPush()) {
+    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  }
+  dispatch(
+    {type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(bundle), loading: false}});
+};
+
+export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
+  Queue.push(bundle);
+  if (Queue.canPush()) {
+    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  }
+}
 
 export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) => {
   var cached = Queue.pop();

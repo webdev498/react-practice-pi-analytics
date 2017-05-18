@@ -102,11 +102,12 @@ class CreateFirmDialog extends React.Component {
   constructor(props: CreateFirmDialogProps) {
     super(props);
     this.state = {
-      name: '',
-      websiteUrl: '',
-      state: '',
+      name: "",
+      websiteUrl: "",
+      state: "",
       countryCode: this.props.value.serviceAddressToSort.country,
-      unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId
+      unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId,
+      serviceAddress: this.props.value.serviceAddressToSort
     };
   }
 
@@ -125,6 +126,7 @@ class CreateFirmDialog extends React.Component {
 
   handleClickOutside = (event: Event) => {
     if (this.props.open) {
+      this.setState({name: "", websiteUrl: "", state: ""});
       this.props.onClose();
     }
   }
@@ -136,7 +138,10 @@ class CreateFirmDialog extends React.Component {
   render(): ?React.Element<any> {
 
     const close = (event: Event) => {
-      event.preventDefault();
+      if (event) {
+        event.preventDefault();
+      }
+      this.setState({name: "", websiteUrl: "", state: ""});
       this.props.onClose();
     }
 
@@ -148,7 +153,7 @@ class CreateFirmDialog extends React.Component {
     const progress = this.props.loading ? (<ProgressBar indeterminate/>) : null;
 
     return (
-      <Dialog open={this.props.open} onCancel={this.props.onClose}>
+      <Dialog open={this.props.open} onCancel={close}>
         <DialogTitle>Create new Law Firm</DialogTitle>
         <IconButton disabled={this.props.loading} name="close" onClick={close} style={{top: "18px"}}
                     onFocus={(event) => this.nameInput.inputRef.focus()}>Close</IconButton>
@@ -160,14 +165,16 @@ class CreateFirmDialog extends React.Component {
           <DialogContent>
             <Grid>
               <Cell col={12}>
-                <Textfield disabled={this.props.loading} style={{width: "100%"}} id={"name"} label={"Name"} ref={(input) => {
+                <Textfield value={this.state.name} disabled={this.props.loading} style={{width: "100%"}} id={"name"}
+                           label={"Name"} ref={(input) => {
                   this.nameInput = input;
                 }} onChange={this.createListener('name')}/>
               </Cell>
             </Grid>
             <Grid>
               <Cell col={12}>
-                <Textfield disabled={this.props.loading} style={{width: "100%"}} id={"url"} label={"Firm URL"}
+                <Textfield value={this.state.websiteUrl} disabled={this.props.loading} style={{width: "100%"}} id={"url"}
+                           label={"Firm URL"}
                            onChange={this.createListener('websiteUrl')}/>
               </Cell>
             </Grid>
@@ -177,7 +184,8 @@ class CreateFirmDialog extends React.Component {
                            onChange={this.createListener('countryCode')}/>
               </Cell>
               <Cell col={6} style={{textAlign: "right"}}>
-                <SelectField defaultOption={this.props.value.serviceAddressToSort.country == "US" ? "" : "All states"}
+                <SelectField value={this.state.state}
+                             defaultOption={this.props.value.serviceAddressToSort.country == "US" ? "" : "All states"}
                              label="Select state" id="countryState" name="countryState"
                              options={options}
                              onChange={this.createListener("state")}/>

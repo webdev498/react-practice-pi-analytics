@@ -5,7 +5,7 @@ import React from "react";
 import "react-mdl/extra/material.js";
 import "../styles/main.scss";
 import FirmDisplay from "./FirmDisplay";
-import {Button, Cell, Content, Grid, Header, HeaderRow, Icon, Layout, ProgressBar} from "react-mdl";
+import {Button, Cell, Content, Grid, Header, HeaderRow, Icon, Layout, ProgressBar, Snackbar} from "react-mdl";
 import AddressesContainer from "../containers/AddressesContainer";
 import CreateFirmDialogContainer from "../containers/CreateFirmDialogContainer";
 import UndoFooter from "./UndoFooter";
@@ -16,20 +16,33 @@ RootProps = {
   isCreateFirmDialogOpen: boolean,
   loading: boolean,
   undo: Object,
+  errorMessage: string,
   onCreateFirm: (event: Event) => void,
   onDismiss: (queueId: string, serviceAddressId: string) => void,
   onSkip: (queueId: string) => void,
   onUndo: (serviceAddressId: string) => void,
-  onGetNextServiceAddress: () => void
+  onGetNextServiceAddress: () => void,
+  onHideError: () => void
 }
 
 class Root extends React.Component {
   props: RootProps
+  state: Object
+  hideSnackbar: () => void
+
+  constructor(props: RootProps) {
+    super(props);
+    this.hideSnackbar = this.hideSnackbar.bind(this)
+  }
 
   componentDidMount() {
     if (!this.props.value) {
       this.props.onGetNextServiceAddress()
     }
+  }
+
+  hideSnackbar() {
+    this.props.onHideError();
   }
 
   render() {
@@ -79,6 +92,10 @@ class Root extends React.Component {
         </Header>
         {progress}
         {content}
+        <Snackbar active={this.props.errorMessage ? true : false} onClick={this.hideSnackbar} onTimeout={this.hideSnackbar}
+                  action="Close">
+          {this.props.errorMessage}
+        </Snackbar>
         <UndoFooter disabled={this.props.loading || !this.props.undo} undo={this.props.undo} onUndo={this.props.onUndo}/>
       </Layout>
     )

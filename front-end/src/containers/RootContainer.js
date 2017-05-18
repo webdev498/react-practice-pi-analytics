@@ -7,7 +7,8 @@ import {
   dismissServiceAddress,
   getNextUnsortedServiceAddress,
   skipServiceAddress,
-  undoServiceAddress
+  undoServiceAddress,
+  hideError
 } from "../reducers/root";
 import * as FetchActions from "../actions/FetchActions";
 import type {Dispatch, State} from "redux";
@@ -18,7 +19,8 @@ const mapStateToProps = (state: State) => ({
   value: state.root.value,
   isCreateFirmDialogOpen: state.root.isCreateFirmDialogOpen,
   loading: state.root.loading,
-  undo: state.root.undo
+  undo: state.root.undo,
+  errorMessage: state.root.errorMessage
 })
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
@@ -36,6 +38,9 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   },
   onUndo: (serviceAddressId: string) => {
     dispatch(undoServiceAddress(serviceAddressId));
+  },
+  onHideError: () => {
+    dispatch(hideError());
   }
 })
 
