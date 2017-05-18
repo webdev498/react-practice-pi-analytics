@@ -22,9 +22,11 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.NonLawFirm;
+import pi.admin.service_address_sorting.generated.SamplePatentApp;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
 import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
+import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressRequest;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
@@ -63,6 +65,7 @@ public class ServiceAddressBundleFetcher {
     return createServiceAddressBundle
         .andThen(addTranslationIfNecessary)
         .andThen(addAgentSuggestions)
+        .andThen(addSamplePatentApplications)
         .apply(queuedServiceAddress);
   }
 
@@ -133,6 +136,33 @@ public class ServiceAddressBundleFetcher {
     return ServiceAddressBundle
         .newBuilder(bundle)
         .addAllSuggestedAgents(suggestedAgents)
+        .build();
+  };
+
+  @VisibleForTesting
+  final Function<ServiceAddressBundle, ServiceAddressBundle> addSamplePatentApplications = bundle -> {
+    final List<SamplePatentApp> samplePatentApps =
+        serviceAddressServiceBlockingStub
+            .getSamplePatentAppsForServiceAddress(
+                GetSamplePatentAppsForServiceAddressRequest
+                    .newBuilder()
+                    .setServiceAddressId(bundle.getServiceAddressToSort().getServiceAddressId())
+                    .setLimit(5)
+                    .build()
+            )
+            .getSamplePatentAppsList()
+            .stream()
+            .map(p -> SamplePatentApp
+                .newBuilder()
+                .setAppNum(p.getAppNum())
+                .addAllApplicants(p.getApplicantsList())
+                .build()
+            )
+            .collect(toList());
+
+    return ServiceAddressBundle
+        .newBuilder(bundle)
+        .addAllSamplePatentApps(samplePatentApps)
         .build();
   };
 

@@ -28,8 +28,11 @@ import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
 import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
+import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressRequest;
+import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressResponse;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
+import pi.ip.data.relational.generated.SamplePatentApp;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
 import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressRequest;
@@ -331,6 +334,52 @@ public class ServiceAddressBundleFetcherTest {
         );
   }
 
+  @Test
+  public void addSamplePatentApplications() throws Exception {
+    final GetSamplePatentAppsForServiceAddressResponse response =
+        GetSamplePatentAppsForServiceAddressResponse
+            .newBuilder()
+            .addSamplePatentApps(
+                SamplePatentApp
+                    .newBuilder()
+                    .setAppNum("appNum1")
+                    .addApplicants("appNum1Applicant1")
+                    .addApplicants("appNum1Applicant2")
+                    .build()
+            )
+            .addSamplePatentApps(
+                SamplePatentApp
+                    .newBuilder()
+                    .setAppNum("appNum2")
+                    .addApplicants("appNum2Applicant")
+                    .build()
+            )
+            .build();
+
+    replyWith(response)
+        .when(serviceAddressService)
+        .getSamplePatentAppsForServiceAddress(any(GetSamplePatentAppsForServiceAddressRequest.class),
+            any(StreamObserver.class));
+
+    final ServiceAddressBundle bundleWithSampleApps =
+        serviceAddressBundleFetcher
+            .addSamplePatentApplications
+            .apply(ServiceAddressBundle.getDefaultInstance());
+
+    assertThat(bundleWithSampleApps.getSamplePatentAppsList()).containsExactly(
+        pi.admin.service_address_sorting.generated.SamplePatentApp
+            .newBuilder()
+            .setAppNum("appNum1")
+            .addApplicants("appNum1Applicant1")
+            .addApplicants("appNum1Applicant2")
+            .build(),
+        pi.admin.service_address_sorting.generated.SamplePatentApp
+            .newBuilder()
+            .setAppNum("appNum2")
+            .addApplicants("appNum2Applicant")
+            .build()
+    );
+  }
 
   // Test Helpers
 
