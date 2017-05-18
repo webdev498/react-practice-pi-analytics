@@ -1,4 +1,5 @@
 // Copyright (c) 2016 Practice Insight Pty Ltd. All rights reserved.
+@import "../vendor/mdl/variables";
 
 .mdl-button {
   border-radius: 2px;
@@ -6,4 +7,8 @@
 
 .mdl-button--primary:hover, .mdl-button--primary.mdl-button--raised:hover {
   background: $button-hover-color-alt;
+}
+
+.mdl-button > .material-icons {
+  margin-right: $button-margin;
 }

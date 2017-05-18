@@ -9,6 +9,7 @@ import {
   serviceAddressUnsorted,
   undoServiceAddressSuccess,
   unsortedServiceAddressFulfilled,
+  unsortedServiceAddressFetchError,
   unsortedServiceAddressPreFetched
 } from "../reducers/root";
 import {searchQueryFulfilled} from "../reducers/search";
@@ -110,7 +111,7 @@ const firm = {
 export const fetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
     .delay(1000)
-    .mapTo(unsortedServiceAddressFulfilled(firm));
+    .mapTo(unsortedServiceAddressFetchError());
 
 export const preFetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)

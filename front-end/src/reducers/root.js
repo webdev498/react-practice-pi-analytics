@@ -61,7 +61,8 @@ export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): A
   if (Queue.canPush()) {
     dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
   }
-  dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(bundle), loading: false}});
+  dispatch(
+    {type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(bundle), loading: false}});
 };
 
 export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
@@ -75,6 +76,14 @@ export const globalFetchError = (): Action => ({
   type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
   payload: {
     loading: false
+  }
+});
+
+export const unsortedServiceAddressFetchError = (): Action => ({
+  type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
+  payload: {
+    loading: false,
+    value: null
   }
 });
 
@@ -96,7 +105,8 @@ export const undoServiceAddressSuccess = (): Action => ({
 export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) => {
   var cached = Queue.pop();
   if (cached) {
-    dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(cached), loading: false}});
+    dispatch(
+      {type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(cached), loading: false}});
   } else {
     dispatch({type: Actions.START_FETCH, payload: {loading: true}});
     dispatch({type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});

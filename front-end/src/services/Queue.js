@@ -15,7 +15,7 @@ export const push = (bundle: ServiceAddressBundle) => {
 
 export const pop = (): ServiceAddressBundle => {
   var result = queue.pop();
-  if (canPush()) {
+  if (result && canPush()) {
     store.dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
   }
   return result;
