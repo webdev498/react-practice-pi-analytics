@@ -5,17 +5,15 @@
 package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.pi.common.core.queue.OfficeCodeListsActive;
-
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -121,26 +119,19 @@ public class UnsortedServiceAddressFetcher {
    * Contains Optional<ServiceAddress>.empty() if the service address is to be skipped
    */
   private QueuedServiceAddress pruneUnhandledQueueItem(final QueuedServiceAddress queuedServiceAddress) {
+    final QueuedServiceAddress skipped = QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
+
     if (!queuedServiceAddress.serviceAddress().isPresent()) {
       // Service address doesn't exist and we can't process it
       deleteQueueItem(queuedServiceAddress.queueId());
     } else if (queuedServiceAddress.serviceAddress().get().getLawFirmStatusDetermined()) {
       // Service address has already been sorted
       deleteQueueItem(queuedServiceAddress.queueId());
-      // Indicate that the service address should be skipped
-      return QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
-    } else {
-      final List<String> activeOfficeCodes =
-          Arrays
-              .stream(OfficeCodeListsActive.PatentOfficeCode.values())
-              .map(patentOfficeCode -> patentOfficeCode.name().toUpperCase())
-              .collect(Collectors.toList());
-      if (!activeOfficeCodes.contains(queuedServiceAddress.serviceAddress().get().getCountry().toUpperCase())) {
-        // We are not interested in this office code
-        deleteQueueItem(queuedServiceAddress.queueId());
-        // Indicate that the service address should be skipped
-        return QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
-      }
+      return skipped;
+    } else if (!activeCountryCodes().contains(queuedServiceAddress.serviceAddress().get().getCountry().toUpperCase())) {
+      // We are not interested in this country code
+      deleteQueueItem(queuedServiceAddress.queueId());
+      return skipped;
     }
     return queuedServiceAddress;
   }
@@ -152,5 +143,13 @@ public class UnsortedServiceAddressFetcher {
   private void deleteQueueItem(final String queueId) {
     final DeleteUnitRequest deleteUnitRequest = DeleteUnitRequest.newBuilder().setDbId(queueId).build();
     queueOnPremBlockingStub.deleteQueueUnit(deleteUnitRequest);
+  }
+
+  private Set<String> activeCountryCodes() {
+    return ImmutableSet.of("AE", "AT", "AU", "BE", "BG", "BR", "CA", "CH", "CL", "CN",
+        "CO", "CU", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HK", "HR", "HU", "IE", "IL", "IN", "IS", "IT",
+        "JP", "KR", "LI", "LU", "LV", "MP", "MX", "MY", "NL", "NO", "NZ", "PL", "PR", "PT", "RO", "RU", "SE", "SG", "SI",
+        "SK", "TH", "TR", "TW", "US", "ZA"
+    );
   }
 }
