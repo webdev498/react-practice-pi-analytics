@@ -33,7 +33,10 @@ class Search extends React.Component {
 
   componentDidMount() {
     if (this.props.query) {
-      findDOMNode(this.searchInput).MaterialTextfield.change(this.props.query.substr(0));
+      const node: any = findDOMNode(this.searchInput);
+      if (node) {
+        node.MaterialTextfield.change(this.props.query.substr(0));
+      }
     }
   }
 
