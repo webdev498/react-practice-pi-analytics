@@ -8,8 +8,8 @@ import {
   getNextUnsortedServiceAddress,
   skipServiceAddress,
   undoServiceAddress,
-  hideError,
   toggleApplicationsPanel
+  hideMessage,
 } from "../reducers/root";
 import * as FetchActions from "../actions/FetchActions";
 import type {Dispatch, State} from "redux";
@@ -21,7 +21,7 @@ const mapStateToProps = (state: State) => ({
   isCreateFirmDialogOpen: state.root.isCreateFirmDialogOpen,
   loading: state.root.loading,
   undo: state.root.undo,
-  errorMessage: state.root.errorMessage,
+  message: state.root.message
   applicationsPanelOpen: state.root.applicationsPanelOpen
 })
 
@@ -41,8 +41,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onUndo: (serviceAddressId: string) => {
     dispatch(undoServiceAddress(serviceAddressId));
   },
-  onHideError: () => {
-    dispatch(hideError());
+  onHideSnackbar: () => {
+    dispatch(hideMessage());
   },
   onToggleApplicationsPanel: (previous: boolean) => {
     dispatch(toggleApplicationsPanel(previous));

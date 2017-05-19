@@ -11,6 +11,9 @@ export const canPush = (): boolean => queue.length < 4;
 
 export const push = (bundle: ServiceAddressBundle) => {
   queue.push(bundle);
+  if (canPush()) {
+    store.dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  }
 }
 
 export const pop = (): ServiceAddressBundle => {

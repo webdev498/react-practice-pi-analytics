@@ -97,11 +97,12 @@ CreateFirmDialogProps = {
 class CreateFirmDialog extends React.Component {
   props: CreateFirmDialogProps;
   state: Object;
+  initialState: Object;
   nameInput: any;
 
   constructor(props: CreateFirmDialogProps) {
     super(props);
-    this.state = {
+    this.initialState = {
       name: "",
       websiteUrl: "",
       state: "",
@@ -109,6 +110,13 @@ class CreateFirmDialog extends React.Component {
       unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId,
       serviceAddress: this.props.value.serviceAddressToSort
     };
+    this.state = u({}, this.initialState);
+  }
+
+  componentWillReceiveProps(nextProps: CreateFirmDialogProps) {
+    if (!this.props.open && nextProps.open) {
+      this.setState(u({}, this.initialState));
+    }
   }
 
   componentDidMount() {

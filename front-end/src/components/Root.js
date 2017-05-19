@@ -17,14 +17,14 @@ RootProps = {
   isCreateFirmDialogOpen: boolean,
   loading: boolean,
   undo: Object,
-  errorMessage: string,
+  message: Object,
   applicationsPanelOpen: boolean,
   onCreateFirm: (event: Event) => void,
   onDismiss: (queueId: string, serviceAddressId: string) => void,
   onSkip: (queueId: string) => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void,
-  onHideError: () => void,
+  onHideSnackbar: () => void
   onToggleApplicationsPanel: (previous: boolean) => void
 }
 
@@ -45,23 +45,13 @@ class Root extends React.Component {
   }
 
   hideSnackbar() {
-    this.props.onHideError();
+    this.props.onHideSnackbar();
   }
 
   render() {
     let content = <Content style={{padding: "32px"}}/>
 
     if (this.props.value) {
-
-      const apps = this.props.value.samplePatentApps
-        ? this.props.value.samplePatentApps.map(
-          (app, index) =>
-            <li key={index}>
-              {app.appNum + (app.applicants ? "&nbsp;(Applicants:&nbsp;" + app.applicants.join(",") + ")" : "") }
-            </li>
-        )
-        : null;
-
       content = (
         <Content style={{padding: "32px"}}>
           <FirmDisplay value={this.props.value}/>
@@ -105,9 +95,11 @@ class Root extends React.Component {
         </Header>
         <ProgressBar style={{visibility: this.props.loading ? "visible" : "hidden"}} indeterminate/>
         {content}
-        <Snackbar active={this.props.errorMessage ? true : false} onClick={this.hideSnackbar} onTimeout={this.hideSnackbar}
-                  action="Close">
-          {this.props.errorMessage}
+        <Snackbar className={this.props.message && this.props.message.error ? "error-message" : "info-message"}
+                  active={this.props.message ? true : false} onClick={this.hideSnackbar} onTimeout={this.hideSnackbar}
+                  timeout={3000}
+                  action="&times;">
+          {this.props.message ? this.props.message.text : ""}
         </Snackbar>
         <UndoFooter disabled={this.props.loading || !this.props.undo} undo={this.props.undo} onUndo={this.props.onUndo}/>
       </Layout>

@@ -18,7 +18,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     dispatch(submitNewFirm(firm));
   },
   onClose: () => {
-    dispatch(closeFirmDialog());
+    dispatch(closeFirmDialog(false));
   }
 })
 
