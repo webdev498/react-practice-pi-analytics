@@ -9,6 +9,7 @@ import {Button, Cell, Content, Grid, Header, HeaderRow, Icon, Layout, ProgressBa
 import AddressesContainer from "../containers/AddressesContainer";
 import CreateFirmDialogContainer from "../containers/CreateFirmDialogContainer";
 import UndoFooter from "./UndoFooter";
+import PatentApplicationsPanel from "./PatentApplicationsPanel";
 
 type
 RootProps = {
@@ -17,12 +18,14 @@ RootProps = {
   loading: boolean,
   undo: Object,
   errorMessage: string,
+  applicationsPanelOpen: boolean,
   onCreateFirm: (event: Event) => void,
   onDismiss: (queueId: string, serviceAddressId: string) => void,
   onSkip: (queueId: string) => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void,
-  onHideError: () => void
+  onHideError: () => void,
+  onToggleApplicationsPanel: (previous: boolean) => void
 }
 
 class Root extends React.Component {
@@ -49,6 +52,16 @@ class Root extends React.Component {
     let content = <Content style={{padding: "32px"}}/>
 
     if (this.props.value) {
+
+      const apps = this.props.value.samplePatentApps
+        ? this.props.value.samplePatentApps.map(
+          (app, index) =>
+            <li key={index}>
+              {app.appNum + (app.applicants ? "&nbsp;(Applicants:&nbsp;" + app.applicants.join(",") + ")" : "") }
+            </li>
+        )
+        : null;
+
       content = (
         <Content style={{padding: "32px"}}>
           <FirmDisplay value={this.props.value}/>
@@ -64,9 +77,11 @@ class Root extends React.Component {
               }}><Icon name="skip_next"/> Skip</Button>
             </Cell>
             <Cell col={3} style={{textAlign: "right"}}>
-              <Button disabled accent><Icon name="description"/> View Sample Applications</Button>
+              <Button accent onClick={() => this.props.onToggleApplicationsPanel(this.props.applicationsPanelOpen)}><Icon
+                name="description"/> View Sample Applications</Button>
             </Cell>
           </Grid>
+          <PatentApplicationsPanel open={this.props.applicationsPanelOpen} applications={this.props.value.samplePatentApps}/>
           <AddressesContainer/>
           <CreateFirmDialogContainer/>
         </Content>

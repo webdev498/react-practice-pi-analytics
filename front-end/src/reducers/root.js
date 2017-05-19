@@ -89,6 +89,13 @@ export const unsortedServiceAddressFetchError = (): Action => ({
   }
 });
 
+export const toggleApplicationsPanel = (previous: boolean): Action => ({
+  type: Actions.TOGGLE_APPLICATIONS_PANEL,
+  payload: {
+    applicationsPanelOpen: !previous
+  }
+});
+
 export const serviceAddressUnsorted = (): Action => ({
   type: Actions.SERVICE_ADDRESS_UNSORTED,
   payload: {

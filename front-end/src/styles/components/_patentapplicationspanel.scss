@@ -1,0 +1,21 @@
+@import "../vendor/mdl/variables";
+
+.patent-applications {
+  padding: 0px;
+  overflow: hidden;
+  transition: height 0.3s ease-in;
+
+  & > .mdl-cell {
+    margin: 0px;
+    padding: 8px;
+
+    &:nth-child(2) {
+      border: $data-table-dividers;
+    }
+  }
+
+  & ul {
+    margin: 0px;
+  }
+
+}

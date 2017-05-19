@@ -2,6 +2,11 @@
 //jshint esversion:6
 //@flow
 
+export type SamplePatentApp = {
+  appNum: string,
+  applicants: Array<string>
+}
+
 export type ServiceAddress = {
   serviceAddressId: string,
   lawFirmId?: number,
@@ -22,7 +27,8 @@ export type Agent = {
 export type ServiceAddressBundle = {
   serviceAddressToSort: ServiceAddress,
   enTranslation?: string,
-  suggestedAgents: Array<Agent>
+  suggestedAgents: Array<Agent>,
+  samplePatentApps?: Array<SamplePatentApp>
 }
 
 export type NonLawFirm = {
