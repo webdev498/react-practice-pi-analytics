@@ -11,10 +11,11 @@
   overflow: hidden;
   padding: 0;
   position: fixed !important;
-  left: 42% !important;
+  left: 50% !important;
   top: 50% !important;
   will-change: transform, opacity;
   width: 100%;
+  margin: 0px;
 
   &.small {
     max-width: 600px;
@@ -44,6 +45,13 @@
   }
 }
 
+.mdl-dialog__actions {
+  padding: 32px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
 @keyframes dialog-open {
   0% {
     opacity: 0;
@@ -53,11 +61,6 @@
     opacity: 1;
     transform: translate(-50%, -50%);
   }
-}
-
-.mdl-dialog__actions {
-  margin-top: -30px;
-  padding-top: 30px;
 }
 
 .mdl-dialog.small .mdl-textfield {
@@ -102,7 +105,6 @@ h4.mdl-dialog__title, .mdl-dialog__title {
 }
 
 .dialog--subtitle {
-  // border-bottom: 1px solid #ccc;
   color: unquote("rgb(#{$color-primary})");
   display: inline-block;
   font-size: 15px;
