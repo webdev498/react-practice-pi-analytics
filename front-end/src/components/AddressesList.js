@@ -96,7 +96,7 @@ class AddressesList extends React.Component {
       result = result.replace(/<==>/g, "<span class='highlighted'>").replace(/<\/==>/g, "</span>");
     }
     return (
-      <div onMouseOver={() => this.select(agentIndex, index, agentIndex < 0)}
+      <div key={index} onMouseOver={() => this.select(agentIndex, index, agentIndex < 0)}
            onMouseLeave={() => this.unselect(agentIndex, index)}
            className={"address-line " + this.getSelectedClassName(agentIndex, index)}><span
         dangerouslySetInnerHTML={{__html: value.address ? result : "N/A"}}/>
@@ -125,7 +125,7 @@ class AddressesList extends React.Component {
 
   renderEntityId(agentIndex: number, agent: Agent): Array<any> {
     return agent.serviceAddresses
-      .map((address, index) => <div onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
+      .map((address, index) => <div key={index} onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
                                     onMouseLeave={() => this.unselect(agentIndex, index)}
                                     className={
                                       "address-line " + this.getSelectedClassName(agentIndex, index)
@@ -134,7 +134,7 @@ class AddressesList extends React.Component {
 
   renderActions(agentIndex: number, agent: Agent): Array<any> {
     return agent.serviceAddresses.map(
-      (address, index) => <div onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
+      (address, index) => <div key={index} onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
                                onMouseLeave={() => this.unselect(agentIndex, index)}
                                className={this.getSelectedClassName(agentIndex, index)}
                                style={{paddingLeft: "2px", marginBottom: "3px"}}>

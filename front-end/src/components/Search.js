@@ -7,6 +7,7 @@ import AddressesList from "./AddressesList";
 import Rx from "rxjs";
 import "rxjs/add/operator/map";
 import "rxjs/add/operator/debounceTime";
+import { findDOMNode } from 'react-dom';
 
 type
 SearchProps = {
@@ -23,17 +24,25 @@ SearchProps = {
 class Search extends React.Component {
   props: SearchProps
   bindSearchInputChange: () => void
+  searchInput: any
 
   constructor(props: SearchProps) {
     super(props)
     this.bindSearchInputChange = this.bindSearchInputChange.bind(this)
   }
 
+  componentDidMount() {
+    if (this.props.query) {
+      findDOMNode(this.searchInput).MaterialTextfield.change(this.props.query.substr(0));
+    }
+  }
+
   bindSearchInputChange(input: any) {
     if (!input) {
       return
     }
-    Rx.Observable.fromEvent(input.inputRef, "keyup")
+    this.searchInput = input;
+    Rx.Observable.fromEvent(this.searchInput.inputRef, "keyup")
       .map(event => event.target.value)
       .debounceTime(200)
       .subscribe(this.props.onSearch)
@@ -57,7 +66,8 @@ class Search extends React.Component {
       <div>
         <div style={{textAlign: "center", margin: "16px"}}>
           <Icon style={{verticalAlign: "sub"}} name="search"/>
-          <Textfield value={this.props.query} ref={this.bindSearchInputChange} style={{marginLeft: "8px"}} label="Search law firm by name" />
+          <Textfield ref={this.bindSearchInputChange} style={{marginLeft: "8px"}}
+                     label="Search law firm by name"/>
         </div>
         <Content className={"center"}>
           {content}
