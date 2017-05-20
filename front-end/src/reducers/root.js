@@ -16,32 +16,26 @@ const initialState = {
   loading: true
 }
 
-const mapServiceAddressBundle = (bundle: ServiceAddressBundle) => u({
-                                                                      suggestedAgents: u.map(
-                                                                        agent => u({
-                                                                                     serviceAddresses: sampleSize(
-                                                                                       agent.serviceAddresses,
-                                                                                       5)
-                                                                                   }, agent))
-                                                                    }, bundle);
+const mapServiceAddressBundle = (bundle: ServiceAddressBundle) => {
+  return u({suggestedAgents: u.map(agent => u({serviceAddresses: sampleSize(agent.serviceAddresses, 5)}, agent))}, bundle);
+}
 
 const root = createReducer(Actions.NAMESPACE, initialState, {
-    [Actions.UNSORT_SERVICE_ADDRESS]: (state, action) => {
-      const newState = u({
-                           value: {
-                             suggestedAgents: u.map({
-                                                      serviceAddresses: u.reject(
-                                                        address => address.serviceAddressId == action.payload.serviceAddressId)
-                                                    })
-                           },
-                           loading: true
-                         }, state);
-      return u({value: {suggestedAgents: u.reject(agent => agent.serviceAddresses.length == 0)}}, newState);
-    },
-    [Actions.SORT_SERVICE_ADDRESS]: (state, action) =>
-      u({value: undefined, loading: true, undo: {value: state.value, agent: action.payload.agent}}, state)
-  })
-;
+  [Actions.UNSORT_SERVICE_ADDRESS]: (state, action) => {
+    const newState = u({
+                         value: {
+                           suggestedAgents: u.map({
+                                                    serviceAddresses: u.reject(
+                                                      address => address.serviceAddressId == action.payload.serviceAddressId)
+                                                  })
+                         },
+                         loading: true
+                       }, state);
+    return u({value: {suggestedAgents: u.reject(agent => agent.serviceAddresses.length == 0)}}, newState);
+  },
+  [Actions.SORT_SERVICE_ADDRESS]: (state, action) =>
+    u({value: undefined, loading: true, undo: {value: state.value, agent: action.payload.agent}}, state)
+});
 
 export default root;
 
@@ -52,32 +46,45 @@ export const createFirm = (): Action => ({
   }
 });
 
-export const closeFirmDialog = (): Action => ({
-  type: Actions.CLOSE_FIRM_DIALOG,
-  payload: {
-    isCreateFirmDialogOpen: false
+export const closeFirmDialog = (success: boolean): Action => {
+  if (success) {
+    return {
+      type: Actions.LAW_FIRM_CREATED,
+      payload: {
+        isCreateFirmDialogOpen: false, message: {text: "Law firm successfully created.", error: false}, undo: undefined
+      }
+    };
   }
-});
+  else {
+    return {type: Actions.LAW_FIRM_CANCELED, payload: {isCreateFirmDialogOpen: false}};
+  }
+};
 
 export const showError = (errorMessage: string): Action => ({
-  type: Actions.ERROR,
+  type: Actions.MESSAGE,
   payload: {
-    errorMessage: errorMessage
+    message: {
+      text: errorMessage,
+      error: true
+    }
   }
 });
 
-export const hideError = (): Action => ({
-  type: Actions.ERROR,
+export const hideMessage = (): Action => ({
+  type: Actions.MESSAGE,
   payload: {
-    errorMessage: undefined
+    message: undefined
   }
 });
 
 export const globalFetchError = (): Action => ({
-  type: Actions.ERROR,
+  type: Actions.MESSAGE,
   payload: {
     loading: false,
-    errorMessage: "Error fetching data"
+    message: {
+      text: "Error fetching data",
+      error: true
+    }
   }
 });
 
@@ -112,11 +119,8 @@ export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): A
     {type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(bundle), loading: false}});
 };
 
-export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
+export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => () => {
   Queue.push(bundle);
-  if (Queue.canPush()) {
-    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
-  }
 }
 
 export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) => {

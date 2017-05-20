@@ -1,3 +1,5 @@
+@import "../vendor/mdl/variables";
+
 .highlighted {
   background-color: #ffffbc;
 }
@@ -31,4 +33,18 @@
 
 .hidden {
   display: none;
+}
+
+.mdl-snackbar {
+  &.info-message {
+    background-color: unquote("rgb(#{$palette-green-300})");
+  }
+
+  &.error-message {
+    background-color: unquote("rgb(#{$palette-red-400})");
+  }
+
+  & .mdl-snackbar__action {
+    color: unquote("rgb(#{$color-white})");
+  }
 }

@@ -5,7 +5,7 @@ import createReducer from "redux-updeep";
 import type {Action, Dispatch} from "redux";
 import * as FetchActions from "../actions/FetchActions";
 import * as Actions from "../actions/CreateFirmDialogActions";
-import {closeFirmDialog, showError} from "../reducers/root";
+import {closeFirmDialog, showError, getNextUnsortedServiceAddress} from "../reducers/root";
 
 const initialState = {}
 
@@ -19,7 +19,8 @@ export const submitNewFirm = (firm: Object): Action => (dispatch: Dispatch) => {
 
 export const lawFirmCreated = (firm: Object): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.FIRM_CREATED, payload: {loading: false}});
-  dispatch(closeFirmDialog());
+  dispatch(closeFirmDialog(true));
+  dispatch(getNextUnsortedServiceAddress());
 };
 
 export const firmCreationError = (): Action => (dispatch: Dispatch) => {
