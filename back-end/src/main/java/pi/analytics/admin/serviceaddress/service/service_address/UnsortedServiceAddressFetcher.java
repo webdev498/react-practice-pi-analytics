@@ -14,12 +14,15 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
+import pi.ip.data.relational.generated.IsHighValueServiceAddressRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
+import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueNameOnPrem;
 import pi.ip.generated.queue.QueueOnPremGrpc;
@@ -75,6 +78,7 @@ public class UnsortedServiceAddressFetcher {
           nextQueueItem
               .map(this::fetchServiceAddress)
               .map(this::pruneUnhandledQueueItem)
+              .map(this::skipLowPriorityServiceAddress)
               .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent());
     }
     return validQueuedServiceAddress;
@@ -119,19 +123,50 @@ public class UnsortedServiceAddressFetcher {
    * Contains Optional<ServiceAddress>.empty() if the service address is to be skipped
    */
   private QueuedServiceAddress pruneUnhandledQueueItem(final QueuedServiceAddress queuedServiceAddress) {
-    final QueuedServiceAddress skipped = QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
-
     if (!queuedServiceAddress.serviceAddress().isPresent()) {
       // Service address doesn't exist and we can't process it
       deleteQueueItem(queuedServiceAddress.queueId());
     } else if (queuedServiceAddress.serviceAddress().get().getLawFirmStatusDetermined()) {
       // Service address has already been sorted
       deleteQueueItem(queuedServiceAddress.queueId());
-      return skipped;
+      return indicateToBeSkipped(queuedServiceAddress);
     } else if (!activeCountryCodes().contains(queuedServiceAddress.serviceAddress().get().getCountry().toUpperCase())) {
       // We are not interested in this country code
       deleteQueueItem(queuedServiceAddress.queueId());
-      return skipped;
+      return indicateToBeSkipped(queuedServiceAddress);
+    }
+    return queuedServiceAddress;
+  }
+
+  private QueuedServiceAddress skipLowPriorityServiceAddress(final QueuedServiceAddress queuedServiceAddress) {
+    final boolean skip =
+        queuedServiceAddress
+            .serviceAddress()
+            .flatMap(serviceAddress -> {
+              try {
+                final IsHighValueServiceAddressRequest request =
+                    IsHighValueServiceAddressRequest
+                        .newBuilder()
+                        .setServiceAddressId(serviceAddress.getServiceAddressId())
+                        .build();
+                return Optional.of(
+                    !serviceAddressServiceBlockingStub.isHighValueServiceAddress(request).getIsHighValue()
+                );
+              } catch (Exception e) {
+                // Only skip if we're certain that the service address isn't of high value
+                return Optional.empty();
+              }
+            })
+            .orElse(false);
+    if (skip) {
+      DelayUnitRequest delayUnitRequest =
+          DelayUnitRequest
+              .newBuilder()
+              .setDbId(queuedServiceAddress.queueId())
+              .setDelaySeconds((int) TimeUnit.HOURS.toSeconds(4))
+              .build();
+      queueOnPremBlockingStub.delayQueueUnit(delayUnitRequest);
+      return indicateToBeSkipped(queuedServiceAddress);
     }
     return queuedServiceAddress;
   }
@@ -151,5 +186,9 @@ public class UnsortedServiceAddressFetcher {
         "JP", "KR", "LI", "LU", "LV", "MP", "MX", "MY", "NL", "NO", "NZ", "PL", "PR", "PT", "RO", "RU", "SE", "SG", "SI",
         "SK", "TH", "TR", "TW", "US", "ZA"
     );
+  }
+
+  private QueuedServiceAddress indicateToBeSkipped(final QueuedServiceAddress queuedServiceAddress) {
+    return QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
   }
 }

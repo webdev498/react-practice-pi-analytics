@@ -24,7 +24,10 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
+import pi.ip.data.relational.generated.IsHighValueServiceAddressRequest;
+import pi.ip.data.relational.generated.IsHighValueServiceAddressResponse;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
+import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.MsgUnit;
 import pi.ip.generated.queue.QueueOnPremGrpc;
@@ -264,7 +267,7 @@ public class UnsortedServiceAddressFetcherTest {
   }
 
   @Test
-  public void fetchNextQueueItem_valid_service_address() throws Exception {
+  public void fetchNextQueueItem_skip_low_value_service_address() throws Exception {
     final StoredMsgUnit storedMsgUnit =
         StoredMsgUnit
             .newBuilder()
@@ -290,6 +293,63 @@ public class UnsortedServiceAddressFetcherTest {
         .when(serviceAddressService)
         .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
+    replyWith(AckResponse.getDefaultInstance())
+        .when(queueOnPrem)
+        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+
+    replyWith(IsHighValueServiceAddressResponse.newBuilder().setIsHighValue(false).build())
+        .when(serviceAddressService)
+        .isHighValueServiceAddress(any(IsHighValueServiceAddressRequest.class), any(StreamObserver.class));
+
+    final Optional<QueuedServiceAddress> queuedServiceAddress =
+        unsortedServiceAddressFetcher.fetchNext(faker.name().username());
+
+    assertThat(queuedServiceAddress)
+        .as("Queues return an item whose service address is of low priority, and thus skipped")
+        .isEmpty();
+
+    final DelayUnitRequest delayUnitRequest =
+        DelayUnitRequest
+            .newBuilder()
+            .setDbId(storedMsgUnit.getDbId())
+            .setDelaySeconds(14400)
+            .build();
+
+    verify(queueOnPrem, times(1)).delayQueueUnit(eq(delayUnitRequest), any(StreamObserver.class));
+    verify(queueOnPrem, never()).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+  }
+
+  @Test
+  public void fetchNextQueueItem_valid_service_address() throws Exception {
+    final StoredMsgUnit storedMsgUnit =
+        StoredMsgUnit
+            .newBuilder()
+            .setDbId("111")
+            .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
+            .build();
+
+    // Queue returns one item
+    replyWith(storedMsgUnit)
+        // End of the queue
+        .replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+
+    replyWith(IsHighValueServiceAddressResponse.newBuilder().setIsHighValue(true).build())
+        .when(serviceAddressService)
+        .isHighValueServiceAddress(any(IsHighValueServiceAddressRequest.class), any(StreamObserver.class));
+
+    final ServiceAddress serviceAddress =
+        ServiceAddress
+            .newBuilder()
+            .setServiceAddressId(222L)
+            .setCountry("AU")
+            .build();
+
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+
     final Optional<QueuedServiceAddress> queuedServiceAddress =
         unsortedServiceAddressFetcher.fetchNext(faker.name().username());
     final QueuedServiceAddress expectedResult = QueuedServiceAddress.create("111", Optional.of(serviceAddress));
@@ -298,6 +358,9 @@ public class UnsortedServiceAddressFetcherTest {
         .as("Queues returns an item whose service address we manage to fetch")
         .isEqualTo(Optional.of(expectedResult));
 
+    // Verify not skipped
+    verify(queueOnPrem, never()).delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+    // Verify valid and handled
     verify(queueOnPrem, never()).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
   }
 }
