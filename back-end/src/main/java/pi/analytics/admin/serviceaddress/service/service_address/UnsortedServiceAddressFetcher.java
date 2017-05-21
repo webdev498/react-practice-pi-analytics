@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +37,8 @@ import pi.ip.proto.generated.ServiceAddress;
  */
 @Singleton
 public class UnsortedServiceAddressFetcher {
+
+  private static final Logger log = LoggerFactory.getLogger(UnsortedServiceAddressFetcher.class);
 
   @Inject
   private QueueOnPremGrpc.QueueOnPremBlockingStub queueOnPremBlockingStub;
@@ -169,6 +173,7 @@ public class UnsortedServiceAddressFetcher {
               .setDelaySeconds((int) TimeUnit.HOURS.toSeconds(4))
               .build();
       queueOnPremBlockingStub.delayQueueUnit(delayUnitRequest);
+      log.info("Skipping unsorted service address id {}", queuedServiceAddress.serviceAddress().get().getServiceAddressId());
       return indicateToBeSkipped(queuedServiceAddress);
     }
     return queuedServiceAddress;
