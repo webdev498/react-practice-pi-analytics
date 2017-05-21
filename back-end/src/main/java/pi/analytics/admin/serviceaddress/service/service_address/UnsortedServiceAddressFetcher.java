@@ -143,6 +143,9 @@ public class UnsortedServiceAddressFetcher {
         queuedServiceAddress
             .serviceAddress()
             .flatMap(serviceAddress -> {
+              if (serviceAddress.getCountry().equals("TW")) {
+                return Optional.of(true);  // Skip Taiwan for now
+              }
               try {
                 final IsHighValueServiceAddressRequest request =
                     IsHighValueServiceAddressRequest
@@ -154,7 +157,7 @@ public class UnsortedServiceAddressFetcher {
                 );
               } catch (Exception e) {
                 // Only skip if we're certain that the service address isn't of high value
-                return Optional.empty();
+                return Optional.of(false);
               }
             })
             .orElse(false);
