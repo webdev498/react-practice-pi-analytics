@@ -171,10 +171,12 @@ class CreateFirmDialog extends React.Component {
           this.props.onSubmit(this.state);
         }}>
           <DialogContent>
+            <div style={{padding: "0px 16px"}}>{"For service address: " + this.props.value.serviceAddressToSort.name + ", "
+                  + this.props.value.serviceAddressToSort.address}</div>
             <Grid>
               <Cell col={12}>
                 <Textfield value={this.state.name} disabled={this.props.loading} style={{width: "100%"}} id={"name"}
-                           label={"Name"} ref={(input) => {
+                           label={"Firm Name"} ref={(input) => {
                   this.nameInput = input;
                 }} onChange={this.createListener('name')}/>
               </Cell>
