@@ -27,7 +27,9 @@ import pi.admin.service_address_sorting.generated.ServiceAddressSkipped;
 import pi.admin.service_address_sorting.generated.ServiceAddressSortingServiceGrpc;
 import pi.admin.service_address_sorting.generated.ServiceAddressUnsorted;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.SortingImpossibleSet;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressBundleFetcher;
@@ -160,6 +162,19 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onCompleted();
     } catch (Throwable th) {
       log.error("Error skipping service address", th);
+      responseObserver.onError(th);
+    }
+  }
+
+  @Override
+  public void setSortingImpossible(final SetSortingImpossibleRequest request,
+                                   final StreamObserver<SortingImpossibleSet> responseObserver) {
+    try {
+      serviceAddressSorter.setSortingImpossible(request);
+      responseObserver.onNext(SortingImpossibleSet.getDefaultInstance());
+      responseObserver.onCompleted();
+    } catch (Throwable th) {
+      log.error("Error setting service address as non law firm", th);
       responseObserver.onError(th);
     }
   }

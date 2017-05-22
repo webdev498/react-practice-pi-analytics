@@ -24,6 +24,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
@@ -252,6 +253,29 @@ public class ServiceAddressSorterTest {
             eq(DelayUnitRequest.newBuilder().setDbId("123").setDelaySeconds(5 * 60).build()),
             any(StreamObserver.class)
         );
+  }
+
+  @Test
+  public void setSortingImpossible() throws Exception {
+    replyWithAckResponse()
+        .when(queueOnPrem)
+        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+
+    serviceAddressSorter.setSortingImpossible(
+        SetSortingImpossibleRequest
+            .newBuilder()
+            .setUnsortedServiceAddressQueueItemId("123")
+            .setServiceAddressId(123)
+            .setRequestedBy("shane")
+            .build()
+    );
+
+    verify(queueOnPrem, times(1))
+        .delayQueueUnit(
+            eq(DelayUnitRequest.newBuilder().setDbId("123").setDelaySeconds(30 * 24 * 60 * 60).build()),
+            any(StreamObserver.class)
+        );
+
   }
 
   private Stubber replyWithAckResponse() {

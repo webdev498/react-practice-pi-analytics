@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
@@ -44,6 +45,8 @@ import pi.ip.proto.generated.ServiceAddress;
 public class ServiceAddressSorter {
 
   private static final Logger log = LoggerFactory.getLogger(ServiceAddressSorter.class);
+
+  private static final int SORTING_IMPOSSIBLE_DELAY_MINUTES = 30 * 24 * 60;
 
   @Inject
   LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
@@ -139,6 +142,13 @@ public class ServiceAddressSorter {
         "Unsorted service address queue item ID is required");
     Preconditions.checkArgument(request.getDelayMinutes() != 0, "Delay (in minutes) is required");
     delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), request.getDelayMinutes());
+  }
+
+  public void setSortingImpossible(final SetSortingImpossibleRequest request) {
+    Preconditions.checkArgument(StringUtils.isNotBlank(request.getUnsortedServiceAddressQueueItemId()),
+        "Unsorted service address queue item ID is required");
+
+    delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), SORTING_IMPOSSIBLE_DELAY_MINUTES);
   }
 
   private void addQueueItem(final long serviceAddressId) {
