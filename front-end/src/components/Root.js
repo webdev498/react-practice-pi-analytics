@@ -24,7 +24,7 @@ RootProps = {
   onSkip: (queueId: string) => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void,
-  onHideSnackbar: () => void
+  onHideSnackbar: () => void,
   onToggleApplicationsPanel: (previous: boolean) => void
 }
 

@@ -12,7 +12,7 @@ PatentApplicationsPanelProps = {
   applications: Array < SamplePatentApp >
 }
 
-class SampleApplicantsPanel extends React.Component {
+class PatentApplicationsPanel extends React.Component {
   props: PatentApplicationsPanelProps
 
   constructor(props: PatentApplicationsPanelProps) {
@@ -33,8 +33,8 @@ class SampleApplicantsPanel extends React.Component {
     return (
       <Grid className={"patent-applications"}
             style={{height: (this.props.open ? this.props.applications.length * 42 : 0) + "px"}}>
-        <Cell col="8"/>
-        <Cell col="4">
+        <Cell col={8}/>
+        <Cell col={4}>
           <ul>
             {apps}
           </ul>
@@ -45,4 +45,4 @@ class SampleApplicantsPanel extends React.Component {
 
 }
 
-export default SampleApplicantsPanel
+export default PatentApplicationsPanel

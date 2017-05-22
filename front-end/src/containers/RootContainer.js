@@ -8,8 +8,8 @@ import {
   getNextUnsortedServiceAddress,
   skipServiceAddress,
   undoServiceAddress,
-  toggleApplicationsPanel
-  hideMessage,
+  toggleApplicationsPanel,
+  hideMessage
 } from "../reducers/root";
 import * as FetchActions from "../actions/FetchActions";
 import type {Dispatch, State} from "redux";
@@ -21,7 +21,7 @@ const mapStateToProps = (state: State) => ({
   isCreateFirmDialogOpen: state.root.isCreateFirmDialogOpen,
   loading: state.root.loading,
   undo: state.root.undo,
-  message: state.root.message
+  message: state.root.message,
   applicationsPanelOpen: state.root.applicationsPanelOpen
 })
 
