@@ -174,7 +174,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onNext(SortingImpossibleSet.getDefaultInstance());
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error setting service address as non law firm", th);
+      log.error("Error setting service address as impossible to sort", th);
       responseObserver.onError(th);
     }
   }
