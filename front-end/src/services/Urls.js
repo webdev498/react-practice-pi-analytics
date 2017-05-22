@@ -11,7 +11,8 @@ export const ApiUrls = {
   unsortServiceAddress: API_BASE_URL + "api/v1/addressing/unsortserviceaddress",
   createLawFirm: API_BASE_URL + "api/v1/addressing/createlawfirm",
   setServiceAddressAsNonLawFirm: API_BASE_URL + "api/v1/addressing/setserviceaddressasnonlawfirm",
-  skipServiceAddress: API_BASE_URL + "api/v1/addressing/skipserviceaddress"
+  skipServiceAddress: API_BASE_URL + "api/v1/addressing/skipserviceaddress",
+  setSortingImpossible: API_BASE_URL + "api/v1/addressing/setsortingimpossible"
 }
 
 export const OuterUrls = {

@@ -20,7 +20,8 @@ RootProps = {
   message: Object,
   applicationsPanelOpen: boolean,
   onCreateFirm: (event: Event) => void,
-  onDismiss: (queueId: string, serviceAddressId: string) => void,
+  onSetAsNonLawFirm: (request: Object) => void,
+  onSetSortingImpossible: (request: Object) => void,
   onSkip: (queueId: string) => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void,
@@ -52,19 +53,30 @@ class Root extends React.Component {
     let content = <Content style={{padding: "32px"}}/>
 
     if (this.props.value) {
+
+      const serviceAddressRequestBase = {
+        unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId,
+        serviceAddressId: this.props.value.serviceAddressToSort.serviceAddressId
+      }
+
       content = (
         <Content style={{padding: "32px"}}>
           <FirmDisplay value={this.props.value}/>
           <Grid className="button-bar">
             <Cell col={9}>
+
               <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
-              <Button raised onClick={() => {
-                this.props.onDismiss(this.props.value.unsortedServiceAddressQueueItemId,
-                                     this.props.value.serviceAddressToSort.serviceAddressId)
-              }}><Icon name="not_interested"/> Not a Law Firm</Button>
+
+              <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressRequestBase)}><Icon
+                name="not_interested"/> Not a Law Firm</Button>
+
+              <Button raised onClick={() => this.props.onSetSortingImpossible(serviceAddressRequestBase)}><Icon
+                name="highlight_off"/> Sorting Impossible</Button>
+
               <Button raised onClick={() => {
                 this.props.onSkip(this.props.value.unsortedServiceAddressQueueItemId)
               }}><Icon name="skip_next"/> Skip</Button>
+
             </Cell>
             <Cell col={3} style={{textAlign: "right"}}>
               <Button accent onClick={() => this.props.onToggleApplicationsPanel(this.props.applicationsPanelOpen)}><Icon

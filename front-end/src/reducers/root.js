@@ -149,17 +149,12 @@ export const skipServiceAddress = (queueId: string): Action => (dispatch: Dispat
            });
 };
 
-export const dismissServiceAddress = (queueId: string, serviceAddressId: string): Action => (dispatch: Dispatch) => {
+export const dismissServiceAddress = (request: Object, fetchActionType: string): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}})
   dispatch(
     {
-      type: FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
-      payload: {
-        request: {
-          unsortedServiceAddressQueueItemId: queueId,
-          serviceAddressId: serviceAddressId
-        }
-      }
+      type: fetchActionType,
+      payload: {request: request}
     });
 };
 

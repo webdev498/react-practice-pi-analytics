@@ -35,8 +35,11 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onGetNextServiceAddress: () => {
     dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());
   },
-  onDismiss: (queueId: string, serviceAddressId: string) => {
-    dispatch(dismissServiceAddress(queueId, serviceAddressId));
+  onSetAsNonLawFirm: (request: Object) => {
+    dispatch(dismissServiceAddress(request, FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM));
+  },
+  onSetSortingImpossible: (request: Object) => {
+    dispatch(dismissServiceAddress(request, FetchActions.SET_SORTING_IMPOSSIBLE));
   },
   onUndo: (serviceAddressId: string) => {
     dispatch(undoServiceAddress(serviceAddressId));

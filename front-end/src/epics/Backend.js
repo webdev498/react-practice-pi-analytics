@@ -29,7 +29,8 @@ import {
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
   SKIP_SERVICE_ADDRESS,
   UNDO_SERVICE_ADDRESS,
-  UNSORT_SERVICE_ADDRESS
+  UNSORT_SERVICE_ADDRESS,
+  SET_SORTING_IMPOSSIBLE
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
 import Authentication from "../services/Authentication";
@@ -98,6 +99,13 @@ export const setServiceAddressAsNonLawFirm = (action$: ActionsObservable<Action>
 export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SKIP_SERVICE_ADDRESS)
     .mergeMap(action => post(ApiUrls.skipServiceAddress, action.payload)
+      .map(mapResponse(getNextUnsortedServiceAddress))
+      .catch(mapError(globalFetchError))
+    );
+
+export const setSortingImpossible = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(SET_SORTING_IMPOSSIBLE)
+    .mergeMap(action => post(ApiUrls.setSortingImpossible, action.payload)
       .map(mapResponse(getNextUnsortedServiceAddress))
       .catch(mapError(globalFetchError))
     );
