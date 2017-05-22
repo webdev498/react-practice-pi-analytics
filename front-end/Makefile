@@ -23,6 +23,9 @@ deploy:
 #test:
 #	cd src; npm install; npm test
 
+npminstall:
+	cd src; npm install
+
 clean:
 	rm -rf build-artifacts/
 
