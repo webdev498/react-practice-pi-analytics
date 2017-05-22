@@ -27,7 +27,7 @@ export type Agent = {
 export type ServiceAddressBundle = {
   serviceAddressToSort: ServiceAddress,
   enTranslation?: string,
-  suggestedAgents: Array<Agent>,
+  suggestedAgents?: Array<Agent>,
   samplePatentApps?: Array<SamplePatentApp>
 }
 

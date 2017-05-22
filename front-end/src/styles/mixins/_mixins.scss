@@ -35,6 +35,10 @@
   display: none;
 }
 
+.center {
+  text-align: center;
+}
+
 .mdl-snackbar {
   &.info-message {
     background-color: unquote("rgb(#{$palette-green-300})");

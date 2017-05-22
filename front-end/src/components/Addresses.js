@@ -18,21 +18,26 @@ AddressesProps = {
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
-const Addresses = (props: AddressesProps): React.Element<Layout> =>
-  <div>
-    <Tabs activeTab={props.tab} onChange={props.onTabChange} ripple style={{marginTop: "16px"}}>
-      <Tab>Suggestions (US)</Tab>
-      <Tab>Search</Tab>
-    </Tabs>
-    <section>
-      {props.tab == 0 ? (
-        <AddressesList agents={props.agents} queueId={props.queueId} serviceAddress={props.serviceAddress}
-                       onSortServiceAddress={props.onSortServiceAddress}
-                       onUnsortServiceAddress={props.onUnsortServiceAddress}/>
-      ) : (
-         <SearchContainer />
-       )}
-    </section >
-  </div >
+const Addresses = (props: AddressesProps): React.Element<Layout> => {
+
+  const suggestions = props.agents ?
+                      <AddressesList agents={props.agents} queueId={props.queueId} serviceAddress={props.serviceAddress}
+                                     onSortServiceAddress={props.onSortServiceAddress}
+                                     onUnsortServiceAddress={props.onUnsortServiceAddress}/> :
+                      <h4 className="voffset32" style={{color: "#bbb"}}>No suggestions available for this service
+                        address</h4>
+  return (
+    <div>
+      <Tabs activeTab={props.tab} onChange={props.onTabChange} ripple style={{marginTop: "16px"}}>
+        <Tab>Suggestions (US)</Tab>
+        <Tab>Search</Tab>
+      </Tabs>
+      <section className={"center"}>
+        {props.tab == 0 ? suggestions : (
+          <SearchContainer />
+        )}
+      </section >
+    </div >)
+}
 
 export default Addresses
