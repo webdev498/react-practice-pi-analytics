@@ -193,7 +193,7 @@ public class UnsortedServiceAddressFetcher {
           DelayUnitRequest
               .newBuilder()
               .setDbId(queuedServiceAddress.queueId())
-              .setDelaySeconds((int) TimeUnit.HOURS.toSeconds(4))
+              .setDelaySeconds((int) TimeUnit.MINUTES.toSeconds(30))
               .build();
       queueOnPremBlockingStub.delayQueueUnit(delayUnitRequest);
       log.info("Skipping unsorted service address id {}", queuedServiceAddress.serviceAddress().get().getServiceAddressId());
