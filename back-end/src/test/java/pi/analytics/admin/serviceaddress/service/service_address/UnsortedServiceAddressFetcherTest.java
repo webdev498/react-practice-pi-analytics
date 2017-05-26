@@ -502,6 +502,10 @@ public class UnsortedServiceAddressFetcherTest {
         .when(serviceAddressService)
         .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
 
+    replyWith(AckResponse.getDefaultInstance())
+        .when(queueOnPrem)
+        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+
     final Optional<QueuedServiceAddress> queuedServiceAddress =
         unsortedServiceAddressFetcher.fetchNext("sgonly");
 
@@ -509,8 +513,9 @@ public class UnsortedServiceAddressFetcherTest {
         .as("Queues returns an item whose service address is not from SG")
         .isEmpty();
 
-    // Verify not skipped
-    verify(queueOnPrem, never()).delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+    // Verify skipped
+    verify(queueOnPrem, times(1))
+        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
     // Verify valid and handled
     verify(queueOnPrem, never()).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
   }

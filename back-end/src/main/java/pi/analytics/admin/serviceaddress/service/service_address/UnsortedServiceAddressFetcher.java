@@ -89,8 +89,7 @@ public class UnsortedServiceAddressFetcher {
           nextQueueItem
               .map(this::fetchServiceAddress)
               .map(this::pruneUnhandledQueueItem)
-              .map(queuedServiceAddress -> filterSgOnlyServiceAddresses(queuedServiceAddress, username))
-              .map(this::skipLowPriorityServiceAddress)
+              .map(queuedServiceAddress -> skipLowPriorityServiceAddress(queuedServiceAddress, username))
               .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent());
     }
     return validQueuedServiceAddress;
@@ -160,11 +159,17 @@ public class UnsortedServiceAddressFetcher {
     return queuedServiceAddress;
   }
 
-  private QueuedServiceAddress skipLowPriorityServiceAddress(final QueuedServiceAddress queuedServiceAddress) {
+  private QueuedServiceAddress skipLowPriorityServiceAddress(final QueuedServiceAddress queuedServiceAddress,
+                                                             final String username) {
     final boolean skip =
         queuedServiceAddress
             .serviceAddress()
             .flatMap(serviceAddress -> {
+              if (username.equals(SG_ONLY_USER)
+                  && queuedServiceAddress.serviceAddress().isPresent()
+                  && !queuedServiceAddress.serviceAddress().get().getCountry().equalsIgnoreCase("sg")) {
+                return Optional.of(true);
+              }
               if (serviceAddress.getCountry().equals("TW")) {
                 return Optional.of(true);  // Skip Taiwan for now
               }
