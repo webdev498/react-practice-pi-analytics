@@ -165,9 +165,7 @@ public class UnsortedServiceAddressFetcher {
         queuedServiceAddress
             .serviceAddress()
             .flatMap(serviceAddress -> {
-              if (username.equals(SG_ONLY_USER)
-                  && queuedServiceAddress.serviceAddress().isPresent()
-                  && !queuedServiceAddress.serviceAddress().get().getCountry().equalsIgnoreCase("sg")) {
+              if (username.equals(SG_ONLY_USER) && !serviceAddress.getCountry().equalsIgnoreCase("sg")) {
                 return Optional.of(true);
               }
               if (serviceAddress.getCountry().equals("TW")) {
