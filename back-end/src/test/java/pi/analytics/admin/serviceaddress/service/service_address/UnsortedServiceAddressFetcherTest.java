@@ -313,7 +313,7 @@ public class UnsortedServiceAddressFetcherTest {
         DelayUnitRequest
             .newBuilder()
             .setDbId(storedMsgUnit.getDbId())
-            .setDelaySeconds(14400)
+            .setDelaySeconds(1800)
             .build();
 
     verify(queueOnPrem, never()).delayQueueUnit(eq(delayUnitRequest), any(StreamObserver.class));
@@ -366,7 +366,7 @@ public class UnsortedServiceAddressFetcherTest {
         DelayUnitRequest
             .newBuilder()
             .setDbId(storedMsgUnit.getDbId())
-            .setDelaySeconds(14400)
+            .setDelaySeconds(1800)
             .build();
 
     verify(queueOnPrem, times(1)).delayQueueUnit(eq(delayUnitRequest), any(StreamObserver.class));
@@ -419,7 +419,7 @@ public class UnsortedServiceAddressFetcherTest {
         DelayUnitRequest
             .newBuilder()
             .setDbId(storedMsgUnit.getDbId())
-            .setDelaySeconds(14400)
+            .setDelaySeconds(1800)
             .build();
 
     verify(queueOnPrem, times(1)).delayQueueUnit(eq(delayUnitRequest), any(StreamObserver.class));
@@ -513,9 +513,15 @@ public class UnsortedServiceAddressFetcherTest {
         .as("Queues returns an item whose service address is not from SG")
         .isEmpty();
 
+    final DelayUnitRequest delayUnitRequest =
+        DelayUnitRequest
+            .newBuilder()
+            .setDbId(storedMsgUnit.getDbId())
+            .setDelaySeconds(1800)
+            .build();
+
     // Verify skipped
-    verify(queueOnPrem, times(1))
-        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+    verify(queueOnPrem, times(1)).delayQueueUnit(eq(delayUnitRequest), any(StreamObserver.class));
     // Verify valid and handled
     verify(queueOnPrem, never()).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
   }
