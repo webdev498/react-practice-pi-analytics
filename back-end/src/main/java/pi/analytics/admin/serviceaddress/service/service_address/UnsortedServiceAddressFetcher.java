@@ -39,6 +39,7 @@ import pi.ip.proto.generated.ServiceAddress;
 public class UnsortedServiceAddressFetcher {
 
   private static final Logger log = LoggerFactory.getLogger(UnsortedServiceAddressFetcher.class);
+  private static final String SG_ONLY_USER = "sgonly";
 
   @Inject
   private QueueOnPremGrpc.QueueOnPremBlockingStub queueOnPremBlockingStub;
@@ -49,7 +50,7 @@ public class UnsortedServiceAddressFetcher {
   public Optional<QueuedServiceAddress> fetchNext(final String username) {
     return getQueueNamesForUser(username)
         .stream()
-        .map(this::fetchNextValidQueuedServiceAddress)
+        .map(queueNameOnPrem -> fetchNextValidQueuedServiceAddress(queueNameOnPrem, username))
         // Skip empty queues
         .filter(Optional::isPresent)
         .map(Optional::get)
@@ -63,6 +64,10 @@ public class UnsortedServiceAddressFetcher {
           QueueNameOnPrem.ServiceAddrSort_en,
           QueueNameOnPrem.ServiceAddrSort_ja
       );
+    } else if (StringUtils.equalsIgnoreCase(userName, SG_ONLY_USER)) {
+      return ImmutableList.of(
+          QueueNameOnPrem.ServiceAddrSort_en
+      );
     } else {
       return ImmutableList.of(
           QueueNameOnPrem.ServiceAddrSort_en,
@@ -73,7 +78,8 @@ public class UnsortedServiceAddressFetcher {
     }
   }
 
-  private Optional<QueuedServiceAddress> fetchNextValidQueuedServiceAddress(final QueueNameOnPrem queueNameOnPrem) {
+  private Optional<QueuedServiceAddress> fetchNextValidQueuedServiceAddress(final QueueNameOnPrem queueNameOnPrem,
+                                                                            final String username) {
     Optional<StoredMsgUnit> nextQueueItem = Optional.of(StoredMsgUnit.getDefaultInstance());
     Optional<QueuedServiceAddress> validQueuedServiceAddress = Optional.empty();
 
@@ -83,6 +89,7 @@ public class UnsortedServiceAddressFetcher {
           nextQueueItem
               .map(this::fetchServiceAddress)
               .map(this::pruneUnhandledQueueItem)
+              .map(queuedServiceAddress -> filterSgOnlyServiceAddresses(queuedServiceAddress, username))
               .map(this::skipLowPriorityServiceAddress)
               .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent());
     }
@@ -121,6 +128,16 @@ public class UnsortedServiceAddressFetcher {
       // Any other status is an error
       throw sre;
     }
+  }
+
+  private QueuedServiceAddress filterSgOnlyServiceAddresses(final QueuedServiceAddress queuedServiceAddress,
+                                                            final String username) {
+    if (username.equals(SG_ONLY_USER)
+          && queuedServiceAddress.serviceAddress().isPresent()
+          && !queuedServiceAddress.serviceAddress().get().getCountry().equalsIgnoreCase("sg")) {
+      return indicateToBeSkipped(queuedServiceAddress);
+    }
+    return queuedServiceAddress;
   }
 
   /**
