@@ -470,4 +470,93 @@ public class UnsortedServiceAddressFetcherTest {
     // Verify valid and handled
     verify(queueOnPrem, never()).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
   }
+
+  @Test
+  public void fetchNextQueueItem_fetch_only_sg_service_address_skipped() throws Exception {
+    final StoredMsgUnit storedMsgUnit =
+        StoredMsgUnit
+            .newBuilder()
+            .setDbId("111")
+            .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
+            .build();
+
+    // Queue returns one item
+    replyWith(storedMsgUnit)
+        // End of the queue
+        .replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+
+    replyWith(IsHighValueServiceAddressResponse.newBuilder().setIsHighValue(true).build())
+        .when(serviceAddressService)
+        .isHighValueServiceAddress(any(IsHighValueServiceAddressRequest.class), any(StreamObserver.class));
+
+    final ServiceAddress serviceAddress =
+        ServiceAddress
+            .newBuilder()
+            .setServiceAddressId(222L)
+            .setCountry("AU")
+            .build();
+
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+
+    final Optional<QueuedServiceAddress> queuedServiceAddress =
+        unsortedServiceAddressFetcher.fetchNext("sgonly");
+
+    assertThat(queuedServiceAddress)
+        .as("Queues returns an item whose service address is not from SG")
+        .isEmpty();
+
+    // Verify not skipped
+    verify(queueOnPrem, never()).delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+    // Verify valid and handled
+    verify(queueOnPrem, never()).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+  }
+
+  @Test
+  public void fetchNextQueueItem_fetch_only_sg_service_address() throws Exception {
+    final StoredMsgUnit storedMsgUnit =
+        StoredMsgUnit
+            .newBuilder()
+            .setDbId("111")
+            .setMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey("222"))
+            .build();
+
+    // Queue returns one item
+    replyWith(storedMsgUnit)
+        // End of the queue
+        .replyWith(StoredMsgUnit.getDefaultInstance())
+        .when(queueOnPrem)
+        .getNextQueueUnit(any(UnitRequestOnPrem.class), any(StreamObserver.class));
+
+    replyWith(IsHighValueServiceAddressResponse.newBuilder().setIsHighValue(true).build())
+        .when(serviceAddressService)
+        .isHighValueServiceAddress(any(IsHighValueServiceAddressRequest.class), any(StreamObserver.class));
+
+    final ServiceAddress serviceAddress =
+        ServiceAddress
+            .newBuilder()
+            .setServiceAddressId(222L)
+            .setCountry("SG")
+            .build();
+
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+
+    final Optional<QueuedServiceAddress> queuedServiceAddress =
+        unsortedServiceAddressFetcher.fetchNext("sgonly");
+    final QueuedServiceAddress expectedResult = QueuedServiceAddress.create("111", Optional.of(serviceAddress));
+
+    assertThat(queuedServiceAddress)
+        .as("Queues returns an item whose service address is from SG")
+        .isEqualTo(Optional.of(expectedResult));
+
+    // Verify not skipped
+    verify(queueOnPrem, never()).delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
+    // Verify valid and handled
+    verify(queueOnPrem, never()).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+  }
 }
