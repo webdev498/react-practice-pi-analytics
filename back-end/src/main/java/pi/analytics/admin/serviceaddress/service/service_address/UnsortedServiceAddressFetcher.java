@@ -194,7 +194,9 @@ public class UnsortedServiceAddressFetcher {
               .setDelaySeconds((int) TimeUnit.MINUTES.toSeconds(30))
               .build();
       queueOnPremBlockingStub.delayQueueUnit(delayUnitRequest);
-      log.info("Skipping unsorted service address id {}", queuedServiceAddress.serviceAddress().get().getServiceAddressId());
+      log.info("Skipping unsorted service address id {}, country {}",
+          queuedServiceAddress.serviceAddress().get().getServiceAddressId(),
+          queuedServiceAddress.serviceAddress().get().getCountry());
       return indicateToBeSkipped(queuedServiceAddress);
     }
     return queuedServiceAddress;
