@@ -39,7 +39,7 @@ import pi.ip.proto.generated.ServiceAddress;
 public class UnsortedServiceAddressFetcher {
 
   private static final Logger log = LoggerFactory.getLogger(UnsortedServiceAddressFetcher.class);
-  private static final String SG_ONLY_USER = "sgonly";
+  private static final String AU_ONLY_USER = "auonly";
 
   @Inject
   private QueueOnPremGrpc.QueueOnPremBlockingStub queueOnPremBlockingStub;
@@ -64,7 +64,7 @@ public class UnsortedServiceAddressFetcher {
           QueueNameOnPrem.ServiceAddrSort_en,
           QueueNameOnPrem.ServiceAddrSort_ja
       );
-    } else if (StringUtils.equalsIgnoreCase(userName, SG_ONLY_USER)) {
+    } else if (StringUtils.equalsIgnoreCase(userName, AU_ONLY_USER)) {
       return ImmutableList.of(
           QueueNameOnPrem.ServiceAddrSort_en
       );
@@ -129,16 +129,6 @@ public class UnsortedServiceAddressFetcher {
     }
   }
 
-  private QueuedServiceAddress filterSgOnlyServiceAddresses(final QueuedServiceAddress queuedServiceAddress,
-                                                            final String username) {
-    if (username.equals(SG_ONLY_USER)
-          && queuedServiceAddress.serviceAddress().isPresent()
-          && !queuedServiceAddress.serviceAddress().get().getCountry().equalsIgnoreCase("sg")) {
-      return indicateToBeSkipped(queuedServiceAddress);
-    }
-    return queuedServiceAddress;
-  }
-
   /**
    * Delete queue items that we can't, or aren't interested in handling
    * Contains Optional<ServiceAddress>.empty() if the service address is to be skipped
@@ -165,7 +155,7 @@ public class UnsortedServiceAddressFetcher {
         queuedServiceAddress
             .serviceAddress()
             .flatMap(serviceAddress -> {
-              if (username.equals(SG_ONLY_USER) && !serviceAddress.getCountry().equalsIgnoreCase("sg")) {
+              if (username.equals(AU_ONLY_USER) && !serviceAddress.getCountry().equalsIgnoreCase("au")) {
                 return Optional.of(true);
               }
               if (serviceAddress.getCountry().equals("TW")) {
