@@ -202,10 +202,9 @@ public class UnsortedServiceAddressFetcher {
   }
 
   private Set<String> activeCountryCodes() {
-    return ImmutableSet.of("AE", "AT", "AU", "BE", "BG", "BR", "CA", "CH", "CL", "CN",
-        "CO", "CU", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GB", "GR", "HK", "HR", "HU", "IE", "IL", "IN", "IS", "IT",
-        "JP", "KR", "LI", "LU", "LV", "MP", "MX", "MY", "NL", "NO", "NZ", "PL", "PR", "PT", "RO", "RU", "SE", "SG", "SI",
-        "SK", "TH", "TR", "TW", "US", "ZA"
+    return ImmutableSet.of("AU", "AT", "BE", "BR", "CA", "CN", "CZ", "DK", "FI", "FR",
+        "DE", "HK", "IS", "IN", "IE", "IL", "IT", "JP", "KR", "LI", "LU", "NL", "NZ", "NO", "RU", "SG", "ZA", "ES", "SE",
+        "CH", "TW", "GB", "US"
     );
   }
 
