@@ -7,17 +7,20 @@ import * as Actions from "../actions/RootActions";
 import * as FetchActions from "../actions/FetchActions";
 import type {ServiceAddressBundle} from "../services/Types";
 import u from "updeep";
-import * as Queue from "../services/Queue";
 import sampleSize from "lodash/sampleSize";
+import has from "lodash/has";
+import last from "lodash/last";
+import {store} from "../index";
 
 const skipDelay = 10080;
+const canPreFetch = () => !has(store.getState(), "root.serviceAddressesCache") ||
+                          store.getState().root.serviceAddressesCache.length < 4;
+const mapServiceAddressBundle = (bundle: ServiceAddressBundle) => {
+  return u({suggestedAgents: u.map(agent => u({serviceAddresses: sampleSize(agent.serviceAddresses, 5)}, agent))}, bundle);
+}
 
 const initialState = {
   loading: true
-}
-
-const mapServiceAddressBundle = (bundle: ServiceAddressBundle) => {
-  return u({suggestedAgents: u.map(agent => u({serviceAddresses: sampleSize(agent.serviceAddresses, 5)}, agent))}, bundle);
 }
 
 const root = createReducer(Actions.NAMESPACE, initialState, {
@@ -34,7 +37,16 @@ const root = createReducer(Actions.NAMESPACE, initialState, {
     return u({value: {suggestedAgents: u.reject(agent => agent.serviceAddresses.length == 0)}}, newState);
   },
   [Actions.SORT_SERVICE_ADDRESS]: (state, action) =>
-    u({value: undefined, loading: true, undo: {value: state.value, agent: action.payload.agent}}, state)
+    u({value: undefined, loading: true, undo: {value: state.value, agent: action.payload.agent}}, state),
+  [Actions.UNSORTED_SERVICE_ADDRESS_PREFETCHED]: (state, action) =>
+    u({
+        serviceAddressesCache: () => state.serviceAddressesCache ? [action.payload].concat(state.serviceAddressesCache)
+          : [action.payload]
+      }, state),
+  [Actions.CONSUME_CACHED_SERVICE_ADDRESS]: (state) => u({
+                                                           value: mapServiceAddressBundle(last(state.serviceAddressesCache)),
+                                                           serviceAddressesCache: state.serviceAddressesCache.slice(0, -1)
+                                                         }, state)
 });
 
 export default root;
@@ -119,22 +131,29 @@ export const undoServiceAddressSuccess = (): Action => ({
 })
 
 export const unsortedServiceAddressFulfilled = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
-  if (Queue.canPush()) {
+  if (canPreFetch()) {
     dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
   }
   dispatch(
-    {type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(bundle), loading: false}});
+    {
+      type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED,
+      payload: {value: mapServiceAddressBundle(bundle), loading: false}
+    });
 };
 
-export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => () => {
-  Queue.push(bundle);
+export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): Action => (dispatch: Dispatch) => {
+  dispatch({type: Actions.UNSORTED_SERVICE_ADDRESS_PREFETCHED, payload: bundle});
+  if (canPreFetch()) {
+    dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+  }
 }
 
 export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) => {
-  var cached = Queue.pop();
-  if (cached) {
-    dispatch(
-      {type: Actions.UNSORTED_SERVICE_ADDRESS_FULFILLED, payload: {value: mapServiceAddressBundle(cached), loading: false}});
+  if (store.getState().root.serviceAddressesCache && store.getState().root.serviceAddressesCache.length > 0) {
+    dispatch({type: Actions.CONSUME_CACHED_SERVICE_ADDRESS});
+    if (canPreFetch()) {
+      dispatch({type: FetchActions.PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
+    }
   } else {
     dispatch({type: Actions.START_FETCH, payload: {loading: true}});
     dispatch({type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
