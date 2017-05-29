@@ -56,6 +56,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 import static pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper.createLawFirm;
+import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressForNonLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
 
 //import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
@@ -157,6 +158,7 @@ public class ServiceAddressSorterTest {
         eq(
             ThinLawFirmServiceAddress
                 .newBuilder()
+                .setNotALawFirm(false)
                 .setThinLawFirm(
                     ThinLawFirm.newBuilder()
                         .setId(lawFirm.getLawFirmId())
@@ -193,14 +195,13 @@ public class ServiceAddressSorterTest {
   @Test
   public void unsortServiceAddress() throws Exception {
     replyWithAckResponse()
-        .when(serviceAddressService).unassignServiceAddressFromLawFirm(
-            any(UnassignServiceAddressFromLawFirmRequest.class), any(StreamObserver.class));
+        .when(serviceAddressService)
+        .unassignServiceAddressFromLawFirm(any(UnassignServiceAddressFromLawFirmRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(datastoreSg3Service).deleteThinLawFirmServiceAddress(any(Int64Value.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(queueOnPrem).addUnit(any(AddUnitRequestOnPrem.class), any(StreamObserver.class));
-    serviceAddressSorter.unsortServiceAddress(
-        UnsortServiceAddressRequest.newBuilder().setServiceAddressId(1L).build());
+    serviceAddressSorter.unsortServiceAddress(UnsortServiceAddressRequest.newBuilder().setServiceAddressId(1L).build());
     verify(serviceAddressService, times(1))
         .unassignServiceAddressFromLawFirm(
             eq(UnassignServiceAddressFromLawFirmRequest.newBuilder().setServiceAddressId(1L).build()),
@@ -221,14 +222,41 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void setServiceAddressAsNonLawFirm() throws Exception {
+    final ServiceAddress serviceAddress = createServiceAddressForNonLawFirm(faker.company().name());
+
     replyWithAckResponse()
-        .when(serviceAddressService).setServiceAddressAsNonLawFirm(
-        any(SetServiceAddressAsNonLawFirmRequest.class), any(StreamObserver.class));
+        .when(serviceAddressService)
+        .setServiceAddressAsNonLawFirm(any(SetServiceAddressAsNonLawFirmRequest.class), any(StreamObserver.class));
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(datastoreSg3Service)
+        .upsertThinLawFirmServiceAddress(any(ThinLawFirmServiceAddress.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(queueOnPrem).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
+
     serviceAddressSorter.setServiceAddressAsNonLawFirm(
         pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
             .newBuilder().setServiceAddressId(1L).build());
+
+    verify(datastoreSg3Service).upsertThinLawFirmServiceAddress(
+        eq(
+            ThinLawFirmServiceAddress
+                .newBuilder()
+                .setNotALawFirm(true)
+                .setThinServiceAddress(
+                    ThinServiceAddress
+                        .newBuilder()
+                        .setServiceAddressId(serviceAddress.getServiceAddressId())
+                        .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
+                        .setCountry(serviceAddress.getCountry())
+                        .setLongitude(serviceAddress.getLongitude())
+                        .setLatitude(serviceAddress.getLatitude())
+                ).build()
+        ),
+        any(StreamObserver.class)
+    );
     verify(queueOnPrem, times(1))
         .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
   }

@@ -103,6 +103,7 @@ public class ServiceAddressSorter {
                     .setLongitude(serviceAddress.getLongitude())
                     .setLatitude(serviceAddress.getLatitude())
             )
+            .setNotALawFirm(false)
             .build();
     datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
 
@@ -134,6 +135,30 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
+
+    // Also update Elasticsearch index
+    final ServiceAddress serviceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
+        GetServiceAddressByIdRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+    final ThinLawFirmServiceAddress thinLawFirmServiceAddress =
+        ThinLawFirmServiceAddress
+            .newBuilder()
+            .setNotALawFirm(true)
+            .setThinServiceAddress(
+                ThinServiceAddress
+                    .newBuilder()
+                    .setServiceAddressId(serviceAddress.getServiceAddressId())
+                    .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
+                    .setCountry(serviceAddress.getCountry())
+                    .setLongitude(serviceAddress.getLongitude())
+                    .setLatitude(serviceAddress.getLatitude())
+            )
+            .build();
+    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
+
     deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }
 
