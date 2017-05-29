@@ -495,7 +495,7 @@ public class UnsortedServiceAddressFetcherTest {
         ServiceAddress
             .newBuilder()
             .setServiceAddressId(222L)
-            .setCountry("MY")
+            .setCountry("CA")
             .build();
 
     replyWith(serviceAddress)
