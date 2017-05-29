@@ -160,11 +160,11 @@ class AddressesList extends React.Component {
 
   render() {
     return (
-      <DataTable className="addresses-list" style={{width: "100%", tableLayout: "fixed"}} rowKeyColumn="key"
+      <DataTable className="addresses-list" rowKeyColumn="key"
                  rows={this.mapRows()}>
-        <TableHeader style={{width: "15%"}} name="lawFirmId">Law Firm ID</TableHeader>
+        <TableHeader style={{width: "12%"}} name="lawFirmId">Law Firm ID</TableHeader>
         <TableHeader style={{width: "21%"}} name="entity">Firm Name</TableHeader>
-        <TableHeader style={{paddingLeft: "26px", width: "53%"}} name="serviceAddress">Service Addresses</TableHeader>
+        <TableHeader style={{paddingLeft: "26px", width: "56%"}} name="serviceAddress">Service Addresses</TableHeader>
         <TableHeader style={{paddingLeft: "26px", width: "6%"}} name="serviceAddressId">Entity ID</TableHeader>
         <TableHeader style={{width: "5%"}} name="actions">Re-sort</TableHeader>
       </DataTable>

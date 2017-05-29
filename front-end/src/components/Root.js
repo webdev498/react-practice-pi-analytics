@@ -60,7 +60,7 @@ class Root extends React.Component {
       }
 
       content = (
-        <Content style={{padding: "32px"}}>
+        <Content>
           <FirmDisplay value={this.props.value}/>
           <Grid className="button-bar">
             <Cell col={9}>

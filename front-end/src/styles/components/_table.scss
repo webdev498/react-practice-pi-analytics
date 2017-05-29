@@ -9,6 +9,9 @@
 }
 
 .addresses-list.mdl-data-table {
+  min-width: 1830px;
+  width: 100%;
+  table-layout: fixed;
 
   & td {
     vertical-align: top;
@@ -24,6 +27,12 @@
 
   & td:nth-child(3) {
     overflow: hidden;
+  }
+
+  & td:nth-child(2) {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
   }
 
   & td:last-child {

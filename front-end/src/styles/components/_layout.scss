@@ -3,3 +3,8 @@
 .mdl-layout {
   perspective: 10000px;
 }
+
+.mdl-layout__content {
+  padding: 32px;
+  overflow-x: auto;
+}
