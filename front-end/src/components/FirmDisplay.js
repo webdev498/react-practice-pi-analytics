@@ -15,6 +15,9 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
   let addressToSort = props.value.serviceAddressToSort;
 
   const renderGoogleSearchIcon = (value: string) => {
+    if (!value) {
+      return <span>N/A</span>
+    }
     var url = OuterUrls.googleSearch.concat(value.replace(/ /g, "+"));
     return (
       <span>{value} <a href={url} target="_blank"><IconButton accent name="search"/></a></span>
