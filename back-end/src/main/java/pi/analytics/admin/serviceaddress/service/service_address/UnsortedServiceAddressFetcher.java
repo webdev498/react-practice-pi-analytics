@@ -22,7 +22,6 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
-import pi.ip.data.relational.generated.IsHighValueServiceAddressRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
@@ -151,19 +150,19 @@ public class UnsortedServiceAddressFetcher {
               if (serviceAddress.getCountry().equals("TW")) {
                 return Optional.of(true);  // Skip Taiwan for now
               }
-              try {
-                final IsHighValueServiceAddressRequest request =
-                    IsHighValueServiceAddressRequest
-                        .newBuilder()
-                        .setServiceAddressId(serviceAddress.getServiceAddressId())
-                        .build();
-                return Optional.of(
-                    !serviceAddressServiceBlockingStub.isHighValueServiceAddress(request).getIsHighValue()
-                );
-              } catch (Exception e) {
-                // Only skip if we're certain that the service address isn't of high value
-                return Optional.of(false);
-              }
+//              try {
+//                final IsHighValueServiceAddressRequest request =
+//                    IsHighValueServiceAddressRequest
+//                        .newBuilder()
+//                        .setServiceAddressId(serviceAddress.getServiceAddressId())
+//                        .build();
+//                return Optional.of(
+//                    !serviceAddressServiceBlockingStub.isHighValueServiceAddress(request).getIsHighValue()
+//                );
+//              } catch (Exception e) {
+//                return Optional.of(false);
+//              }
+              return Optional.of(false);  // IPFLOW-890: Disabled because most queue items are currently being skipped
             })
             .orElse(false);
     if (skip) {
