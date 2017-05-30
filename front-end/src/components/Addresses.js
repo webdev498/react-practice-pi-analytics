@@ -29,7 +29,7 @@ const Addresses = (props: AddressesProps): React.Element<Layout> => {
   return (
     <div>
       <Tabs activeTab={props.tab} onChange={props.onTabChange} ripple style={{marginTop: "16px"}}>
-        <Tab>Suggestions (US)</Tab>
+        <Tab>Suggestions ({props.serviceAddress.country})</Tab>
         <Tab>Search</Tab>
       </Tabs>
       <section className={"center"}>

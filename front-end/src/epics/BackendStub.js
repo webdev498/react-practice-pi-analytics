@@ -27,7 +27,8 @@ import {
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
   SKIP_SERVICE_ADDRESS,
   UNDO_SERVICE_ADDRESS,
-  UNSORT_SERVICE_ADDRESS
+  UNSORT_SERVICE_ADDRESS,
+  SET_SORTING_IMPOSSIBLE
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
 import Authentication from "../services/Authentication";
@@ -155,6 +156,11 @@ export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsO
   action$.ofType(SKIP_SERVICE_ADDRESS)
     .delay(1000)
     .mapTo(getNextUnsortedServiceAddress());
+
+export const setSortingImpossible = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(SET_SORTING_IMPOSSIBLE)
+    .delay(1000)
+    .map(getNextUnsortedServiceAddress());
 
 export const getCurrentUser = (acitons$: ActionsObservable<Action>): ActionsObservable<Action> =>
   acitons$.ofType(GET_CURRENT_USER)
