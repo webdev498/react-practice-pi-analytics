@@ -39,7 +39,6 @@ import pi.ip.proto.generated.ServiceAddress;
 public class UnsortedServiceAddressFetcher {
 
   private static final Logger log = LoggerFactory.getLogger(UnsortedServiceAddressFetcher.class);
-  private static final String AU_ONLY_USER = "auonly";
 
   @Inject
   private QueueOnPremGrpc.QueueOnPremBlockingStub queueOnPremBlockingStub;
@@ -50,7 +49,7 @@ public class UnsortedServiceAddressFetcher {
   public Optional<QueuedServiceAddress> fetchNext(final String username) {
     return getQueueNamesForUser(username)
         .stream()
-        .map(queueNameOnPrem -> fetchNextValidQueuedServiceAddress(queueNameOnPrem, username))
+        .map(queueNameOnPrem -> fetchNextValidQueuedServiceAddress(queueNameOnPrem))
         // Skip empty queues
         .filter(Optional::isPresent)
         .map(Optional::get)
@@ -64,10 +63,6 @@ public class UnsortedServiceAddressFetcher {
           QueueNameOnPrem.ServiceAddrSort_en,
           QueueNameOnPrem.ServiceAddrSort_ja
       );
-    } else if (StringUtils.equalsIgnoreCase(userName, AU_ONLY_USER)) {
-      return ImmutableList.of(
-          QueueNameOnPrem.ServiceAddrSort_en
-      );
     } else {
       return ImmutableList.of(
           QueueNameOnPrem.ServiceAddrSort_en,
@@ -78,8 +73,7 @@ public class UnsortedServiceAddressFetcher {
     }
   }
 
-  private Optional<QueuedServiceAddress> fetchNextValidQueuedServiceAddress(final QueueNameOnPrem queueNameOnPrem,
-                                                                            final String username) {
+  private Optional<QueuedServiceAddress> fetchNextValidQueuedServiceAddress(final QueueNameOnPrem queueNameOnPrem) {
     Optional<StoredMsgUnit> nextQueueItem = Optional.of(StoredMsgUnit.getDefaultInstance());
     Optional<QueuedServiceAddress> validQueuedServiceAddress = Optional.empty();
 
@@ -89,7 +83,7 @@ public class UnsortedServiceAddressFetcher {
           nextQueueItem
               .map(this::fetchServiceAddress)
               .map(this::pruneUnhandledQueueItem)
-              .map(queuedServiceAddress -> skipLowPriorityServiceAddress(queuedServiceAddress, username))
+              .map(queuedServiceAddress -> skipLowPriorityServiceAddress(queuedServiceAddress))
               .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent());
     }
     return validQueuedServiceAddress;
@@ -149,15 +143,11 @@ public class UnsortedServiceAddressFetcher {
     return queuedServiceAddress;
   }
 
-  private QueuedServiceAddress skipLowPriorityServiceAddress(final QueuedServiceAddress queuedServiceAddress,
-                                                             final String username) {
+  private QueuedServiceAddress skipLowPriorityServiceAddress(final QueuedServiceAddress queuedServiceAddress) {
     final boolean skip =
         queuedServiceAddress
             .serviceAddress()
             .flatMap(serviceAddress -> {
-              if (username.equals(AU_ONLY_USER) && !serviceAddress.getCountry().equalsIgnoreCase("au")) {
-                return Optional.of(true);
-              }
               if (serviceAddress.getCountry().equals("TW")) {
                 return Optional.of(true);  // Skip Taiwan for now
               }
