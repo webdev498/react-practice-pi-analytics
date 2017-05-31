@@ -45,7 +45,8 @@ const root = createReducer(Actions.NAMESPACE, initialState, {
       }, state),
   [Actions.CONSUME_CACHED_SERVICE_ADDRESS]: (state) => u({
                                                            value: mapServiceAddressBundle(last(state.serviceAddressesCache)),
-                                                           serviceAddressesCache: state.serviceAddressesCache.slice(0, -1)
+                                                           serviceAddressesCache: state.serviceAddressesCache.slice(0, -1),
+                                                           loading: false
                                                          }, state)
 });
 
