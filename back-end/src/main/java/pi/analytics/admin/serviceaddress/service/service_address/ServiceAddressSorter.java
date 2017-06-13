@@ -25,10 +25,8 @@ import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
+import pi.ip.generated.es.EsMutate;
 import pi.ip.generated.queue.AddUnitRequestOnPrem;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
@@ -55,7 +53,7 @@ public class ServiceAddressSorter {
   private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   @Inject
-  private DatastoreSg3ServiceBlockingStub datastoreSg3ServiceBlockingStub;
+  private ESMutationServiceBlockingStub esMutationServiceBlockingStub;
 
   @Inject
   private QueueOnPremBlockingStub queueOnPremBlockingStub;
@@ -85,17 +83,17 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    final ThinLawFirmServiceAddress thinLawFirmServiceAddress =
-        ThinLawFirmServiceAddress
+    final EsMutate.ThinLawFirmServiceAddress thinLawFirmServiceAddress =
+        EsMutate.ThinLawFirmServiceAddress
             .newBuilder()
             .setThinLawFirm(
-                ThinLawFirm
+                EsMutate.ThinLawFirm
                     .newBuilder()
                     .setId(lawFirm.getLawFirmId())
                     .setName(lawFirm.getName())
             )
             .setThinServiceAddress(
-                ThinServiceAddress
+                EsMutate.ThinServiceAddress
                     .newBuilder()
                     .setServiceAddressId(serviceAddress.getServiceAddressId())
                     .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
@@ -105,7 +103,7 @@ public class ServiceAddressSorter {
             )
             .setNotALawFirm(false)
             .build();
-    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
+    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
 
     deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }
@@ -118,7 +116,7 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    datastoreSg3ServiceBlockingStub.deleteThinLawFirmServiceAddress(
+    esMutationServiceBlockingStub.deleteThinLawFirmServiceAddress(
         Int64Value
             .newBuilder()
             .setValue(request.getServiceAddressId())
@@ -143,12 +141,12 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    final ThinLawFirmServiceAddress thinLawFirmServiceAddress =
-        ThinLawFirmServiceAddress
+    final EsMutate.ThinLawFirmServiceAddress thinLawFirmServiceAddress =
+        EsMutate.ThinLawFirmServiceAddress
             .newBuilder()
             .setNotALawFirm(true)
             .setThinServiceAddress(
-                ThinServiceAddress
+                EsMutate.ThinServiceAddress
                     .newBuilder()
                     .setServiceAddressId(serviceAddress.getServiceAddressId())
                     .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
@@ -157,7 +155,7 @@ public class ServiceAddressSorter {
                     .setLatitude(serviceAddress.getLatitude())
             )
             .build();
-    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
+    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
 
     deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }

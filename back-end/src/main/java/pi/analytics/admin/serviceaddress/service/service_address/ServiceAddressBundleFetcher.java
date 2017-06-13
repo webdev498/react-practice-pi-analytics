@@ -30,9 +30,8 @@ import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressReque
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.SuggestSimilarThinServiceAddressRequest;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
+import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
+import pi.ip.generated.es.EsMutate;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -55,7 +54,7 @@ public class ServiceAddressBundleFetcher {
   ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   @Inject
-  DatastoreSg3ServiceBlockingStub datastoreSg3ServiceBlockingStub;
+  ESMutationServiceBlockingStub esMutationServiceBlockingStub;
 
   @Inject
   Translator translator;
@@ -101,8 +100,8 @@ public class ServiceAddressBundleFetcher {
   final Function<ServiceAddressBundle, ServiceAddressBundle> addAgentSuggestions = bundle -> {
     final ServiceAddress serviceAddress = bundle.getServiceAddressToSort();
 
-    final SuggestSimilarThinServiceAddressRequest getSuggestionsRequest =
-        SuggestSimilarThinServiceAddressRequest
+    final EsMutate.SuggestSimilarThinServiceAddressRequest getSuggestionsRequest =
+        EsMutate.SuggestSimilarThinServiceAddressRequest
             .newBuilder()
             .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
             .setCountry(serviceAddress.getCountry())
@@ -111,7 +110,7 @@ public class ServiceAddressBundleFetcher {
             .build();
 
     final List<Agent> suggestedAgents =
-        datastoreSg3ServiceBlockingStub
+        esMutationServiceBlockingStub
             // Fetch suggestions from Elasticsearch
             .suggestSimilarThinServiceAddress(getSuggestionsRequest)
             .getSuggestionsList()
@@ -166,7 +165,7 @@ public class ServiceAddressBundleFetcher {
         .build();
   };
 
-  private Optional<ServiceAddress> fetchServiceAddress(final ThinLawFirmServiceAddress thinLawFirmServiceAddress) {
+  private Optional<ServiceAddress> fetchServiceAddress(final EsMutate.ThinLawFirmServiceAddress thinLawFirmServiceAddress) {
     try {
     return Optional.of(
         serviceAddressServiceBlockingStub

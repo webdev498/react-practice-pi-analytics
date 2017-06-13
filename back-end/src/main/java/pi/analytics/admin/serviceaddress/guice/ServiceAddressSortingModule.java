@@ -10,7 +10,7 @@ import com.google.inject.Singleton;
 import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSearchServiceGrpc;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
+import pi.ip.generated.es.ESMutationServiceGrpc;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 
 /**
@@ -29,8 +29,8 @@ public class ServiceAddressSortingModule extends AbstractModule {
     bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
         .toProvider(ServiceAddressServiceBlockingStubProvider.class)
         .in(Singleton.class);
-    bind(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub.class)
-        .toProvider(DatastoreSg3ServiceBlockingStubProvider.class)
+    bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
+        .toProvider(EsMutationServiceBlockingStubProvider.class)
         .in(Singleton.class);
     bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
         .toProvider(ServiceAddressServiceBlockingStubProvider.class)
