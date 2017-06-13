@@ -34,11 +34,8 @@ import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmRequest;
 import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmResponse;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.LawFirmUpserted;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.es.ESMutationServiceGrpc;
+import pi.ip.generated.es.EsMutate;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 import pi.ip.proto.generated.AckResponse;
@@ -64,7 +61,7 @@ public class LawFirmRepositoryTest {
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private NakedLawFirmSearchServiceGrpc.NakedLawFirmSearchServiceImplBase lawFirmSearchService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
-  private DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase datastoreSg3Service;
+  private ESMutationServiceGrpc.ESMutationServiceImplBase esMutationService;
   private QueueOnPremGrpc.QueueOnPremImplBase queueOnPrem;
   private Server server;
   private ManagedChannel channel;
@@ -75,7 +72,7 @@ public class LawFirmRepositoryTest {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     lawFirmSearchService = mock(NakedLawFirmSearchServiceGrpc.NakedLawFirmSearchServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
-    datastoreSg3Service = mock(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase.class);
+    esMutationService = mock(ESMutationServiceGrpc.ESMutationServiceImplBase.class);
     queueOnPrem = mock(QueueOnPremGrpc.QueueOnPremImplBase.class);
 
     final String serverName = "law-firm-helper-test-".concat(UUID.randomUUID().toString());
@@ -85,7 +82,7 @@ public class LawFirmRepositoryTest {
             .addService(lawFirmDbService.bindService())
             .addService(lawFirmSearchService.bindService())
             .addService(serviceAddressService.bindService())
-            .addService(datastoreSg3Service.bindService())
+            .addService(esMutationService.bindService())
             .addService(queueOnPrem.bindService())
             .directExecutor()
             .build()
@@ -105,8 +102,8 @@ public class LawFirmRepositoryTest {
             .toInstance(NakedLawFirmSearchServiceGrpc.newBlockingStub(channel));
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
-        bind(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub.class)
-            .toInstance(DatastoreSg3ServiceGrpc.newBlockingStub(channel));
+        bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
+            .toInstance(ESMutationServiceGrpc.newBlockingStub(channel));
         bind(QueueOnPremGrpc.QueueOnPremBlockingStub.class)
             .toInstance(QueueOnPremGrpc.newBlockingStub(channel));
       }
@@ -181,14 +178,14 @@ public class LawFirmRepositoryTest {
         .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
 
     // datastoreSg3ServiceBlockingStub.upsertIntoLawFirmCaches()
-    replyWith(LawFirmUpserted.getDefaultInstance())
-        .when(datastoreSg3Service)
-        .upsertIntoLawFirmCaches(any(LawFirm.class), any(StreamObserver.class));
+    replyWith(AckResponse.getDefaultInstance())
+        .when(esMutationService)
+        .upsertLawFirm(any(LawFirm.class), any(StreamObserver.class));
 
     // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
     replyWith(AckResponse.getDefaultInstance())
-        .when(datastoreSg3Service)
-        .upsertThinLawFirmServiceAddress(any(ThinLawFirmServiceAddress.class), any(StreamObserver.class));
+        .when(esMutationService)
+        .upsertThinLawFirmServiceAddress(any(EsMutate.ThinLawFirmServiceAddress.class), any(StreamObserver.class));
 
     // queueOnPremBlockingStub.deleteQueueUnit()
     replyWith(AckResponse.getDefaultInstance())
@@ -216,8 +213,8 @@ public class LawFirmRepositoryTest {
         );
 
     // Verify upsert into law firm caches called
-    verify(datastoreSg3Service, times(1))
-        .upsertIntoLawFirmCaches(
+    verify(esMutationService, times(1))
+        .upsertLawFirm(
             eq(
                 LawFirm
                     .newBuilder()
@@ -232,13 +229,13 @@ public class LawFirmRepositoryTest {
         );
 
     // Verify upsert thin law firm service address called
-    verify(datastoreSg3Service, times(1))
+    verify(esMutationService, times(1))
         .upsertThinLawFirmServiceAddress(
             eq(
-                ThinLawFirmServiceAddress
+                EsMutate.ThinLawFirmServiceAddress
                     .newBuilder()
                     .setThinServiceAddress(
-                        ThinServiceAddress
+                        EsMutate.ThinServiceAddress
                             .newBuilder()
                             .setServiceAddressId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
                             .setNameAddress(createLawFirmRequest.getServiceAddress().getName() + " "
@@ -249,7 +246,7 @@ public class LawFirmRepositoryTest {
                     )
                     .setNotALawFirm(false)
                     .setThinLawFirm(
-                        ThinLawFirm.newBuilder()
+                        EsMutate.ThinLawFirm.newBuilder()
                             .setId(newLawFirmId)
                             .setName(createLawFirmRequest.getName())
                     )

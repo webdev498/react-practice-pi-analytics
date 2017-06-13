@@ -13,26 +13,26 @@ import com.pi.common.config.PiKubeServicePort;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
+import pi.ip.generated.es.ESMutationServiceGrpc;
+import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
 
 /**
  * @author shane.xie@practiceinsight.io
  */
 @Singleton
-public class DatastoreSg3ServiceBlockingStubProvider implements Provider<DatastoreSg3ServiceBlockingStub> {
+public class EsMutationServiceBlockingStubProvider implements Provider<ESMutationServiceBlockingStub> {
 
     @Override
-    public DatastoreSg3ServiceBlockingStub get() {
+    public ESMutationServiceBlockingStub get() {
       final PiConfig piConfig = PiConfig.get();
       final ManagedChannel channel =
           ManagedChannelBuilder
               .forAddress(
-                  piConfig.getServiceHostname(PiKubeServiceImpl.DATASTORE_SERVICE_SG3_HOST),
-                  piConfig.getInteger(PiKubeServicePort.DATASTORE_SERVICE_SG3_PORT)
+                  piConfig.getServiceHostname(PiKubeServiceImpl.ES_MUTATION_SERVICE_HOST),
+                  piConfig.getInteger(PiKubeServicePort.ES_MUTATION_SERVICE_PORT)
               )
               .usePlaintext(true)
               .build();
-      return DatastoreSg3ServiceGrpc.newBlockingStub(channel);
+      return ESMutationServiceGrpc.newBlockingStub(channel);
     }
 }

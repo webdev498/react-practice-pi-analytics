@@ -35,10 +35,8 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.es.ESMutationServiceGrpc;
+import pi.ip.generated.es.EsMutate;
 import pi.ip.generated.queue.AddUnitRequestOnPrem;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
@@ -69,7 +67,7 @@ public class ServiceAddressSorterTest {
   private Faker faker = new Faker();
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
-  private DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase datastoreSg3Service;
+  private ESMutationServiceGrpc.ESMutationServiceImplBase esMutationService;
   private QueueOnPremGrpc.QueueOnPremImplBase queueOnPrem;
   private Server server;
   private ManagedChannel channel;
@@ -79,7 +77,7 @@ public class ServiceAddressSorterTest {
   public void setUp() throws Exception {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
-    datastoreSg3Service = mock(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceImplBase.class);
+    esMutationService = mock(ESMutationServiceGrpc.ESMutationServiceImplBase.class);
     queueOnPrem = mock(QueueOnPremGrpc.QueueOnPremImplBase.class);
 
     final String serverName = "service-address-sorter-test-".concat(UUID.randomUUID().toString());
@@ -88,7 +86,7 @@ public class ServiceAddressSorterTest {
             .forName(serverName)
             .addService(lawFirmDbService.bindService())
             .addService(serviceAddressService.bindService())
-            .addService(datastoreSg3Service.bindService())
+            .addService(esMutationService.bindService())
             .addService(queueOnPrem.bindService())
             .directExecutor()
             .build()
@@ -106,8 +104,8 @@ public class ServiceAddressSorterTest {
             .toInstance(LawFirmDbServiceGrpc.newBlockingStub(channel));
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
-        bind(DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub.class)
-            .toInstance(DatastoreSg3ServiceGrpc.newBlockingStub(channel));
+        bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
+            .toInstance(ESMutationServiceGrpc.newBlockingStub(channel));
         bind(QueueOnPremGrpc.QueueOnPremBlockingStub.class)
             .toInstance(QueueOnPremGrpc.newBlockingStub(channel));
       }
@@ -130,8 +128,8 @@ public class ServiceAddressSorterTest {
         .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
 
     replyWithAckResponse()
-        .when(datastoreSg3Service)
-        .upsertThinLawFirmServiceAddress(any(ThinLawFirmServiceAddress.class), any(StreamObserver.class));
+        .when(esMutationService)
+        .upsertThinLawFirmServiceAddress(any(EsMutate.ThinLawFirmServiceAddress.class), any(StreamObserver.class));
 
     replyWithAckResponse()
         .when(queueOnPrem)
@@ -154,18 +152,18 @@ public class ServiceAddressSorterTest {
             .build()
     );
 
-    verify(datastoreSg3Service).upsertThinLawFirmServiceAddress(
+    verify(esMutationService).upsertThinLawFirmServiceAddress(
         eq(
-            ThinLawFirmServiceAddress
+            EsMutate.ThinLawFirmServiceAddress
                 .newBuilder()
                 .setNotALawFirm(false)
                 .setThinLawFirm(
-                    ThinLawFirm.newBuilder()
+                    EsMutate.ThinLawFirm.newBuilder()
                         .setId(lawFirm.getLawFirmId())
                         .setName(lawFirm.getName())
                 )
                 .setThinServiceAddress(
-                    ThinServiceAddress
+                    EsMutate.ThinServiceAddress
                         .newBuilder()
                         .setServiceAddressId(serviceAddress.getServiceAddressId())
                         .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
@@ -198,7 +196,7 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .unassignServiceAddressFromLawFirm(any(UnassignServiceAddressFromLawFirmRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
-        .when(datastoreSg3Service).deleteThinLawFirmServiceAddress(any(Int64Value.class), any(StreamObserver.class));
+        .when(esMutationService).deleteThinLawFirmServiceAddress(any(Int64Value.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(queueOnPrem).addUnit(any(AddUnitRequestOnPrem.class), any(StreamObserver.class));
     serviceAddressSorter.unsortServiceAddress(UnsortServiceAddressRequest.newBuilder().setServiceAddressId(1L).build());
@@ -207,7 +205,7 @@ public class ServiceAddressSorterTest {
             eq(UnassignServiceAddressFromLawFirmRequest.newBuilder().setServiceAddressId(1L).build()),
             any(StreamObserver.class)
         );
-    verify(datastoreSg3Service, times(1))
+    verify(esMutationService, times(1))
         .deleteThinLawFirmServiceAddress(eq(Int64Value.newBuilder().setValue(1L).build()), any(StreamObserver.class));
     final AddUnitRequestOnPrem addUnitRequestOnPrem =
         AddUnitRequestOnPrem
@@ -231,8 +229,8 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
-        .when(datastoreSg3Service)
-        .upsertThinLawFirmServiceAddress(any(ThinLawFirmServiceAddress.class), any(StreamObserver.class));
+        .when(esMutationService)
+        .upsertThinLawFirmServiceAddress(any(EsMutate.ThinLawFirmServiceAddress.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(queueOnPrem).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
@@ -240,13 +238,13 @@ public class ServiceAddressSorterTest {
         pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
             .newBuilder().setServiceAddressId(1L).build());
 
-    verify(datastoreSg3Service).upsertThinLawFirmServiceAddress(
+    verify(esMutationService).upsertThinLawFirmServiceAddress(
         eq(
-            ThinLawFirmServiceAddress
+            EsMutate.ThinLawFirmServiceAddress
                 .newBuilder()
                 .setNotALawFirm(true)
                 .setThinServiceAddress(
-                    ThinServiceAddress
+                    EsMutate.ThinServiceAddress
                         .newBuilder()
                         .setServiceAddressId(serviceAddress.getServiceAddressId())
                         .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())

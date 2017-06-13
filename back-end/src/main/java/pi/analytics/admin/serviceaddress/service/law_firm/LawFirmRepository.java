@@ -14,18 +14,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import io.practiceinsight.licensingalert.citationsearch.generated.LawFirmSearchRequest;
-import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSearchServiceGrpc
-    .NakedLawFirmSearchServiceBlockingStub;
+import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSearchServiceGrpc.NakedLawFirmSearchServiceBlockingStub;
 import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
-import pi.ip.generated.datastore_sg3.DatastoreSg3ServiceGrpc.DatastoreSg3ServiceBlockingStub;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirm;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinLawFirmServiceAddress;
-import pi.ip.generated.datastore_sg3.IpDatastoreSg3.ThinServiceAddress;
+import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
+import pi.ip.generated.es.EsMutate;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
 import pi.ip.proto.generated.LawFirm;
@@ -47,7 +44,7 @@ public class LawFirmRepository {
   private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   @Inject
-  private DatastoreSg3ServiceBlockingStub datastoreSg3ServiceBlockingStub;
+  private ESMutationServiceBlockingStub esMutationServiceBlockingStub;
 
   @Inject
   private QueueOnPremBlockingStub queueOnPremBlockingStub;
@@ -125,8 +122,8 @@ public class LawFirmRepository {
     );
 
     // Update Elasticsearch caches
-    datastoreSg3ServiceBlockingStub.upsertIntoLawFirmCaches(newLawFirm);  // Used by law firm search by name
-    datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress(
+    esMutationServiceBlockingStub.upsertLawFirm(newLawFirm);  // Used by law firm search by name
+    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddress(
         createThinLawFirmServiceAddressForLawFirm(request.getServiceAddress(), newLawFirm)
     );
 
@@ -141,18 +138,18 @@ public class LawFirmRepository {
     return lawFirmId;
   }
 
-  private ThinLawFirmServiceAddress createThinLawFirmServiceAddressForLawFirm(final ServiceAddress serviceAddress,
-                                                                              final LawFirm lawFirm) {
-    return ThinLawFirmServiceAddress
+  private EsMutate.ThinLawFirmServiceAddress createThinLawFirmServiceAddressForLawFirm(final ServiceAddress serviceAddress,
+                                                                                       final LawFirm lawFirm) {
+    return EsMutate.ThinLawFirmServiceAddress
         .newBuilder()
         .setThinLawFirm(
-            ThinLawFirm.newBuilder()
+            EsMutate.ThinLawFirm.newBuilder()
                 .setId(lawFirm.getLawFirmId())
                 .setName(lawFirm.getName())
         )
         .setNotALawFirm(false)
         .setThinServiceAddress(
-            ThinServiceAddress
+            EsMutate.ThinServiceAddress
                 .newBuilder()
                 .setServiceAddressId(serviceAddress.getServiceAddressId())
                 .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
