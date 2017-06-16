@@ -15,9 +15,8 @@ SearchProps = {
   loading: boolean,
   query: string,
   serviceAddress: Object,
-  queueId: string,
   onSearch: (query: string) => void,
-  onSortServiceAddress: (queueId: string, serviceAddressId: string, address: Object) => void,
+  onSortServiceAddress: (serviceAddressId: string, address: Object) => void,
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
@@ -56,7 +55,7 @@ class Search extends React.Component {
     if (!this.props.loading && this.props.query && this.props.query.length > 0 && this.props.agents
         && this.props.agents.length > 0) {
       content =
-        <AddressesList agents={this.props.agents} queueId={this.props.queueId} serviceAddress={this.props.serviceAddress}
+        <AddressesList agents={this.props.agents} serviceAddress={this.props.serviceAddress}
                        onSortServiceAddress={this.props.onSortServiceAddress}
                        onUnsortServiceAddress={this.props.onUnsortServiceAddress}/>
     } else if (!this.props.loading && this.props.query && this.props.query.length > 0) {
@@ -72,9 +71,9 @@ class Search extends React.Component {
           <Textfield ref={this.bindSearchInputChange} style={{marginLeft: "8px"}}
                      label="Search law firm by name"/>
         </div>
-        <Content className={"center"}>
+        <div className={"center"}>
           {content}
-        </Content>
+        </div>
       </div>
     )
   }

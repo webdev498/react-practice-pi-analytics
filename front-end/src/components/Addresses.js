@@ -12,16 +12,15 @@ AddressesProps = {
   tab: number,
   agents: Array < Agent >,
   serviceAddress: Object,
-  queueId: string,
   onTabChange: (tab: number) => void,
-  onSortServiceAddress: (queueId: string, serviceAddressId: string, address: Object) => void,
+  onSortServiceAddress: (serviceAddressId: string, address: Object) => void,
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
 const Addresses = (props: AddressesProps): React.Element<Layout> => {
 
   const suggestions = props.agents ?
-                      <AddressesList agents={props.agents} queueId={props.queueId} serviceAddress={props.serviceAddress}
+                      <AddressesList agents={props.agents} serviceAddress={props.serviceAddress}
                                      onSortServiceAddress={props.onSortServiceAddress}
                                      onUnsortServiceAddress={props.onUnsortServiceAddress}/> :
                       <h4 className="voffset32" style={{color: "#bbb"}}>No suggestions available for this service

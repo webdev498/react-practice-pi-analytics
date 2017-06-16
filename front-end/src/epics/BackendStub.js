@@ -108,7 +108,6 @@ const firm = {
     languageType: "en"
   },
   enTranslation: "Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
-  unsortedServiceAddressQueueItemId: "123",
   suggestedAgents: tableRows.lawFirmAgents
 }
 
