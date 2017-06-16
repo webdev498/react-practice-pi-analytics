@@ -16,19 +16,13 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
-import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
+import pi.ip.data.relational.generated.GetNextUnsortedServiceAddressRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
-import pi.ip.generated.queue.DelayUnitRequest;
-import pi.ip.generated.queue.DeleteUnitRequest;
-import pi.ip.generated.queue.QueueNameOnPrem;
-import pi.ip.generated.queue.QueueOnPremGrpc;
-import pi.ip.generated.queue.StoredMsgUnit;
-import pi.ip.generated.queue.UnitRequestOnPrem;
+import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.ServiceAddress;
 
 /**
@@ -39,153 +33,56 @@ public class UnsortedServiceAddressFetcher {
 
   private static final Logger log = LoggerFactory.getLogger(UnsortedServiceAddressFetcher.class);
 
-  @Inject
-  private QueueOnPremGrpc.QueueOnPremBlockingStub queueOnPremBlockingStub;
+  private static final Set<String> ACTIVE_COUNTRY_CODES =
+    ImmutableSet.of("AU", "AT", "BE", "BR", "CA", "CN", "CZ", "DK", "FI", "FR",
+        "DE", "HK", "IS", "IN", "IE", "IL", "IT", "JP", "KR", "LI", "LU", "NL", "NZ", "NO", "RU", "SG", "ZA", "ES", "SE",
+        "CH", "TW", "GB", "US"
+    );
+
+  private static final Set<String> IGNORED_COUNTRY_CODES = ImmutableSet.of("TW");
 
   @Inject
   private ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
-  public Optional<QueuedServiceAddress> fetchNext(final String username) {
-    return getQueueNamesForUser(username)
-        .stream()
-        .map(queueNameOnPrem -> fetchNextValidQueuedServiceAddress(queueNameOnPrem))
-        // Skip empty queues
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .findFirst();
-  }
+  public Optional<ServiceAddress> fetchNext(final String username) {
+    final Set<String> officeCodes =
+        ACTIVE_COUNTRY_CODES
+            .stream()
+            .filter(country -> !IGNORED_COUNTRY_CODES.contains(country))
+            .collect(Collectors.toSet());
 
-  private List<QueueNameOnPrem> getQueueNamesForUser(final String userName) {
-    if (StringUtils.equalsIgnoreCase(userName, "hellen")) {
-      return ImmutableList.of(
-          QueueNameOnPrem.ServiceAddrSort_zh,
-          QueueNameOnPrem.ServiceAddrSort_en,
-          QueueNameOnPrem.ServiceAddrSort_ja
-      );
-    } else {
-      return ImmutableList.of(
-          QueueNameOnPrem.ServiceAddrSort_en,
-          QueueNameOnPrem.ServiceAddrSort_de,
-          QueueNameOnPrem.ServiceAddrSort_kr,
-          QueueNameOnPrem.ServiceAddrSort_ja
-      );
-    }
-  }
-
-  private Optional<QueuedServiceAddress> fetchNextValidQueuedServiceAddress(final QueueNameOnPrem queueNameOnPrem) {
-    Optional<StoredMsgUnit> nextQueueItem = Optional.of(StoredMsgUnit.getDefaultInstance());
-    Optional<QueuedServiceAddress> validQueuedServiceAddress = Optional.empty();
-
-    while (nextQueueItem.isPresent() && !validQueuedServiceAddress.isPresent()) {
-      nextQueueItem = fetchNextQueueItem(queueNameOnPrem);
-      validQueuedServiceAddress =
-          nextQueueItem
-              .map(this::fetchServiceAddress)
-              .map(this::pruneUnhandledQueueItem)
-              .map(queuedServiceAddress -> skipLowPriorityServiceAddress(queuedServiceAddress))
-              .filter(queuedServiceAddress -> queuedServiceAddress.serviceAddress().isPresent());
-    }
-    return validQueuedServiceAddress;
-  }
-
-  private Optional<StoredMsgUnit> fetchNextQueueItem(final QueueNameOnPrem queueNameOnPrem) {
-    UnitRequestOnPrem unitRequestOnPrem =
-        UnitRequestOnPrem
+    final GetNextUnsortedServiceAddressRequest request =
+        GetNextUnsortedServiceAddressRequest
             .newBuilder()
-            .setQueueNameOnPrem(queueNameOnPrem)
-            .setLockTimeSeconds(240)
+            .addAllRestrictToLangTypes(langTypesForUser(username))
+            .addAllRestrictToOfficeCodes(officeCodes)
             .build();
-    StoredMsgUnit storedMsgUnit = queueOnPremBlockingStub.getNextQueueUnit(unitRequestOnPrem);
-    if (StringUtils.isEmpty(storedMsgUnit.getDbId())) {
-      // End of this queue
-      return Optional.empty();
-    } else {
-      return Optional.of(storedMsgUnit);
-    }
-  }
 
-  private QueuedServiceAddress fetchServiceAddress(final StoredMsgUnit storedMsgUnit) {
-    final GetServiceAddressByIdRequest fetchRequest =
-        GetServiceAddressByIdRequest
-            .newBuilder()
-            .setServiceAddressId(getServiceAddressId(storedMsgUnit))
-            .build();
     try {
-      final ServiceAddress serviceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(fetchRequest);
-      return QueuedServiceAddress.create(storedMsgUnit.getDbId(), Optional.of(serviceAddress));
+      return Optional.of(serviceAddressServiceBlockingStub.getNextUnsortedServiceAddress(request));
     } catch (StatusRuntimeException sre) {
       if (sre.getStatus().equals(Status.NOT_FOUND)) {
-        return QueuedServiceAddress.create(storedMsgUnit.getDbId(), Optional.empty());
+        return Optional.empty();
       }
       // Any other status is an error
       throw sre;
     }
   }
 
-  /**
-   * Delete queue items that we can't, or aren't interested in handling
-   * Contains Optional<ServiceAddress>.empty() if the service address is to be skipped
-   */
-  private QueuedServiceAddress pruneUnhandledQueueItem(final QueuedServiceAddress queuedServiceAddress) {
-    if (!queuedServiceAddress.serviceAddress().isPresent()) {
-      // Service address doesn't exist and we can't process it
-      deleteQueueItem(queuedServiceAddress.queueId());
-    } else if (queuedServiceAddress.serviceAddress().get().getLawFirmStatusDetermined()) {
-      // Service address has already been sorted
-      deleteQueueItem(queuedServiceAddress.queueId());
-      return indicateToBeSkipped(queuedServiceAddress);
-    } else if (!activeCountryCodes().contains(queuedServiceAddress.serviceAddress().get().getCountry().toUpperCase())) {
-      // We are not interested in this country code
-      deleteQueueItem(queuedServiceAddress.queueId());
-      return indicateToBeSkipped(queuedServiceAddress);
+  private List<LangType> langTypesForUser(final String userName) {
+    if (StringUtils.equalsIgnoreCase(userName, "hellen")) {
+      return ImmutableList.of(
+          LangType.CHINESE,
+          LangType.WESTERN_SCRIPT,
+          LangType.JAPANESE
+      );
+    } else {
+      return ImmutableList.of(
+          LangType.WESTERN_SCRIPT,
+          LangType.KOREAN,
+          LangType.JAPANESE,
+          LangType.CYRILLIC
+      );
     }
-    return queuedServiceAddress;
-  }
-
-  private QueuedServiceAddress skipLowPriorityServiceAddress(final QueuedServiceAddress queuedServiceAddress) {
-    final boolean skip =
-        queuedServiceAddress
-            .serviceAddress()
-            .flatMap(serviceAddress -> {
-              if (serviceAddress.getCountry().equals("TW")) {
-                return Optional.of(true);  // Skip Taiwan for now
-              }
-              return Optional.of(false);
-            })
-            .orElse(false);
-    if (skip) {
-      DelayUnitRequest delayUnitRequest =
-          DelayUnitRequest
-              .newBuilder()
-              .setDbId(queuedServiceAddress.queueId())
-              .setDelaySeconds((int) TimeUnit.MINUTES.toSeconds(30))
-              .build();
-      queueOnPremBlockingStub.delayQueueUnit(delayUnitRequest);
-      log.info("Skipping unsorted service address id {}, country {}",
-          queuedServiceAddress.serviceAddress().get().getServiceAddressId(),
-          queuedServiceAddress.serviceAddress().get().getCountry());
-      return indicateToBeSkipped(queuedServiceAddress);
-    }
-    return queuedServiceAddress;
-  }
-
-  private long getServiceAddressId(final StoredMsgUnit storedMsgUnit) {
-    return Long.parseLong(storedMsgUnit.getMsgUnit().getUniqueMsgKey());
-  }
-
-  private void deleteQueueItem(final String queueId) {
-    final DeleteUnitRequest deleteUnitRequest = DeleteUnitRequest.newBuilder().setDbId(queueId).build();
-    queueOnPremBlockingStub.deleteQueueUnit(deleteUnitRequest);
-  }
-
-  private Set<String> activeCountryCodes() {
-    return ImmutableSet.of("AU", "AT", "BE", "BR", "CA", "CN", "CZ", "DK", "FI", "FR",
-        "DE", "HK", "IS", "IN", "IE", "IL", "IT", "JP", "KR", "LI", "LU", "NL", "NZ", "NO", "RU", "SG", "ZA", "ES", "SE",
-        "CH", "TW", "GB", "US"
-    );
-  }
-
-  private QueuedServiceAddress indicateToBeSkipped(final QueuedServiceAddress queuedServiceAddress) {
-    return QueuedServiceAddress.create(queuedServiceAddress.queueId(), Optional.empty());
   }
 }

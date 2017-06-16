@@ -8,16 +8,12 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.Int64Value;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
-import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
@@ -30,12 +26,6 @@ import pi.ip.generated.es.LocationRecord;
 import pi.ip.generated.es.ThinLawFirmRecord;
 import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
 import pi.ip.generated.es.ThinServiceAddressRecord;
-import pi.ip.generated.queue.AddUnitRequestOnPrem;
-import pi.ip.generated.queue.DelayUnitRequest;
-import pi.ip.generated.queue.DeleteUnitRequest;
-import pi.ip.generated.queue.MsgUnit;
-import pi.ip.generated.queue.QueueNameOnPrem;
-import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
@@ -47,8 +37,6 @@ public class ServiceAddressSorter {
 
   private static final Logger log = LoggerFactory.getLogger(ServiceAddressSorter.class);
 
-  private static final int SORTING_IMPOSSIBLE_DELAY_MINUTES = 30 * 24 * 60;
-
   @Inject
   LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
 
@@ -57,9 +45,6 @@ public class ServiceAddressSorter {
 
   @Inject
   private ESMutationServiceBlockingStub esMutationServiceBlockingStub;
-
-  @Inject
-  private QueueOnPremBlockingStub queueOnPremBlockingStub;
 
   public void assignServiceAddress(final AssignServiceAddressRequest request) {
     Preconditions.checkArgument(request.getLawFirmId() != 0, "Law firm ID is required");
@@ -111,8 +96,6 @@ public class ServiceAddressSorter {
             .setLawFirmFlag(true)
             .build();
     esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
-
-    deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }
 
   public void unsortServiceAddress(final UnsortServiceAddressRequest request) {
@@ -129,7 +112,6 @@ public class ServiceAddressSorter {
             .setValue(request.getServiceAddressId())
             .build()
     );
-    addQueueItem(request.getServiceAddressId());
   }
 
   public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request) {
@@ -167,54 +149,9 @@ public class ServiceAddressSorter {
             )
             .build();
     esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
-
-    deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
-  }
-
-  public void skipServiceAddress(final SkipServiceAddressRequest request) {
-    Preconditions.checkArgument(StringUtils.isNotBlank(request.getUnsortedServiceAddressQueueItemId()),
-        "Unsorted service address queue item ID is required");
-    Preconditions.checkArgument(request.getDelayMinutes() != 0, "Delay (in minutes) is required");
-    delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), request.getDelayMinutes());
   }
 
   public void setSortingImpossible(final SetSortingImpossibleRequest request) {
-    Preconditions.checkArgument(StringUtils.isNotBlank(request.getUnsortedServiceAddressQueueItemId()),
-        "Unsorted service address queue item ID is required");
-
-    delayQueueItem(request.getUnsortedServiceAddressQueueItemId(), SORTING_IMPOSSIBLE_DELAY_MINUTES);
-  }
-
-  private void addQueueItem(final long serviceAddressId) {
-    final AddUnitRequestOnPrem addUnitRequestOnPrem =
-        AddUnitRequestOnPrem.newBuilder()
-            .setQueueNameOnPrem(QueueNameOnPrem.ServiceAddrSort_en)
-            .setDelaySeconds((int) TimeUnit.DAYS.toSeconds(1))
-            .addMsgUnit(
-                MsgUnit
-                    .newBuilder()
-                    .setUniqueMsgKey(String.valueOf(serviceAddressId))
-            )
-            .build();
-    queueOnPremBlockingStub.addUnit(addUnitRequestOnPrem);
-  }
-
-  private void deleteQueueItem(final String queueId) {
-    final DeleteUnitRequest deleteUnitRequest =
-        DeleteUnitRequest
-            .newBuilder()
-            .setDbId(queueId)
-            .build();
-    queueOnPremBlockingStub.deleteQueueUnit(deleteUnitRequest);
-  }
-
-  private void delayQueueItem(final String queueId, final int delayInMinutes) {
-    DelayUnitRequest delayUnitRequest =
-        DelayUnitRequest
-            .newBuilder()
-            .setDbId(queueId)
-            .setDelaySeconds((int) TimeUnit.MINUTES.toSeconds(delayInMinutes))
-            .build();
-    queueOnPremBlockingStub.delayQueueUnit(delayUnitRequest);
+    // TODO: This needs to be implemented. Current behaviour is to skip sorting the service address.
   }
 }

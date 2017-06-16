@@ -16,7 +16,6 @@ import org.junit.Test;
 import org.mockito.stubbing.Stubber;
 
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
@@ -24,8 +23,6 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
-import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
-import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
@@ -40,11 +37,6 @@ import pi.ip.generated.es.LocationRecord;
 import pi.ip.generated.es.ThinLawFirmRecord;
 import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
 import pi.ip.generated.es.ThinServiceAddressRecord;
-import pi.ip.generated.queue.AddUnitRequestOnPrem;
-import pi.ip.generated.queue.DelayUnitRequest;
-import pi.ip.generated.queue.DeleteUnitRequest;
-import pi.ip.generated.queue.MsgUnit;
-import pi.ip.generated.queue.QueueNameOnPrem;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 import pi.ip.proto.generated.AckResponse;
 import pi.ip.proto.generated.LawFirm;
@@ -71,7 +63,6 @@ public class ServiceAddressSorterTest {
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private ESMutationServiceGrpc.ESMutationServiceImplBase esMutationService;
-  private QueueOnPremGrpc.QueueOnPremImplBase queueOnPrem;
   private Server server;
   private ManagedChannel channel;
   private ServiceAddressSorter serviceAddressSorter;
@@ -81,7 +72,6 @@ public class ServiceAddressSorterTest {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
     esMutationService = mock(ESMutationServiceGrpc.ESMutationServiceImplBase.class);
-    queueOnPrem = mock(QueueOnPremGrpc.QueueOnPremImplBase.class);
 
     final String serverName = "service-address-sorter-test-".concat(UUID.randomUUID().toString());
     server =
@@ -90,7 +80,6 @@ public class ServiceAddressSorterTest {
             .addService(lawFirmDbService.bindService())
             .addService(serviceAddressService.bindService())
             .addService(esMutationService.bindService())
-            .addService(queueOnPrem.bindService())
             .directExecutor()
             .build()
             .start();
@@ -134,10 +123,6 @@ public class ServiceAddressSorterTest {
         .when(esMutationService)
         .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
 
-    replyWithAckResponse()
-        .when(queueOnPrem)
-        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
-
     replyWith(GetLawFirmByIdResponse.newBuilder().setLawFirm(lawFirm).build())
         .when(lawFirmDbService)
         .getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
@@ -149,7 +134,6 @@ public class ServiceAddressSorterTest {
     serviceAddressSorter.assignServiceAddress(
         AssignServiceAddressRequest
             .newBuilder()
-            .setUnsortedServiceAddressQueueItemId("123")
             .setLawFirmId(lawFirm.getLawFirmId())
             .setServiceAddressId(serviceAddress.getServiceAddressId())
             .build()
@@ -182,10 +166,6 @@ public class ServiceAddressSorterTest {
         ),
         any(StreamObserver.class)
     );
-    verify(queueOnPrem).deleteQueueUnit(
-        eq(DeleteUnitRequest.newBuilder().setDbId("123").build()),
-        any(StreamObserver.class)
-    );
     verify(serviceAddressService).assignServiceAddressToLawFirm(
         eq(
             AssignServiceAddressToLawFirmRequest
@@ -205,8 +185,6 @@ public class ServiceAddressSorterTest {
         .unassignServiceAddressFromLawFirm(any(UnassignServiceAddressFromLawFirmRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(esMutationService).deleteThinLawFirmServiceAddress(any(Int64Value.class), any(StreamObserver.class));
-    replyWithAckResponse()
-        .when(queueOnPrem).addUnit(any(AddUnitRequestOnPrem.class), any(StreamObserver.class));
     serviceAddressSorter.unsortServiceAddress(UnsortServiceAddressRequest.newBuilder().setServiceAddressId(1L).build());
     verify(serviceAddressService, times(1))
         .unassignServiceAddressFromLawFirm(
@@ -215,15 +193,6 @@ public class ServiceAddressSorterTest {
         );
     verify(esMutationService, times(1))
         .deleteThinLawFirmServiceAddress(eq(Int64Value.newBuilder().setValue(1L).build()), any(StreamObserver.class));
-    final AddUnitRequestOnPrem addUnitRequestOnPrem =
-        AddUnitRequestOnPrem
-            .newBuilder()
-            .setQueueNameOnPrem(QueueNameOnPrem.ServiceAddrSort_en)
-            .setDelaySeconds((int) TimeUnit.DAYS.toSeconds(1))
-            .addMsgUnit(MsgUnit.newBuilder().setUniqueMsgKey(String.valueOf(1L)).build())
-            .build();
-    verify(queueOnPrem, times(1))
-        .addUnit(eq(addUnitRequestOnPrem), any(StreamObserver.class));
   }
 
   @Test
@@ -239,8 +208,6 @@ public class ServiceAddressSorterTest {
     replyWithAckResponse()
         .when(esMutationService)
         .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
-    replyWithAckResponse()
-        .when(queueOnPrem).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
     serviceAddressSorter.setServiceAddressAsNonLawFirm(
         pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
@@ -267,53 +234,11 @@ public class ServiceAddressSorterTest {
         ),
         any(StreamObserver.class)
     );
-    verify(queueOnPrem, times(1))
-        .deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
-  }
-
-  @Test
-  public void skipServiceAddress() throws Exception {
-    replyWithAckResponse()
-        .when(queueOnPrem)
-        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
-
-    serviceAddressSorter.skipServiceAddress(
-        SkipServiceAddressRequest
-            .newBuilder()
-            .setUnsortedServiceAddressQueueItemId("123")
-            .setDelayMinutes(5)
-            .setRequestedBy("shane")
-            .build()
-    );
-
-    verify(queueOnPrem, times(1))
-        .delayQueueUnit(
-            eq(DelayUnitRequest.newBuilder().setDbId("123").setDelaySeconds(5 * 60).build()),
-            any(StreamObserver.class)
-        );
   }
 
   @Test
   public void setSortingImpossible() throws Exception {
-    replyWithAckResponse()
-        .when(queueOnPrem)
-        .delayQueueUnit(any(DelayUnitRequest.class), any(StreamObserver.class));
-
-    serviceAddressSorter.setSortingImpossible(
-        SetSortingImpossibleRequest
-            .newBuilder()
-            .setUnsortedServiceAddressQueueItemId("123")
-            .setServiceAddressId(123)
-            .setRequestedBy("shane")
-            .build()
-    );
-
-    verify(queueOnPrem, times(1))
-        .delayQueueUnit(
-            eq(DelayUnitRequest.newBuilder().setDbId("123").setDelaySeconds(30 * 24 * 60 * 60).build()),
-            any(StreamObserver.class)
-        );
-
+    // TODO
   }
 
   private Stubber replyWithAckResponse() {

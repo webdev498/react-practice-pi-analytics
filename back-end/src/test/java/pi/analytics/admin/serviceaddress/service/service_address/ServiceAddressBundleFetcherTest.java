@@ -13,7 +13,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import io.grpc.ManagedChannel;
@@ -25,7 +24,6 @@ import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.NonLawFirm;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
-import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
 import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressRequest;
@@ -46,7 +44,6 @@ import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -123,15 +120,6 @@ public class ServiceAddressBundleFetcherTest {
   }
 
   @Test
-  public void fetch_fails_no_service_address() throws Exception {
-    final QueuedServiceAddress queuedServiceAddress = QueuedServiceAddress
-        .create(faker.numerify("#####"), Optional.empty());
-    assertThatThrownBy(() -> { serviceAddressBundleFetcher.fetch(queuedServiceAddress); })
-        .isInstanceOf(IllegalArgumentException.class)
-        .as("Service address cannot be empty");
-  }
-
-  @Test
   public void createServiceAddressBundle() throws Exception {
     final String queueId = faker.numerify("#####");
     final ServiceAddress serviceAddress =
@@ -139,15 +127,13 @@ public class ServiceAddressBundleFetcherTest {
             .newBuilder()
             .setServiceAddressId(faker.number().randomNumber())
             .build();
-    final QueuedServiceAddress queuedServiceAddress = QueuedServiceAddress.create(queueId, Optional.of(serviceAddress));
     final ServiceAddressBundle serviceAddressBundle =
         ServiceAddressBundle
             .newBuilder()
-            .setUnsortedServiceAddressQueueItemId(queueId)
             .setServiceAddressToSort(serviceAddress)
             .build();
     assertThat(serviceAddressBundle)
-        .isEqualTo(serviceAddressBundleFetcher.createServiceAddressBundle.apply(queuedServiceAddress));
+        .isEqualTo(serviceAddressBundleFetcher.createServiceAddressBundle.apply(serviceAddress));
   }
 
   @Test
@@ -239,7 +225,6 @@ public class ServiceAddressBundleFetcherTest {
     final ServiceAddressBundle originalBundle =
         ServiceAddressBundle
             .newBuilder()
-            .setUnsortedServiceAddressQueueItemId(faker.numerify("#####"))
             .setServiceAddressToSort(createServiceAddressForNonLawFirm(faker.company().name()))
             .build();
 
