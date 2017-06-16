@@ -35,7 +35,10 @@ import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmResponse;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.es.ESMutationServiceGrpc;
-import pi.ip.generated.es.EsMutate;
+import pi.ip.generated.es.LocationRecord;
+import pi.ip.generated.es.ThinLawFirmRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
+import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 import pi.ip.proto.generated.AckResponse;
@@ -185,7 +188,7 @@ public class LawFirmRepositoryTest {
     // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
     replyWith(AckResponse.getDefaultInstance())
         .when(esMutationService)
-        .upsertThinLawFirmServiceAddress(any(EsMutate.ThinLawFirmServiceAddress.class), any(StreamObserver.class));
+        .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
 
     // queueOnPremBlockingStub.deleteQueueUnit()
     replyWith(AckResponse.getDefaultInstance())
@@ -230,23 +233,28 @@ public class LawFirmRepositoryTest {
 
     // Verify upsert thin law firm service address called
     verify(esMutationService, times(1))
-        .upsertThinLawFirmServiceAddress(
+        .upsertThinLawFirmServiceAddressRecord(
             eq(
-                EsMutate.ThinLawFirmServiceAddress
+                ThinLawFirmServiceAddressRecord
                     .newBuilder()
-                    .setThinServiceAddress(
-                        EsMutate.ThinServiceAddress
+                    .setServiceAddress(
+                        ThinServiceAddressRecord
                             .newBuilder()
-                            .setServiceAddressId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
+                            .setId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
                             .setNameAddress(createLawFirmRequest.getServiceAddress().getName() + " "
                                 + createLawFirmRequest.getServiceAddress().getAddress())
                             .setCountry(createLawFirmRequest.getServiceAddress().getCountry())
-                            .setLongitude(createLawFirmRequest.getServiceAddress().getLongitude())
-                            .setLongitude(createLawFirmRequest.getServiceAddress().getLatitude())
+                            .setLoc(
+                                LocationRecord
+                                    .newBuilder()
+                                    .setLon((float) createLawFirmRequest.getServiceAddress().getLongitude())
+                                    .setLat((float) createLawFirmRequest.getServiceAddress().getLatitude())
+                            )
                     )
-                    .setNotALawFirm(false)
-                    .setThinLawFirm(
-                        EsMutate.ThinLawFirm.newBuilder()
+                    .setLawFirmFlag(true)
+                    .setLawFirm(
+                        ThinLawFirmRecord
+                            .newBuilder()
                             .setId(newLawFirmId)
                             .setName(createLawFirmRequest.getName())
                     )

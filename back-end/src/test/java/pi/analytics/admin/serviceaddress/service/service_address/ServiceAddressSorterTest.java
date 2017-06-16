@@ -36,7 +36,10 @@ import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.es.ESMutationServiceGrpc;
-import pi.ip.generated.es.EsMutate;
+import pi.ip.generated.es.LocationRecord;
+import pi.ip.generated.es.ThinLawFirmRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
+import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.generated.queue.AddUnitRequestOnPrem;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
@@ -129,7 +132,7 @@ public class ServiceAddressSorterTest {
 
     replyWithAckResponse()
         .when(esMutationService)
-        .upsertThinLawFirmServiceAddress(any(EsMutate.ThinLawFirmServiceAddress.class), any(StreamObserver.class));
+        .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
 
     replyWithAckResponse()
         .when(queueOnPrem)
@@ -152,24 +155,29 @@ public class ServiceAddressSorterTest {
             .build()
     );
 
-    verify(esMutationService).upsertThinLawFirmServiceAddress(
+    verify(esMutationService).upsertThinLawFirmServiceAddressRecord(
         eq(
-            EsMutate.ThinLawFirmServiceAddress
+            ThinLawFirmServiceAddressRecord
                 .newBuilder()
-                .setNotALawFirm(false)
-                .setThinLawFirm(
-                    EsMutate.ThinLawFirm.newBuilder()
+                .setLawFirmFlag(true)
+                .setLawFirm(
+                    ThinLawFirmRecord
+                        .newBuilder()
                         .setId(lawFirm.getLawFirmId())
                         .setName(lawFirm.getName())
                 )
-                .setThinServiceAddress(
-                    EsMutate.ThinServiceAddress
+                .setServiceAddress(
+                    ThinServiceAddressRecord
                         .newBuilder()
-                        .setServiceAddressId(serviceAddress.getServiceAddressId())
+                        .setId(serviceAddress.getServiceAddressId())
                         .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
                         .setCountry(serviceAddress.getCountry())
-                        .setLongitude(serviceAddress.getLongitude())
-                        .setLatitude(serviceAddress.getLatitude())
+                        .setLoc(
+                            LocationRecord
+                                .newBuilder()
+                                .setLon((float) serviceAddress.getLongitude())
+                                .setLat((float) serviceAddress.getLatitude())
+                        )
                 ).build()
         ),
         any(StreamObserver.class)
@@ -230,7 +238,7 @@ public class ServiceAddressSorterTest {
         .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(esMutationService)
-        .upsertThinLawFirmServiceAddress(any(EsMutate.ThinLawFirmServiceAddress.class), any(StreamObserver.class));
+        .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(queueOnPrem).deleteQueueUnit(any(DeleteUnitRequest.class), any(StreamObserver.class));
 
@@ -238,19 +246,23 @@ public class ServiceAddressSorterTest {
         pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
             .newBuilder().setServiceAddressId(1L).build());
 
-    verify(esMutationService).upsertThinLawFirmServiceAddress(
+    verify(esMutationService).upsertThinLawFirmServiceAddressRecord(
         eq(
-            EsMutate.ThinLawFirmServiceAddress
+            ThinLawFirmServiceAddressRecord
                 .newBuilder()
-                .setNotALawFirm(true)
-                .setThinServiceAddress(
-                    EsMutate.ThinServiceAddress
+                .setLawFirmFlag(false)
+                .setServiceAddress(
+                    ThinServiceAddressRecord
                         .newBuilder()
-                        .setServiceAddressId(serviceAddress.getServiceAddressId())
+                        .setId(serviceAddress.getServiceAddressId())
                         .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
                         .setCountry(serviceAddress.getCountry())
-                        .setLongitude(serviceAddress.getLongitude())
-                        .setLatitude(serviceAddress.getLatitude())
+                        .setLoc(
+                            LocationRecord
+                                .newBuilder()
+                                .setLon((float) serviceAddress.getLongitude())
+                                .setLat((float) serviceAddress.getLatitude())
+                        )
                 ).build()
         ),
         any(StreamObserver.class)

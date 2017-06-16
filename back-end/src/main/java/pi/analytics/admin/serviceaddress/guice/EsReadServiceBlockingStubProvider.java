@@ -13,17 +13,17 @@ import com.pi.common.config.PiKubeServicePort;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import pi.ip.generated.es.ESMutationServiceGrpc;
-import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
+import pi.ip.generated.es.ESReadServiceGrpc;
+import pi.ip.generated.es.ESReadServiceGrpc.ESReadServiceBlockingStub;
 
 /**
  * @author shane.xie@practiceinsight.io
  */
 @Singleton
-public class EsMutationServiceBlockingStubProvider implements Provider<ESMutationServiceBlockingStub> {
+public class EsReadServiceBlockingStubProvider implements Provider<ESReadServiceBlockingStub> {
 
     @Override
-    public ESMutationServiceBlockingStub get() {
+    public ESReadServiceBlockingStub get() {
       final PiConfig piConfig = PiConfig.get();
       final ManagedChannel channel =
           ManagedChannelBuilder
@@ -33,6 +33,6 @@ public class EsMutationServiceBlockingStubProvider implements Provider<ESMutatio
               )
               .usePlaintext(true)
               .build();
-      return ESMutationServiceGrpc.newBlockingStub(channel);
+      return ESReadServiceGrpc.newBlockingStub(channel);
     }
 }
