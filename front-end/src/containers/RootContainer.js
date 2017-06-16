@@ -6,7 +6,6 @@ import {
   createFirm,
   dismissServiceAddress,
   getNextUnsortedServiceAddress,
-  skipServiceAddress,
   undoServiceAddress,
   toggleApplicationsPanel,
   hideMessage
@@ -29,8 +28,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onCreateFirm: () => {
     dispatch(createFirm());
   },
-  onSkip: (serviceAddressId: string) => {
-    dispatch(skipServiceAddress(serviceAddressId));
+  onSkip: () => {
+    dispatch(getNextUnsortedServiceAddress());
   },
   onGetNextServiceAddress: () => {
     dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());

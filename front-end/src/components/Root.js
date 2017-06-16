@@ -22,7 +22,7 @@ RootProps = {
   onCreateFirm: (event: Event) => void,
   onSetAsNonLawFirm: (serviceAddressId: string) => void,
   onSetSortingImpossible: (serviceAddressId: string) => void,
-  onSkip: (serviceAddressId: string) => void,
+  onSkip: () => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void,
   onHideSnackbar: () => void,
@@ -67,12 +67,10 @@ class Root extends React.Component {
               <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}><Icon
                 name="not_interested"/> Not a Law Firm</Button>
 
-              <Button raised onClick={() => this.props.onSetSortingImpossible(serviceAddressId)}><Icon
+              <Button disabled raised onClick={() => this.props.onSetSortingImpossible(serviceAddressId)}><Icon
                 name="highlight_off"/> Sorting Impossible</Button>
 
-              <Button raised onClick={() => {
-                this.props.onSkip(serviceAddressId)
-              }}><Icon name="skip_next"/> Skip</Button>
+              <Button raised onClick={() => {this.props.onSkip()}}><Icon name="skip_next"/> Skip</Button>
 
             </Cell>
             <Cell col={3} style={{textAlign: "right"}}>

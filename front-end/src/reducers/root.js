@@ -161,14 +161,6 @@ export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) 
   }
 };
 
-export const skipServiceAddress = (serviceAddressId: string): Action => (dispatch: Dispatch) => {
-  dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}});
-  dispatch({
-             type: FetchActions.SKIP_SERVICE_ADDRESS,
-             payload: {request: {serviceAddressId: serviceAddressId, delayMinutes: skipDelay}}
-           });
-};
-
 export const dismissServiceAddress = (serviceAddressId: string, fetchActionType: string): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}})
   dispatch(
