@@ -35,7 +35,12 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.SamplePatentApp;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.es.ESMutationServiceGrpc;
-import pi.ip.generated.es.EsMutate;
+import pi.ip.generated.es.ESReadServiceGrpc;
+import pi.ip.generated.es.LocationRecord;
+import pi.ip.generated.es.SuggestSimilarThinLawFirmServiceAddressRecordResponse;
+import pi.ip.generated.es.ThinLawFirmRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
+import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -62,6 +67,7 @@ public class ServiceAddressBundleFetcherTest {
   private Faker faker = new Faker();
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
+  private ESReadServiceGrpc.ESReadServiceImplBase esReadService;
   private ESMutationServiceGrpc.ESMutationServiceImplBase esMutationService;
   private Translator translator;
   private Server server;
@@ -72,6 +78,7 @@ public class ServiceAddressBundleFetcherTest {
   public void setUp() throws Exception {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
+    esReadService = mock(ESReadServiceGrpc.ESReadServiceImplBase.class);
     esMutationService = mock(ESMutationServiceGrpc.ESMutationServiceImplBase.class);
     translator = mock(Translator.class);
 
@@ -81,6 +88,7 @@ public class ServiceAddressBundleFetcherTest {
             .forName(serverName)
             .addService(lawFirmDbService.bindService())
             .addService(serviceAddressService.bindService())
+            .addService(esReadService.bindService())
             .addService(esMutationService.bindService())
             .directExecutor()
             .build()
@@ -98,6 +106,8 @@ public class ServiceAddressBundleFetcherTest {
             .toInstance(LawFirmDbServiceGrpc.newBlockingStub(channel));
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
+        bind(ESReadServiceGrpc.ESReadServiceBlockingStub.class)
+            .toInstance(ESReadServiceGrpc.newBlockingStub(channel));
         bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
             .toInstance(ESMutationServiceGrpc.newBlockingStub(channel));
         bind(Translator.class)
@@ -222,10 +232,9 @@ public class ServiceAddressBundleFetcherTest {
 
   @Test
   public void addAgentSuggestions_no_suggestions_found() throws Exception {
-    replyWith(EsMutate.SuggestSimilarThinServiceAddressResponse.getDefaultInstance())
-        .when(esMutationService)
-        .suggestSimilarThinServiceAddress(any(EsMutate.SuggestSimilarThinServiceAddressRequest.class),
-            any(StreamObserver.class));
+    replyWith(SuggestSimilarThinLawFirmServiceAddressRecordResponse.getDefaultInstance())
+        .when(esReadService)
+        .suggestSimilarThinLawFirmServiceAddressRecord(any(ThinServiceAddressRecord.class), any(StreamObserver.class));
 
     final ServiceAddressBundle originalBundle =
         ServiceAddressBundle
@@ -249,32 +258,32 @@ public class ServiceAddressBundleFetcherTest {
     final ServiceAddress lawFirm1ServiceAddress2 = createServiceAddressToMatchLawFirm(lawFirm1);
     setupGetServiceAddressByIdAnswer(lawFirm1ServiceAddress1);
     setupGetServiceAddressByIdAnswer(lawFirm1ServiceAddress2);
-    final EsMutate.ThinLawFirmServiceAddress lawFirm1ThinAddress1 =
-        createThinLawFirmServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress1);
-    final EsMutate.ThinLawFirmServiceAddress lawFirm1ThinAddress2 =
-        createThinLawFirmServiceAddressMatchingServiceAddress(lawFirm1ServiceAddress2);
+    final ThinLawFirmServiceAddressRecord lawFirm1ThinAddress1 =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(lawFirm1ServiceAddress1);
+    final ThinLawFirmServiceAddressRecord lawFirm1ThinAddress2 =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(lawFirm1ServiceAddress2);
 
     // Set up a service address that is unsorted and hence skipped
     final ServiceAddress unsortedServiceAddress = createUnsortedServiceAddress(faker.company().name());
     setupGetServiceAddressByIdAnswer(unsortedServiceAddress);
-    final EsMutate.ThinLawFirmServiceAddress unsortedThinAddress =
-        createThinLawFirmServiceAddressMatchingServiceAddress(unsortedServiceAddress);
+    final ThinLawFirmServiceAddressRecord unsortedThinAddress =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(unsortedServiceAddress);
 
     // Set up a couple of non-law firm suggestion
     final ServiceAddress nonLawFirmServiceAddress1 = createServiceAddressForNonLawFirm(faker.company().name());
     setupGetServiceAddressByIdAnswer(nonLawFirmServiceAddress1);
-    final EsMutate.ThinLawFirmServiceAddress nonLawFirmThinAddress1 =
-        createThinLawFirmServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress1);
+    final ThinLawFirmServiceAddressRecord nonLawFirmThinAddress1 =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(nonLawFirmServiceAddress1);
 
     final ServiceAddress nonLawFirmServiceAddress2 = createServiceAddressForNonLawFirm(faker.company().name());
     setupGetServiceAddressByIdAnswer(nonLawFirmServiceAddress2);
-    final EsMutate.ThinLawFirmServiceAddress nonLawFirmThinAddress2 =
-        createThinLawFirmServiceAddressMatchingServiceAddress(nonLawFirmServiceAddress2);
+    final ThinLawFirmServiceAddressRecord nonLawFirmThinAddress2 =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(nonLawFirmServiceAddress2);
 
     // Set up a service address that is not found and hence skipped
     final ServiceAddress notFoundServiceAddress = createServiceAddressForNonLawFirm(faker.company().name());
-    final EsMutate.ThinLawFirmServiceAddress notFoundThinAddress =
-        createThinLawFirmServiceAddressMatchingServiceAddress(notFoundServiceAddress);
+    final ThinLawFirmServiceAddressRecord notFoundThinAddress =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(notFoundServiceAddress);
     setupGetServiceAddressByIdNotFoundAnswer(notFoundServiceAddress.getServiceAddressId());
 
     // Set up a law firm suggestion with one service address
@@ -282,12 +291,12 @@ public class ServiceAddressBundleFetcherTest {
     setupGetLawFirmByIdAnswer(lawFirm2);
     final ServiceAddress lawFirm2ServiceAddress = createServiceAddressToMatchLawFirm(lawFirm2);
     setupGetServiceAddressByIdAnswer(lawFirm2ServiceAddress);
-    final EsMutate.ThinLawFirmServiceAddress lawFirm2ThinAddress =
-        createThinLawFirmServiceAddressMatchingServiceAddress(lawFirm2ServiceAddress);
+    final ThinLawFirmServiceAddressRecord lawFirm2ThinAddress =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(lawFirm2ServiceAddress);
 
     // Prepare suggestions
-    final EsMutate.SuggestSimilarThinServiceAddressResponse suggestSimilarThinServiceAddressResponse =
-        EsMutate.SuggestSimilarThinServiceAddressResponse
+    final SuggestSimilarThinLawFirmServiceAddressRecordResponse suggestSimilarThinServiceAddressResponse =
+        SuggestSimilarThinLawFirmServiceAddressRecordResponse
             .newBuilder()
             .addSuggestions(lawFirm1ThinAddress1)
             .addSuggestions(unsortedThinAddress)
@@ -299,9 +308,8 @@ public class ServiceAddressBundleFetcherTest {
             .build();
 
     replyWith(suggestSimilarThinServiceAddressResponse)
-        .when(esMutationService)
-        .suggestSimilarThinServiceAddress(any(EsMutate.SuggestSimilarThinServiceAddressRequest.class),
-            any(StreamObserver.class));
+        .when(esReadService)
+        .suggestSimilarThinLawFirmServiceAddressRecord(any(ThinServiceAddressRecord.class), any(StreamObserver.class));
 
     final ServiceAddressBundle originalBundle = ServiceAddressBundle.getDefaultInstance();
     final ServiceAddressBundle bundleWithSuggestions = serviceAddressBundleFetcher.addAgentSuggestions.apply(originalBundle);
@@ -381,31 +389,35 @@ public class ServiceAddressBundleFetcherTest {
 
   // Test Helpers
 
-  private EsMutate.ThinLawFirmServiceAddress createThinLawFirmServiceAddressMatchingServiceAddress(
+  private ThinLawFirmServiceAddressRecord createThinLawFirmServiceAddressRecordMatchingServiceAddress(
       final ServiceAddress serviceAddress) {
-    EsMutate.ThinLawFirmServiceAddress.Builder builder =
-        EsMutate.ThinLawFirmServiceAddress
+    ThinLawFirmServiceAddressRecord.Builder builder =
+        ThinLawFirmServiceAddressRecord
             .newBuilder()
-            .setThinServiceAddress(
-                EsMutate.ThinServiceAddress.
+            .setServiceAddress(
+                ThinServiceAddressRecord.
                     newBuilder()
-                    .setServiceAddressId(serviceAddress.getServiceAddressId())
+                    .setId(serviceAddress.getServiceAddressId())
                     .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
                 .setCountry(serviceAddress.getCountry())
-                .setLongitude(serviceAddress.getLongitude())
-                .setLatitude(serviceAddress.getLatitude())
+                .setLoc(
+                    LocationRecord
+                        .newBuilder()
+                        .setLat((float) serviceAddress.getLatitude())
+                        .setLon((float) serviceAddress.getLongitude())
+                )
             );
     if (serviceAddress.hasLawFirmId()) {
       builder
-          .setNotALawFirm(false)
-          .setThinLawFirm(
-              EsMutate.ThinLawFirm.
-                  newBuilder()
+          .setLawFirmFlag(true)
+          .setLawFirm(
+              ThinLawFirmRecord
+                  .newBuilder()
                   .setId(serviceAddress.getLawFirmId().getValue())
                   .setName(serviceAddress.getName())
           );
     } else {
-      builder.setNotALawFirm(true);
+      builder.setLawFirmFlag(false);
     }
     return builder.build();
   }

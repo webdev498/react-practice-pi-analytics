@@ -22,7 +22,10 @@ import pi.ip.data.relational.generated.GetServiceAddressesForLawFirmRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
-import pi.ip.generated.es.EsMutate;
+import pi.ip.generated.es.LocationRecord;
+import pi.ip.generated.es.ThinLawFirmRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
+import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.generated.queue.DeleteUnitRequest;
 import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
 import pi.ip.proto.generated.LawFirm;
@@ -123,8 +126,8 @@ public class LawFirmRepository {
 
     // Update Elasticsearch caches
     esMutationServiceBlockingStub.upsertLawFirm(newLawFirm);  // Used by law firm search by name
-    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddress(
-        createThinLawFirmServiceAddressForLawFirm(request.getServiceAddress(), newLawFirm)
+    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(
+        createThinLawFirmServiceAddressRecordForLawFirm(request.getServiceAddress(), newLawFirm)
     );
 
     // Remove service address from unsorted queue
@@ -138,24 +141,28 @@ public class LawFirmRepository {
     return lawFirmId;
   }
 
-  private EsMutate.ThinLawFirmServiceAddress createThinLawFirmServiceAddressForLawFirm(final ServiceAddress serviceAddress,
-                                                                                       final LawFirm lawFirm) {
-    return EsMutate.ThinLawFirmServiceAddress
+  private ThinLawFirmServiceAddressRecord createThinLawFirmServiceAddressRecordForLawFirm(
+      final ServiceAddress serviceAddress, final LawFirm lawFirm) {
+    return ThinLawFirmServiceAddressRecord
         .newBuilder()
-        .setThinLawFirm(
-            EsMutate.ThinLawFirm.newBuilder()
+        .setLawFirm(
+            ThinLawFirmRecord.newBuilder()
                 .setId(lawFirm.getLawFirmId())
                 .setName(lawFirm.getName())
         )
-        .setNotALawFirm(false)
-        .setThinServiceAddress(
-            EsMutate.ThinServiceAddress
+        .setLawFirmFlag(true)
+        .setServiceAddress(
+            ThinServiceAddressRecord
                 .newBuilder()
-                .setServiceAddressId(serviceAddress.getServiceAddressId())
+                .setId(serviceAddress.getServiceAddressId())
                 .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
                 .setCountry(serviceAddress.getCountry())
-                .setLongitude(serviceAddress.getLongitude())
-                .setLatitude(serviceAddress.getLatitude())
+                .setLoc(
+                    LocationRecord
+                        .newBuilder()
+                        .setLat((float) serviceAddress.getLatitude())
+                        .setLon((float) serviceAddress.getLongitude())
+                )
         )
         .build();
   }

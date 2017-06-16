@@ -30,8 +30,10 @@ import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressReque
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
-import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
-import pi.ip.generated.es.EsMutate;
+import pi.ip.generated.es.ESReadServiceGrpc.ESReadServiceBlockingStub;
+import pi.ip.generated.es.LocationRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
+import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -54,7 +56,7 @@ public class ServiceAddressBundleFetcher {
   ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   @Inject
-  ESMutationServiceBlockingStub esMutationServiceBlockingStub;
+  ESReadServiceBlockingStub esReadServiceBlockingStub;
 
   @Inject
   Translator translator;
@@ -100,19 +102,23 @@ public class ServiceAddressBundleFetcher {
   final Function<ServiceAddressBundle, ServiceAddressBundle> addAgentSuggestions = bundle -> {
     final ServiceAddress serviceAddress = bundle.getServiceAddressToSort();
 
-    final EsMutate.SuggestSimilarThinServiceAddressRequest getSuggestionsRequest =
-        EsMutate.SuggestSimilarThinServiceAddressRequest
+    final ThinServiceAddressRecord getSuggestionsRequest =
+        ThinServiceAddressRecord
             .newBuilder()
             .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
             .setCountry(serviceAddress.getCountry())
-            .setLongitude(serviceAddress.getLongitude())
-            .setLatitude(serviceAddress.getLatitude())
+            .setLoc(
+                LocationRecord
+                    .newBuilder()
+                    .setLon((float) serviceAddress.getLongitude())
+                    .setLat((float) serviceAddress.getLatitude())
+            )
             .build();
 
     final List<Agent> suggestedAgents =
-        esMutationServiceBlockingStub
+        esReadServiceBlockingStub
             // Fetch suggestions from Elasticsearch
-            .suggestSimilarThinServiceAddress(getSuggestionsRequest)
+            .suggestSimilarThinLawFirmServiceAddressRecord(getSuggestionsRequest)
             .getSuggestionsList()
             .stream()
 
@@ -165,14 +171,14 @@ public class ServiceAddressBundleFetcher {
         .build();
   };
 
-  private Optional<ServiceAddress> fetchServiceAddress(final EsMutate.ThinLawFirmServiceAddress thinLawFirmServiceAddress) {
+  private Optional<ServiceAddress> fetchServiceAddress(final ThinLawFirmServiceAddressRecord thinLawFirmServiceAddress) {
     try {
     return Optional.of(
         serviceAddressServiceBlockingStub
             .getServiceAddressById(
                 GetServiceAddressByIdRequest
                     .newBuilder()
-                    .setServiceAddressId(thinLawFirmServiceAddress.getThinServiceAddress().getServiceAddressId())
+                    .setServiceAddressId(thinLawFirmServiceAddress.getServiceAddress().getId())
                     .build()
             )
         );

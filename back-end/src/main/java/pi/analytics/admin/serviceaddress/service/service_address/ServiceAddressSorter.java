@@ -26,7 +26,10 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBloc
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
-import pi.ip.generated.es.EsMutate;
+import pi.ip.generated.es.LocationRecord;
+import pi.ip.generated.es.ThinLawFirmRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
+import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.generated.queue.AddUnitRequestOnPrem;
 import pi.ip.generated.queue.DelayUnitRequest;
 import pi.ip.generated.queue.DeleteUnitRequest;
@@ -83,27 +86,31 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    final EsMutate.ThinLawFirmServiceAddress thinLawFirmServiceAddress =
-        EsMutate.ThinLawFirmServiceAddress
+    final ThinLawFirmServiceAddressRecord thinLawFirmServiceAddressRecord =
+        ThinLawFirmServiceAddressRecord
             .newBuilder()
-            .setThinLawFirm(
-                EsMutate.ThinLawFirm
+            .setLawFirm(
+                ThinLawFirmRecord
                     .newBuilder()
                     .setId(lawFirm.getLawFirmId())
                     .setName(lawFirm.getName())
             )
-            .setThinServiceAddress(
-                EsMutate.ThinServiceAddress
+            .setServiceAddress(
+                ThinServiceAddressRecord
                     .newBuilder()
-                    .setServiceAddressId(serviceAddress.getServiceAddressId())
+                    .setId(serviceAddress.getServiceAddressId())
                     .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
                     .setCountry(serviceAddress.getCountry())
-                    .setLongitude(serviceAddress.getLongitude())
-                    .setLatitude(serviceAddress.getLatitude())
+                    .setLoc(
+                        LocationRecord
+                            .newBuilder()
+                            .setLon((float) serviceAddress.getLongitude())
+                            .setLat((float) serviceAddress.getLatitude())
+                    )
             )
-            .setNotALawFirm(false)
+            .setLawFirmFlag(true)
             .build();
-    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
+    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
 
     deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }
@@ -141,21 +148,25 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    final EsMutate.ThinLawFirmServiceAddress thinLawFirmServiceAddress =
-        EsMutate.ThinLawFirmServiceAddress
+    final ThinLawFirmServiceAddressRecord thinLawFirmServiceAddressRecord =
+        ThinLawFirmServiceAddressRecord
             .newBuilder()
-            .setNotALawFirm(true)
-            .setThinServiceAddress(
-                EsMutate.ThinServiceAddress
+            .setLawFirmFlag(false)
+            .setServiceAddress(
+                ThinServiceAddressRecord
                     .newBuilder()
-                    .setServiceAddressId(serviceAddress.getServiceAddressId())
+                    .setId(serviceAddress.getServiceAddressId())
                     .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
                     .setCountry(serviceAddress.getCountry())
-                    .setLongitude(serviceAddress.getLongitude())
-                    .setLatitude(serviceAddress.getLatitude())
+                    .setLoc(
+                        LocationRecord
+                            .newBuilder()
+                            .setLon((float) serviceAddress.getLongitude())
+                            .setLat((float) serviceAddress.getLatitude())
+                    )
             )
             .build();
-    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddress(thinLawFirmServiceAddress);
+    esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
 
     deleteQueueItem(request.getUnsortedServiceAddressQueueItemId());
   }

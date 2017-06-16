@@ -11,6 +11,7 @@ import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSe
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.es.ESMutationServiceGrpc;
+import pi.ip.generated.es.ESReadServiceGrpc;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 
 /**
@@ -28,6 +29,9 @@ public class ServiceAddressSortingModule extends AbstractModule {
         .in(Singleton.class);
     bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
         .toProvider(ServiceAddressServiceBlockingStubProvider.class)
+        .in(Singleton.class);
+    bind(ESReadServiceGrpc.ESReadServiceBlockingStub.class)
+        .toProvider(EsReadServiceBlockingStubProvider.class)
         .in(Singleton.class);
     bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
         .toProvider(EsMutationServiceBlockingStubProvider.class)
