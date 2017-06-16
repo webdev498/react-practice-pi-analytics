@@ -150,19 +150,7 @@ public class UnsortedServiceAddressFetcher {
               if (serviceAddress.getCountry().equals("TW")) {
                 return Optional.of(true);  // Skip Taiwan for now
               }
-//              try {
-//                final IsHighValueServiceAddressRequest request =
-//                    IsHighValueServiceAddressRequest
-//                        .newBuilder()
-//                        .setServiceAddressId(serviceAddress.getServiceAddressId())
-//                        .build();
-//                return Optional.of(
-//                    !serviceAddressServiceBlockingStub.isHighValueServiceAddress(request).getIsHighValue()
-//                );
-//              } catch (Exception e) {
-//                return Optional.of(false);
-//              }
-              return Optional.of(false);  // IPFLOW-890: Disabled because most queue items are currently being skipped
+              return Optional.of(false);
             })
             .orElse(false);
     if (skip) {
