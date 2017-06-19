@@ -18,7 +18,7 @@ public class LawFirmTestHelper {
   public static LawFirm createLawFirm() {
     return LawFirm
         .newBuilder()
-        .setLawFirmId(faker.number().randomDigitNotZero())
+        .setLawFirmId(faker.number().randomNumber(8, true))
         .setName(faker.company().name())
         .setStateStr(faker.address().state())
         .setCountry(faker.address().countryCode())

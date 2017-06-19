@@ -124,7 +124,7 @@ public class ServiceAddressBundleFetcherTest {
     final ServiceAddress serviceAddress =
         ServiceAddress
             .newBuilder()
-            .setServiceAddressId(faker.number().randomDigitNotZero())
+            .setServiceAddressId(faker.number().randomNumber(8, true))
             .build();
     final ServiceAddressBundle serviceAddressBundle =
         ServiceAddressBundle
