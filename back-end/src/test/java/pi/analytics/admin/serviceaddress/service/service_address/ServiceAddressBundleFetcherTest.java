@@ -121,7 +121,6 @@ public class ServiceAddressBundleFetcherTest {
 
   @Test
   public void createServiceAddressBundle() throws Exception {
-    final String queueId = faker.numerify("#####");
     final ServiceAddress serviceAddress =
         ServiceAddress
             .newBuilder()
