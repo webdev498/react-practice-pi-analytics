@@ -41,7 +41,7 @@ public class ServiceAddressTestHelper {
     ServiceAddress.Builder builder =
         ServiceAddress
             .newBuilder()
-            .setServiceAddressId(faker.number().randomNumber())
+            .setServiceAddressId(faker.number().randomDigitNotZero())
             .setName(name)
             .setAddress(faker.address().streetAddress(true))
             .setCountry(country)
