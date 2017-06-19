@@ -26,8 +26,6 @@ import pi.ip.generated.es.LocationRecord;
 import pi.ip.generated.es.ThinLawFirmRecord;
 import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
 import pi.ip.generated.es.ThinServiceAddressRecord;
-import pi.ip.generated.queue.DeleteUnitRequest;
-import pi.ip.generated.queue.QueueOnPremGrpc.QueueOnPremBlockingStub;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
@@ -48,9 +46,6 @@ public class LawFirmRepository {
 
   @Inject
   private ESMutationServiceBlockingStub esMutationServiceBlockingStub;
-
-  @Inject
-  private QueueOnPremBlockingStub queueOnPremBlockingStub;
 
   public List<Agent> searchLawFirms(final String searchTerm) {
     final LawFirmSearchRequest searchRequest =
@@ -86,10 +81,8 @@ public class LawFirmRepository {
 
   public long createLawFirm(final CreateLawFirmRequest request) {
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getName()), "Law firm name is required");
-    Preconditions.checkArgument(StringUtils.isNotBlank(request.getCountryCode()), "Law firm country code is required");
+    Preconditions.checkArgument(StringUtils.isNotBlank(request.getCountryCode()), "Country code is required");
     Preconditions.checkArgument(request.hasServiceAddress(), "Service address is required");
-    Preconditions.checkArgument(StringUtils.isNotBlank(request.getUnsortedServiceAddressQueueItemId()),
-        "Unsorted service address queue item ID is required");
 
     // Create the new law firm record in MySQL
     final LawFirm lawFirmToBeCreated =
@@ -128,14 +121,6 @@ public class LawFirmRepository {
     esMutationServiceBlockingStub.upsertLawFirm(newLawFirm);  // Used by law firm search by name
     esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(
         createThinLawFirmServiceAddressRecordForLawFirm(request.getServiceAddress(), newLawFirm)
-    );
-
-    // Remove service address from unsorted queue
-    queueOnPremBlockingStub.deleteQueueUnit(
-        DeleteUnitRequest
-            .newBuilder()
-            .setDbId(request.getUnsortedServiceAddressQueueItemId())
-            .build()
     );
 
     return lawFirmId;

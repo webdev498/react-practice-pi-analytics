@@ -5,7 +5,6 @@
 package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -24,7 +23,6 @@ import pi.admin.service_address_sorting.generated.Agent;
 import pi.admin.service_address_sorting.generated.NonLawFirm;
 import pi.admin.service_address_sorting.generated.SamplePatentApp;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
-import pi.analytics.admin.serviceaddress.service.QueuedServiceAddress;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressRequest;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
@@ -61,21 +59,19 @@ public class ServiceAddressBundleFetcher {
   @Inject
   Translator translator;
 
-  public ServiceAddressBundle fetch(final QueuedServiceAddress queuedServiceAddress) {
-    Preconditions.checkArgument(queuedServiceAddress.serviceAddress().isPresent());
+  public ServiceAddressBundle fetch(final ServiceAddress serviceAddress) {
     return createServiceAddressBundle
         .andThen(addTranslationIfNecessary)
         .andThen(addAgentSuggestions)
         .andThen(addSamplePatentApplications)
-        .apply(queuedServiceAddress);
+        .apply(serviceAddress);
   }
 
   @VisibleForTesting
-  final Function<QueuedServiceAddress, ServiceAddressBundle> createServiceAddressBundle = queuedServiceAddress ->
+  final Function<ServiceAddress, ServiceAddressBundle> createServiceAddressBundle = serviceAddress ->
     ServiceAddressBundle
         .newBuilder()
-        .setServiceAddressToSort(queuedServiceAddress.serviceAddress().get())
-        .setUnsortedServiceAddressQueueItemId(queuedServiceAddress.queueId())
+        .setServiceAddressToSort(serviceAddress)
         .build();
 
   @VisibleForTesting

@@ -154,7 +154,6 @@ public class LawFirmRepositoryTest {
     final CreateLawFirmRequest createLawFirmRequest =
         CreateLawFirmRequest
             .newBuilder()
-            .setUnsortedServiceAddressQueueItemId(faker.numerify("#####"))
             .setRequestedBy(faker.name().username())
             .setName(faker.company().name())
             .setState(faker.address().state())
@@ -260,13 +259,6 @@ public class LawFirmRepositoryTest {
                     )
                     .build()
             ),
-            any(StreamObserver.class)
-        );
-
-    // Verify delete from queue called
-    verify(queueOnPrem, times(1))
-        .deleteQueueUnit(
-            eq(DeleteUnitRequest.newBuilder().setDbId(createLawFirmRequest.getUnsortedServiceAddressQueueItemId()).build()),
             any(StreamObserver.class)
         );
   }
