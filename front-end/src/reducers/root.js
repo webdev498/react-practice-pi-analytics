@@ -161,20 +161,12 @@ export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) 
   }
 };
 
-export const skipServiceAddress = (queueId: string): Action => (dispatch: Dispatch) => {
-  dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}});
-  dispatch({
-             type: FetchActions.SKIP_SERVICE_ADDRESS,
-             payload: {request: {unsortedServiceAddressQueueItemId: queueId, delayMinutes: skipDelay}}
-           });
-};
-
-export const dismissServiceAddress = (request: Object, fetchActionType: string): Action => (dispatch: Dispatch) => {
+export const dismissServiceAddress = (serviceAddressId: string, fetchActionType: string): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}})
   dispatch(
     {
       type: fetchActionType,
-      payload: {request: request}
+      payload: {request: {serviceAddressId: serviceAddressId}}
     });
 };
 
@@ -183,15 +175,13 @@ export const unsortServiceAddress = (serviceAddressId: string): Action => (dispa
   dispatch({type: FetchActions.UNSORT_SERVICE_ADDRESS, payload: {request: {serviceAddressId: serviceAddressId}}});
 };
 
-export const sortServiceAddress = (queueId: string, serviceAddressId: string,
-                                   agent: Object): Action => (dispatch: Dispatch) => {
+export const sortServiceAddress = (serviceAddressId: string, agent: Object): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.SORT_SERVICE_ADDRESS, payload: {agent: agent}});
   dispatch(
     {
       type: FetchActions.ASSIGN_SERVICE_ADDRESS,
       payload: {
         request: {
-          unsortedServiceAddressQueueItemId: queueId,
           serviceAddressId: serviceAddressId,
           lawFirmId: agent.lawFirm.lawFirmId
         }

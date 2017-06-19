@@ -20,9 +20,9 @@ RootProps = {
   message: Object,
   applicationsPanelOpen: boolean,
   onCreateFirm: (event: Event) => void,
-  onSetAsNonLawFirm: (request: Object) => void,
-  onSetSortingImpossible: (request: Object) => void,
-  onSkip: (queueId: string) => void,
+  onSetAsNonLawFirm: (serviceAddressId: string) => void,
+  onSetSortingImpossible: (serviceAddressId: string) => void,
+  onSkip: () => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void,
   onHideSnackbar: () => void,
@@ -54,10 +54,7 @@ class Root extends React.Component {
 
     if (this.props.value) {
 
-      const serviceAddressRequestBase = {
-        unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId,
-        serviceAddressId: this.props.value.serviceAddressToSort.serviceAddressId
-      }
+      const serviceAddressId = this.props.value.serviceAddressToSort.serviceAddressId;
 
       content = (
         <Content>
@@ -67,15 +64,13 @@ class Root extends React.Component {
 
               <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
 
-              <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressRequestBase)}><Icon
+              <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}><Icon
                 name="not_interested"/> Not a Law Firm</Button>
 
-              <Button raised onClick={() => this.props.onSetSortingImpossible(serviceAddressRequestBase)}><Icon
+              <Button disabled raised onClick={() => this.props.onSetSortingImpossible(serviceAddressId)}><Icon
                 name="highlight_off"/> Sorting Impossible</Button>
 
-              <Button raised onClick={() => {
-                this.props.onSkip(this.props.value.unsortedServiceAddressQueueItemId)
-              }}><Icon name="skip_next"/> Skip</Button>
+              <Button raised onClick={() => {this.props.onSkip()}}><Icon name="skip_next"/> Skip</Button>
 
             </Cell>
             <Cell col={3} style={{textAlign: "right"}}>

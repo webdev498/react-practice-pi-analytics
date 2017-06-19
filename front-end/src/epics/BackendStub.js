@@ -25,7 +25,6 @@ import {
   PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS,
   SEARCH_LAW_FIRMS,
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
-  SKIP_SERVICE_ADDRESS,
   UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS,
   SET_SORTING_IMPOSSIBLE
@@ -108,7 +107,6 @@ const firm = {
     languageType: "en"
   },
   enTranslation: "Law Offices of Mark Wilson PMB: 348 2530 Berryessa Road San Jose, CA 95132",
-  unsortedServiceAddressQueueItemId: "123",
   suggestedAgents: tableRows.lawFirmAgents
 }
 
@@ -149,11 +147,6 @@ export const createLawFirm = (action$: ActionsObservable<Action>): ActionsObserv
 
 export const setServiceAddressAsNonLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM)
-    .delay(1000)
-    .mapTo(getNextUnsortedServiceAddress());
-
-export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
-  action$.ofType(SKIP_SERVICE_ADDRESS)
     .delay(1000)
     .mapTo(getNextUnsortedServiceAddress());
 

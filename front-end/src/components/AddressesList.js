@@ -11,8 +11,7 @@ type
 AddressesListProps = {
   serviceAddress: Object,
   agents: Array < Agent >,
-  queueId: string,
-  onSortServiceAddress: (queueId: string, serviceAddressId: string, agent: Agent) => void,
+  onSortServiceAddress: (serviceAddressId: string, agent: Agent) => void,
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
@@ -66,7 +65,7 @@ class AddressesList extends React.Component {
         <span>
         <a className="entity" href="#" onClick={(event: Event) => {
           event.preventDefault()
-          this.props.onSortServiceAddress(this.props.queueId, this.props.serviceAddress.serviceAddressId, agent)
+          this.props.onSortServiceAddress(this.props.serviceAddress.serviceAddressId, agent)
         }
         }>
           {agent.lawFirm.name}
@@ -81,17 +80,24 @@ class AddressesList extends React.Component {
     let result = value.name + ", " + value.address
     const upperCase = result.toUpperCase()
     if (testValue && testValue.length > 0 && value.address) {
-      testValue
+
+      const cleaned = testValue.replace(/[;:.,'"]/g, " ").replace(/  /g, " ");
+      cleaned
         .toUpperCase()
-        .replace(/[;:.,]/g, " ")
-        .replace(/  /g, " ")
         .split(" ")
         .sort((a, b) => b.length - a.length)
         .filter(item => item.length > 1 && upperCase.indexOf(item) >= 0)
         .forEach(item => {
-          [item, item.toLowerCase(), item.substr(0, 1) + item.substr(1).toLowerCase()].forEach(test => {
-            result = result.split(test).join("<==>" + test + "</==>")
-          });
+          //prepare lookup variants: unchanged, uppercase, lowercase, capitalized
+          [
+            cleaned.substr(cleaned.toUpperCase().indexOf(item), item.length),
+            item,
+            item.toLowerCase(),
+            item.substr(0, 1) + item.substr(1).toLowerCase()
+          ]
+            .forEach(test => {
+              result = result.split(test).join("<==>" + test + "</==>")
+            });
         });
       result = result.replace(/<==>/g, "<span class='highlighted'>").replace(/<\/==>/g, "</span>");
     }
@@ -125,7 +131,8 @@ class AddressesList extends React.Component {
 
   renderEntityId(agentIndex: number, agent: Agent): Array<any> {
     return agent.serviceAddresses
-      .map((address, index) => <div key={index} onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
+      .map((address, index) => <div key={index}
+                                    onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
                                     onMouseLeave={() => this.unselect(agentIndex, index)}
                                     className={
                                       "address-line " + this.getSelectedClassName(agentIndex, index)
@@ -134,7 +141,8 @@ class AddressesList extends React.Component {
 
   renderActions(agentIndex: number, agent: Agent): Array<any> {
     return agent.serviceAddresses.map(
-      (address, index) => <div key={index} onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
+      (address, index) => <div key={index}
+                               onMouseOver={() => this.select(agentIndex, index, agent.serviceAddresses.length < 2)}
                                onMouseLeave={() => this.unselect(agentIndex, index)}
                                className={this.getSelectedClassName(agentIndex, index)}
                                style={{paddingLeft: "2px", marginBottom: "3px"}}>

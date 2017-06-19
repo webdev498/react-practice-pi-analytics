@@ -12,7 +12,6 @@ const mapStateToProps = (state: State) => ({
   query: state.search.query,
   loading: state.search.loading,
   serviceAddress: state.root.value.serviceAddressToSort,
-  queueId: state.root.value.unsortedServiceAddressQueueItemId
 })
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
@@ -23,8 +22,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
       dispatch(stopSearch());
     }
   },
-  onSortServiceAddress: (queueId: string, serviceAddressId: string, address: Object) => {
-    dispatch(sortServiceAddress(queueId, serviceAddressId, address));
+  onSortServiceAddress: (serviceAddressId: string, address: Object) => {
+    dispatch(sortServiceAddress(serviceAddressId, address));
   },
   onUnsortServiceAddress: (serviceAddressId: string) => {
     dispatch(unsortServiceAddress(serviceAddressId));

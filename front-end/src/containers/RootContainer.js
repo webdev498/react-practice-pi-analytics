@@ -6,7 +6,6 @@ import {
   createFirm,
   dismissServiceAddress,
   getNextUnsortedServiceAddress,
-  skipServiceAddress,
   undoServiceAddress,
   toggleApplicationsPanel,
   hideMessage
@@ -29,17 +28,17 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onCreateFirm: () => {
     dispatch(createFirm());
   },
-  onSkip: (queueId: string) => {
-    dispatch(skipServiceAddress(queueId));
+  onSkip: () => {
+    dispatch(getNextUnsortedServiceAddress());
   },
   onGetNextServiceAddress: () => {
     dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());
   },
-  onSetAsNonLawFirm: (request: Object) => {
-    dispatch(dismissServiceAddress(request, FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM));
+  onSetAsNonLawFirm: (serviceAddressId: string) => {
+    dispatch(dismissServiceAddress(serviceAddressId, FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM));
   },
-  onSetSortingImpossible: (request: Object) => {
-    dispatch(dismissServiceAddress(request, FetchActions.SET_SORTING_IMPOSSIBLE));
+  onSetSortingImpossible: (serviceAddressId: string) => {
+    dispatch(dismissServiceAddress(serviceAddressId, FetchActions.SET_SORTING_IMPOSSIBLE));
   },
   onUndo: (serviceAddressId: string) => {
     dispatch(undoServiceAddress(serviceAddressId));

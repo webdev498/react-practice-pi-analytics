@@ -89,7 +89,6 @@ CreateFirmDialogProps = {
   value: Object,
   open: boolean,
   loading: boolean,
-  queueId: string,
   onSubmit: (firm: Object) => void,
   onClose: () => void
 }
@@ -107,7 +106,6 @@ class CreateFirmDialog extends React.Component {
       websiteUrl: "",
       state: "",
       countryCode: this.props.value.serviceAddressToSort.country,
-      unsortedServiceAddressQueueItemId: this.props.value.unsortedServiceAddressQueueItemId,
       serviceAddress: this.props.value.serviceAddressToSort
     };
     this.state = u({}, this.initialState);

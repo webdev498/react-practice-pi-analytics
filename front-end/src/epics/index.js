@@ -10,7 +10,6 @@ import {
   preFetchNextUnsortedServiceAddress,
   searchLawFirm,
   setServiceAddressAsNonLawFirm,
-  skipServiceAddress,
   undoServiceAddress,
   unsortServiceAddress,
   setSortingImpossible
@@ -20,7 +19,6 @@ const rootEpic = combineEpics(
   createLawFirm,
   searchLawFirm,
   getCurrentUser,
-  skipServiceAddress,
   undoServiceAddress,
   setSortingImpossible,
   assignServiceAddress,

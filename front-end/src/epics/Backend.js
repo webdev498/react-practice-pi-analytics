@@ -27,7 +27,6 @@ import {
   PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS,
   SEARCH_LAW_FIRMS,
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
-  SKIP_SERVICE_ADDRESS,
   UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS,
   SET_SORTING_IMPOSSIBLE
@@ -92,13 +91,6 @@ export const createLawFirm = (action$: ActionsObservable<Action>): ActionsObserv
 export const setServiceAddressAsNonLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
   action$.ofType(SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM)
     .mergeMap(action => post(ApiUrls.setServiceAddressAsNonLawFirm, action.payload)
-      .map(mapResponse(getNextUnsortedServiceAddress))
-      .catch(mapError(globalFetchError))
-    );
-
-export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
-  action$.ofType(SKIP_SERVICE_ADDRESS)
-    .mergeMap(action => post(ApiUrls.skipServiceAddress, action.payload)
       .map(mapResponse(getNextUnsortedServiceAddress))
       .catch(mapError(globalFetchError))
     );
