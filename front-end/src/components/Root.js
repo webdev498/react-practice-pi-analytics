@@ -62,7 +62,7 @@ class Root extends React.Component {
           <Grid className="button-bar">
             <Cell col={9}>
 
-              <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
+              <Button disabled raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
 
               <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}><Icon
                 name="not_interested"/> Not a Law Firm</Button>
