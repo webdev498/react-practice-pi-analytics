@@ -184,7 +184,7 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .unassignServiceAddressFromLawFirm(any(UnassignServiceAddressFromLawFirmRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
-        .when(esMutationService).deleteThinLawFirmServiceAddress(any(Int64Value.class), any(StreamObserver.class));
+        .when(esMutationService).deleteThinLawFirmServiceAddressRecord(any(Int64Value.class), any(StreamObserver.class));
     serviceAddressSorter.unsortServiceAddress(UnsortServiceAddressRequest.newBuilder().setServiceAddressId(1L).build());
     verify(serviceAddressService, times(1))
         .unassignServiceAddressFromLawFirm(
@@ -192,7 +192,7 @@ public class ServiceAddressSorterTest {
             any(StreamObserver.class)
         );
     verify(esMutationService, times(1))
-        .deleteThinLawFirmServiceAddress(eq(Int64Value.newBuilder().setValue(1L).build()), any(StreamObserver.class));
+        .deleteThinLawFirmServiceAddressRecord(eq(Int64Value.newBuilder().setValue(1L).build()), any(StreamObserver.class));
   }
 
   @Test

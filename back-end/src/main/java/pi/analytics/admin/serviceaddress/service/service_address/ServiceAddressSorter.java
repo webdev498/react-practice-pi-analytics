@@ -106,7 +106,7 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    esMutationServiceBlockingStub.deleteThinLawFirmServiceAddress(
+    esMutationServiceBlockingStub.deleteThinLawFirmServiceAddressRecord(
         Int64Value
             .newBuilder()
             .setValue(request.getServiceAddressId())
