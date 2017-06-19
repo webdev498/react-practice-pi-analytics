@@ -21,7 +21,7 @@ class PatentApplicationsPanel extends React.Component {
 
   render() {
 
-    const panelHeight = this.props.open && this.props.applications ? this.props.applications.length * 42 : 0;
+    const panelHeight = this.props.open && this.props.applications ? this.props.applications.length * 24 + 16 : 0;
 
     const apps = this.props.applications
       ? this.props.applications.map(

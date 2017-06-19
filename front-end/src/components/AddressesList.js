@@ -4,7 +4,7 @@
 import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
 import "../styles/main.scss";
-import type {Agent, ServiceAddress} from "../services/Types";
+import type, {Agent, ServiceAddress} from "../services/Types";
 import {OuterUrls} from "../services/Urls";
 
 type
@@ -59,19 +59,15 @@ class AddressesList extends React.Component {
     return <span style={{color: "#bbb"}}>Non law firm</span>
   }
 
-  renderEntity(agent: Agent): React.Element<any> {
+  renderFirmName(agent: Agent): React.Element<any> {
     if (agent.lawFirm) {
-      return (
-        <span>
-        <a className="entity" href="#" onClick={(event: Event) => {
-          event.preventDefault()
-          this.props.onSortServiceAddress(this.props.serviceAddress.serviceAddressId, agent)
-        }
-        }>
-          {agent.lawFirm.name}
-        </a>
-        </span>
-      )
+
+      const onClick = (event: Event) => {
+        event.preventDefault()
+        this.props.onSortServiceAddress(this.props.serviceAddress.serviceAddressId, agent)
+      }
+
+      return <span><a className="entity" href="#" onClick={onClick}>{agent.lawFirm.name}</a></span>
     }
     return <span className="entity">{agent.nonLawFirm ? agent.nonLawFirm.name : ""}</span>
   }
@@ -79,9 +75,13 @@ class AddressesList extends React.Component {
   renderAddressLine(agentIndex: number, index: number, value: ServiceAddress, testValue: string): React.Element<any> {
     let result = value.name + ", " + value.address
     const upperCase = result.toUpperCase()
+
+    //here we going to add highlight tags to indicate service address and law firm address/name intersections.
     if (testValue && testValue.length > 0 && value.address) {
 
+      //clean address string. remove ; : . , ' "
       const cleaned = testValue.replace(/[;:.,'"]/g, " ").replace(/  /g, " ");
+
       cleaned
         .toUpperCase()
         .split(" ")
@@ -96,9 +96,12 @@ class AddressesList extends React.Component {
             item.substr(0, 1) + item.substr(1).toLowerCase()
           ]
             .forEach(test => {
+              //insert temporary non-alphanum tags for each occurrence of the test item to avoid possible
+              //undesirable intersections with span tag name and class attribute.
               result = result.split(test).join("<==>" + test + "</==>")
             });
         });
+      //insert real highlight tags.
       result = result.replace(/<==>/g, "<span class='highlighted'>").replace(/<\/==>/g, "</span>");
     }
     return (
@@ -158,7 +161,7 @@ class AddressesList extends React.Component {
     return this.props.agents.map((agent: Agent, index: number) => ({
       key: index,
       lawFirmId: this.renderLawFirmId(agent),
-      entity: this.renderEntity(agent),
+      entity: this.renderFirmName(agent),
       serviceAddress: this.renderServiceAddressWithInclusions(index, agent, this.props.serviceAddress.name + " "
                                                                             + this.props.serviceAddress.address),
       serviceAddressId: this.renderEntityId(index, agent),
