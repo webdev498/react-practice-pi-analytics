@@ -70,7 +70,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onNext(serviceAddressBundle.get());
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error generating next unsorted service address", th);
+      log.error("Error generating next unsorted service address for request: " + request.toString(), th);
       responseObserver.onError(th);
     }
   }
@@ -90,7 +90,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       );
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error searching law firms", th);
+      log.error("Error searching law firms for request: " + request.toString(), th);
       responseObserver.onError(th);
     }
   }
@@ -103,7 +103,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onNext(ServiceAddressAssigned.getDefaultInstance());
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error assigning service address to law firm", th);
+      log.error("Error assigning service address to law firm for request: " + request.toString(), th);
       responseObserver.onError(th);
     }
   }
@@ -116,7 +116,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onNext(ServiceAddressUnsorted.getDefaultInstance());
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error unsorting service address (unassigning from law firm)", th);
+      log.error("Error unsorting service address for request: " + request.toString(), th);
       responseObserver.onError(th);
     }
   }
@@ -132,7 +132,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       );
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error creating new law firm using service address", th);
+      log.error("Error creating new law firm using service address for request: " + request.toString(), th);
       responseObserver.onError(th);
     }
   }
@@ -145,7 +145,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onNext(ServiceAddressSetAsNonLawFirm.getDefaultInstance());
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error setting service address as non law firm", th);
+      log.error("Error setting service address as non law firm for request: " + request.toString(), th);
       responseObserver.onError(th);
     }
   }
@@ -158,7 +158,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onNext(SortingImpossibleSet.getDefaultInstance());
       responseObserver.onCompleted();
     } catch (Throwable th) {
-      log.error("Error setting service address as impossible to sort", th);
+      log.error("Error setting service address as impossible to sort for request: " + request.toString(), th);
       responseObserver.onError(th);
     }
   }
