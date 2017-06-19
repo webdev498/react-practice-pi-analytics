@@ -4,7 +4,6 @@
 
 package pi.analytics.admin.serviceaddress.service.service_address;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -13,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,22 +31,22 @@ public class UnsortedServiceAddressFetcher {
 
   private static final Logger log = LoggerFactory.getLogger(UnsortedServiceAddressFetcher.class);
 
-  private static final Set<String> ACTIVE_COUNTRY_CODES =
+  private static final Set<String> COUNTRIES_TO_SORT =
     ImmutableSet.of("AU", "AT", "BE", "BR", "CA", "CN", "CZ", "DK", "FI", "FR",
         "DE", "HK", "IS", "IN", "IE", "IL", "IT", "JP", "KR", "LI", "LU", "NL", "NZ", "NO", "RU", "SG", "ZA", "ES", "SE",
         "CH", "TW", "GB", "US"
     );
 
-  private static final Set<String> IGNORED_COUNTRY_CODES = ImmutableSet.of("TW");
+  private static final Set<String> DISABLED_COUNTRIES = ImmutableSet.of("TW");  // Taiwan addresses not ready for sorting
 
   @Inject
   private ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   public Optional<ServiceAddress> fetchNext(final String username) {
     final Set<String> officeCodes =
-        ACTIVE_COUNTRY_CODES
+        COUNTRIES_TO_SORT
             .stream()
-            .filter(country -> !IGNORED_COUNTRY_CODES.contains(country))
+            .filter(country -> !DISABLED_COUNTRIES.contains(country))
             .collect(Collectors.toSet());
 
     final GetNextUnsortedServiceAddressRequest request =
@@ -69,15 +67,16 @@ public class UnsortedServiceAddressFetcher {
     }
   }
 
-  private List<LangType> langTypesForUser(final String userName) {
+  private Set<LangType> langTypesForUser(final String userName) {
     if (StringUtils.equalsIgnoreCase(userName, "hellen")) {
-      return ImmutableList.of(
+      // Hellen specialises in sorting chinese addresses. Provide her with a reduced set that includes chinese.
+      return ImmutableSet.of(
           LangType.CHINESE,
           LangType.WESTERN_SCRIPT,
           LangType.JAPANESE
       );
     } else {
-      return ImmutableList.of(
+      return ImmutableSet.of(
           LangType.WESTERN_SCRIPT,
           LangType.KOREAN,
           LangType.JAPANESE,
