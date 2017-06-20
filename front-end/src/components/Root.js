@@ -61,17 +61,14 @@ class Root extends React.Component {
           <FirmDisplay value={this.props.value}/>
           <Grid className="button-bar">
             <Cell col={9}>
-
-              <Button disabled raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
-
-              <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}><Icon
-                name="not_interested"/> Not a Law Firm</Button>
-
-              <Button disabled raised onClick={() => this.props.onSetSortingImpossible(serviceAddressId)}><Icon
-                name="highlight_off"/> Sorting Impossible</Button>
-
+              <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
+              <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}>
+                <Icon name="not_interested"/> Not a Law Firm
+              </Button>
+              <Button disabled raised onClick={() => this.props.onSetSortingImpossible(serviceAddressId)}>
+                <Icon name="highlight_off"/> Sorting Impossible
+              </Button>
               <Button raised onClick={() => {this.props.onSkip()}}><Icon name="skip_next"/> Skip</Button>
-
             </Cell>
             <Cell col={3} style={{textAlign: "right"}}>
               <Button accent onClick={() => this.props.onToggleApplicationsPanel(this.props.applicationsPanelOpen)}><Icon

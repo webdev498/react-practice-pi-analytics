@@ -162,7 +162,7 @@ public class LawFirmRepositoryTest {
             .setServiceAddress(createUnsortedServiceAddress(faker.company().name()))
             .build();
 
-    final long newLawFirmId = faker.number().randomDigitNotZero();
+    final long newLawFirmId = faker.number().randomNumber(8, true);
 
     // lawFirmDbService.createLawFirm()
     replyWith(
