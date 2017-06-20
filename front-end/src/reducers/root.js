@@ -12,7 +12,6 @@ import has from "lodash/has";
 import last from "lodash/last";
 import {store} from "../index";
 
-const skipDelay = 10080;
 const canPreFetch = () => !has(store.getState(), "root.serviceAddressesCache") ||
                           store.getState().root.serviceAddressesCache.length < 4;
 const mapServiceAddressBundle = (bundle: ServiceAddressBundle) => {
@@ -43,11 +42,12 @@ const root = createReducer(Actions.NAMESPACE, initialState, {
         serviceAddressesCache: () => state.serviceAddressesCache ? [action.payload].concat(state.serviceAddressesCache)
           : [action.payload]
       }, state),
-  [Actions.CONSUME_CACHED_SERVICE_ADDRESS]: (state) => u({
-                                                           value: mapServiceAddressBundle(last(state.serviceAddressesCache)),
-                                                           serviceAddressesCache: state.serviceAddressesCache.slice(0, -1),
-                                                           loading: false
-                                                         }, state)
+  [Actions.CONSUME_CACHED_SERVICE_ADDRESS]: (state) =>
+    u({
+        value: u.constant(mapServiceAddressBundle(last(state.serviceAddressesCache))),
+        serviceAddressesCache: state.serviceAddressesCache.slice(0, -1),
+        loading: false
+      }, state)
 });
 
 export default root;

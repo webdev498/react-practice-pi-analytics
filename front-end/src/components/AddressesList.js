@@ -4,7 +4,7 @@
 import React from "react";
 import {DataTable, IconButton, TableHeader} from "react-mdl";
 import "../styles/main.scss";
-import type, {Agent, ServiceAddress} from "../services/Types";
+import type {Agent, ServiceAddress} from "../services/Types";
 import {OuterUrls} from "../services/Urls";
 
 type
