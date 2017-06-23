@@ -15,27 +15,44 @@ class AddressesLine extends React.Component {
   element: any
   state: Object
   updateElement: () => void
+  resize: () => void
+  hasTooltip: () => void
 
   constructor(props: AddressesLineProps) {
     super(props)
     this.state = {tooltip: false}
     this.updateElement = this.updateElement.bind(this)
+    this.resize = this.resize.bind(this)
+    this.hasTooltip = this.hasTooltip.bind(this)
+  }
+
+  hasTooltip() {
+    function findAncestor(el, cls) {
+      while ((el = el.parentElement) && !el.classList.contains(cls)) {
+
+      }
+      return el
+    }
+
+    const childRect = this.element.getBoundingClientRect()
+    const parentRect = findAncestor(this.element, "address-line").getBoundingClientRect()
+
+    return childRect.width + 10 > parentRect.width
   }
 
   updateElement(element) {
     if (!element) {
       return;
     }
-    this.element = element;
+    this.element = element
   }
 
-  resize = () => this.forceUpdate()
+  resize() {
+    this.setState({tooltip: this.hasTooltip()})
+  }
 
   componentDidMount() {
-    const parentRect = this.element.parentElement.getBoundingClientRect();
-    const childRect = this.element.getBoundingClientRect();
-
-    this.setState({tooltip: childRect.width > parentRect.width});
+    this.setState({tooltip: this.hasTooltip()})
     window.addEventListener('resize', this.resize)
   }
 
