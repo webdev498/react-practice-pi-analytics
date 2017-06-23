@@ -6,6 +6,7 @@ import {DataTable, IconButton, TableHeader} from "react-mdl";
 import "../styles/main.scss";
 import type {Agent, ServiceAddress} from "../services/Types";
 import {OuterUrls} from "../services/Urls";
+import AddressLine from "./AddressLine";
 
 type
 AddressesListProps = {
@@ -107,8 +108,10 @@ class AddressesList extends React.Component {
     return (
       <div key={index} onMouseOver={() => this.select(agentIndex, index, agentIndex < 0)}
            onMouseLeave={() => this.unselect(agentIndex, index)}
-           className={"address-line " + this.getSelectedClassName(agentIndex, index)}><span
-        dangerouslySetInnerHTML={{__html: value.address ? result : "N/A"}}/>
+           className={"address-line " + this.getSelectedClassName(agentIndex, index)}>
+        <AddressLine
+          text={value.address ? result : null}
+          fullText={value.address ? value.name + ", " + value.address : null}/>
       </div>
     );
   }
@@ -175,9 +178,9 @@ class AddressesList extends React.Component {
                  rows={this.mapRows()}>
         <TableHeader style={{width: "12%"}} name="lawFirmId">Law Firm ID</TableHeader>
         <TableHeader style={{width: "21%"}} name="entity">Firm Name</TableHeader>
-        <TableHeader style={{paddingLeft: "26px", width: "56%"}} name="serviceAddress">Service Addresses</TableHeader>
-        <TableHeader style={{paddingLeft: "26px", width: "6%"}} name="serviceAddressId">Entity ID</TableHeader>
-        <TableHeader style={{width: "5%"}} name="actions">Re-sort</TableHeader>
+        <TableHeader style={{paddingLeft: "26px", width: "54%"}} name="serviceAddress">Service Addresses</TableHeader>
+        <TableHeader style={{paddingLeft: "26px", width: "7%"}} name="serviceAddressId">Entity ID</TableHeader>
+        <TableHeader style={{width: "6%"}} name="actions">Re-sort</TableHeader>
       </DataTable>
     )
   }

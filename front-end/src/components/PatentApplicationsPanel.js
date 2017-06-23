@@ -35,8 +35,8 @@ class PatentApplicationsPanel extends React.Component {
     return (
       <Grid className={"patent-applications"}
             style={{height: panelHeight + "px"}}>
-        <Cell col={8}/>
-        <Cell col={4}>
+        <Cell col={5}/>
+        <Cell col={7}>
           <ul>
             {apps}
           </ul>
