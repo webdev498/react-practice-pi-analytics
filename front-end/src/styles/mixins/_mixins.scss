@@ -1,5 +1,9 @@
 @import "../vendor/mdl/variables";
 
+.addresses-container {
+  min-width: $min-container-width;
+}
+
 .highlighted {
   background-color: #ffffbc;
 }
@@ -7,7 +11,7 @@
 .button-bar {
 
   padding: $grid-desktop-margin 0px $grid-desktop-margin 0px;
-  min-width: 1200px;
+  min-width: $min-container-width;
 
   > button {
     margin-right: $grid-desktop-margin;

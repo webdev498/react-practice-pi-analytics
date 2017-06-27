@@ -9,7 +9,7 @@
 }
 
 .addresses-list.mdl-data-table {
-  min-width: 1200px;
+  min-width: $min-container-width;
   width: 100%;
   table-layout: fixed;
 
@@ -56,7 +56,7 @@
 }
 
 .firm-display.mdl-data-table {
-  min-width: 1200px;
+  min-width: $min-container-width;
   width: 100%;
   table-layout: fixed;
 

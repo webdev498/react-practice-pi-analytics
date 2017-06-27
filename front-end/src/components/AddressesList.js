@@ -110,8 +110,9 @@ class AddressesList extends React.Component {
            onMouseLeave={() => this.unselect(agentIndex, index)}
            className={"address-line " + this.getSelectedClassName(agentIndex, index)}>
         <AddressLine
-          text={value.address ? result : null}
-          fullText={value.address ? value.name + ", " + value.address : null}/>
+          parentClass={"address-line"}
+          text={value.address ? result : ""}
+          fullText={value.address ? value.name + ", " + value.address : ""}/>
       </div>
     );
   }
