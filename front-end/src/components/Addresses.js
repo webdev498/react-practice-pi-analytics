@@ -26,7 +26,7 @@ const Addresses = (props: AddressesProps): React.Element<Layout> => {
                       <h4 className="voffset32" style={{color: "#bbb"}}>No suggestions available for this service
                         address</h4>
   return (
-    <div>
+    <div className="addresses-container">
       <Tabs activeTab={props.tab} onChange={props.onTabChange} ripple style={{marginTop: "16px"}}>
         <Tab>Suggestions ({props.serviceAddress.country})</Tab>
         <Tab>Search</Tab>

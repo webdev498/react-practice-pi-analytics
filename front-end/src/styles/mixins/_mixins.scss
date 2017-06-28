@@ -1,22 +1,25 @@
 @import "../vendor/mdl/variables";
 
+.addresses-container {
+  min-width: $min-container-width;
+}
+
 .highlighted {
   background-color: #ffffbc;
 }
 
 .button-bar {
 
-  padding-left: 0px;
-  padding-right: 0px;
+  padding: $grid-desktop-margin 0px $grid-desktop-margin 0px;
+  min-width: $min-container-width;
 
-  > div {
-    margin-left: 0px;
-    margin-right: 0px;
+  > button {
+    margin-right: $grid-desktop-margin;
   }
 
-  > div > button:nth-child(2n) {
-    margin-left: 32px;
-    margin-right: 32px;
+  > button:last-child {
+    float: right;
+    margin-right: 0px;
   }
 
 }
@@ -51,4 +54,8 @@
   & .mdl-snackbar__action {
     color: unquote("rgb(#{$color-white})");
   }
+}
+
+.mdl-tooltip {
+  max-width: none !important;
 }

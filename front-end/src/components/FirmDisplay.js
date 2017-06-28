@@ -48,12 +48,12 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
       {"en" !== addressToSort.languageType ? (
         <h5>{props.value.enTranslation}</h5>
       ) : (null)}
-      <DataTable style={{width: "100%"}} rowKeyColumn="lawFirmId" rows={mapRows()}>
-        <TableHeader name="name" cellFormatter={renderGoogleSearchIcon}>Name</TableHeader>
-        <TableHeader name="address" cellFormatter={renderGoogleSearchIcon}>Address</TableHeader>
-        <TableHeader name="phone">Phone</TableHeader>
-        <TableHeader name="country">Country</TableHeader>
-        <TableHeader name="serviceAddressId">Entity ID</TableHeader>
+      <DataTable className="firm-display" style={{width: "100%"}} rowKeyColumn="lawFirmId" rows={mapRows()}>
+        <TableHeader style={{width: "41%"}} name="name" cellFormatter={renderGoogleSearchIcon}>Name</TableHeader>
+        <TableHeader style={{width: "30%"}} name="address" cellFormatter={renderGoogleSearchIcon}>Address</TableHeader>
+        <TableHeader style={{width: "7%"}} name="phone">Phone</TableHeader>
+        <TableHeader style={{width: "7%"}} name="country">Country</TableHeader>
+        <TableHeader style={{width: "7%"}} name="serviceAddressId">Entity ID</TableHeader>
       </DataTable>
     </div>
   )

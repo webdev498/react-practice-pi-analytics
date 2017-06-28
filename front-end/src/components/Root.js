@@ -59,8 +59,7 @@ class Root extends React.Component {
       content = (
         <Content>
           <FirmDisplay value={this.props.value}/>
-          <Grid className="button-bar">
-            <Cell col={9}>
+          <div className="button-bar">
               <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
               <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}>
                 <Icon name="not_interested"/> Not a Law Firm
@@ -69,12 +68,9 @@ class Root extends React.Component {
                 <Icon name="highlight_off"/> Sorting Impossible
               </Button>
               <Button raised onClick={() => {this.props.onSkip()}}><Icon name="skip_next"/> Skip</Button>
-            </Cell>
-            <Cell col={3} style={{textAlign: "right"}}>
               <Button accent onClick={() => this.props.onToggleApplicationsPanel(this.props.applicationsPanelOpen)}><Icon
                 name="description"/> View Sample Applications</Button>
-            </Cell>
-          </Grid>
+          </div>
           <PatentApplicationsPanel open={this.props.applicationsPanelOpen} applications={this.props.value.samplePatentApps}/>
           <AddressesContainer/>
           <CreateFirmDialogContainer/>

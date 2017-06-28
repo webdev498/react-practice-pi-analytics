@@ -92,3 +92,6 @@ $footer-color: unquote("rgb(#{$palette-grey-500})");
 $footer-heading-color: unquote("rgb(#{$palette-grey-300})");
 $footer-button-fill-color: $footer-color;
 $footer-underline-color: unquote("rgb(#{$palette-grey-300})");
+
+// General
+$min-container-width: 1200px;

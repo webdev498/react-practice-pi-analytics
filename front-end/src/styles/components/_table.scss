@@ -9,7 +9,7 @@
 }
 
 .addresses-list.mdl-data-table {
-  min-width: 1830px;
+  min-width: $min-container-width;
   width: 100%;
   table-layout: fixed;
 
@@ -27,6 +27,11 @@
 
   & td:nth-child(3) {
     overflow: hidden;
+
+    & > div.address-line {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 
   & td:nth-child(2) {
@@ -48,4 +53,17 @@
       background-color: $data-table-selection-color;
     }
   }
+}
+
+.firm-display.mdl-data-table {
+  min-width: $min-container-width;
+  width: 100%;
+  table-layout: fixed;
+
+  & td:nth-child(1), & td:nth-child(2) {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+
 }

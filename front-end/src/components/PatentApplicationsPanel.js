@@ -21,7 +21,7 @@ class PatentApplicationsPanel extends React.Component {
 
   render() {
 
-    const panelHeight = this.props.open && this.props.applications ? this.props.applications.length * 24 + 16 : 0;
+    const panelHeight = this.props.open && this.props.applications ? this.props.applications.length * 24 + 16 + 18 : 0;
 
     const apps = this.props.applications
       ? this.props.applications.map(
@@ -35,8 +35,8 @@ class PatentApplicationsPanel extends React.Component {
     return (
       <Grid className={"patent-applications"}
             style={{height: panelHeight + "px"}}>
-        <Cell col={8}/>
-        <Cell col={4}>
+        <Cell col={5}/>
+        <Cell col={7}>
           <ul>
             {apps}
           </ul>
