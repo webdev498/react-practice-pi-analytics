@@ -29,6 +29,9 @@ import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmR
 import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
 import pi.admin.service_address_sorting.generated.SortingImpossibleSet;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
+import pi.analytics.admin.serviceaddress.metrics.ImmutableMetricSpec;
+import pi.analytics.admin.serviceaddress.metrics.MetricSpec;
+import pi.analytics.admin.serviceaddress.metrics.MetricsAccessor;
 import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressBundleFetcher;
 import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressSorter;
@@ -41,6 +44,44 @@ import pi.analytics.admin.serviceaddress.service.service_address.UnsortedService
 public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServiceGrpc.ServiceAddressSortingServiceImplBase {
 
   private static final Logger log = LoggerFactory.getLogger(ServiceAddressSortingServiceImpl.class);
+
+  @Inject
+  private MetricsAccessor metricsAccessor;
+
+  private final MetricSpec requestNextUnsortedMetricSpec =
+      ImmutableMetricSpec
+          .builder()
+          .action("request_next_unsorted")
+          .addLabels("user")
+          .build();
+
+  private final MetricSpec sortMetricSpec =
+      ImmutableMetricSpec
+          .builder()
+          .action("sort")
+            .addLabels("type", "user")
+            .build();
+
+  private final MetricSpec unsortMetricSpec =
+      ImmutableMetricSpec
+          .builder()
+          .action("unsort")
+          .addLabels("user")
+          .build();
+
+  private final MetricSpec sortingImpossibleMetricSpec =
+      ImmutableMetricSpec
+          .builder()
+          .action("sorting_impossible")
+          .addLabels("user")
+          .build();
+
+  private final MetricSpec errorMetricSpec =
+      ImmutableMetricSpec
+          .builder()
+          .action("error")
+          .addLabels("type")
+          .build();
 
   @Inject
   private UnsortedServiceAddressFetcher unsortedServiceAddressFetcher;
@@ -69,9 +110,11 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       }
       responseObserver.onNext(serviceAddressBundle.get());
       responseObserver.onCompleted();
+      metricsAccessor.getCounter(requestNextUnsortedMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {
       log.error("Error generating next unsorted service address for request: " + request.toString(), th);
       responseObserver.onError(th);
+      metricsAccessor.getCounter(errorMetricSpec).inc("next_unsorted_service_address");
     }
   }
 
@@ -92,6 +135,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
     } catch (Throwable th) {
       log.error("Error searching law firms for request: " + request.toString(), th);
       responseObserver.onError(th);
+      metricsAccessor.getCounter(errorMetricSpec).inc("search_law_firms");
     }
   }
 
@@ -102,9 +146,11 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       serviceAddressSorter.assignServiceAddress(request);
       responseObserver.onNext(ServiceAddressAssigned.getDefaultInstance());
       responseObserver.onCompleted();
+      metricsAccessor.getCounter(sortMetricSpec).inc("assign_to_law_firm", request.getRequestedBy());
     } catch (Throwable th) {
       log.error("Error assigning service address to law firm for request: " + request.toString(), th);
       responseObserver.onError(th);
+      metricsAccessor.getCounter(errorMetricSpec).inc("assign_service_address");
     }
   }
 
@@ -115,9 +161,11 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       serviceAddressSorter.unsortServiceAddress(request);
       responseObserver.onNext(ServiceAddressUnsorted.getDefaultInstance());
       responseObserver.onCompleted();
+      metricsAccessor.getCounter(unsortMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {
       log.error("Error unsorting service address for request: " + request.toString(), th);
       responseObserver.onError(th);
+      metricsAccessor.getCounter(errorMetricSpec).inc("unsort_service_address");
     }
   }
 
@@ -131,9 +179,11 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
               .build()
       );
       responseObserver.onCompleted();
+      metricsAccessor.getCounter(sortMetricSpec).inc("create_law_firm", request.getRequestedBy());
     } catch (Throwable th) {
       log.error("Error creating new law firm using service address for request: " + request.toString(), th);
       responseObserver.onError(th);
+      metricsAccessor.getCounter(errorMetricSpec).inc("create_law_firm");
     }
   }
 
@@ -144,9 +194,11 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       serviceAddressSorter.setServiceAddressAsNonLawFirm(request);
       responseObserver.onNext(ServiceAddressSetAsNonLawFirm.getDefaultInstance());
       responseObserver.onCompleted();
+      metricsAccessor.getCounter(sortMetricSpec).inc("set_non_law_firm", request.getRequestedBy());
     } catch (Throwable th) {
       log.error("Error setting service address as non law firm for request: " + request.toString(), th);
       responseObserver.onError(th);
+      metricsAccessor.getCounter(errorMetricSpec).inc("set_service_address_as_non_law_firm");
     }
   }
 
@@ -157,9 +209,11 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       serviceAddressSorter.setSortingImpossible(request);
       responseObserver.onNext(SortingImpossibleSet.getDefaultInstance());
       responseObserver.onCompleted();
+      metricsAccessor.getCounter(sortingImpossibleMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {
       log.error("Error setting service address as impossible to sort for request: " + request.toString(), th);
       responseObserver.onError(th);
+      metricsAccessor.getCounter(errorMetricSpec).inc("set_sorting_impossible");
     }
   }
 }
