@@ -71,6 +71,13 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
           .addLabels("user")
           .build();
 
+  private final MetricSpec skipMetricSpec =
+      ImmutableMetricSpec
+          .builder()
+          .action("skip")
+          .addLabels("user")
+          .build();
+
   private final MetricSpec sortingImpossibleMetricSpec =
       ImmutableMetricSpec
           .builder()
@@ -210,7 +217,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
     // Skipping is built into the get next unsorted service address endpoint of ip-data-relational
     responseObserver.onNext(ServiceAddressSkipped.getDefaultInstance());
     responseObserver.onCompleted();
-    metricsAccessor.getCounter(sortMetricSpec).inc("skip_service_address", request.getRequestedBy());
+    metricsAccessor.getCounter(skipMetricSpec).inc(request.getRequestedBy());
   }
 
   @Override
