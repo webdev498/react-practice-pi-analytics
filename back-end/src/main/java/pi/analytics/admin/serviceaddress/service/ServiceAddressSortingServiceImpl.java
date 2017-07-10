@@ -23,10 +23,12 @@ import pi.admin.service_address_sorting.generated.SearchResults;
 import pi.admin.service_address_sorting.generated.ServiceAddressAssigned;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
 import pi.admin.service_address_sorting.generated.ServiceAddressSetAsNonLawFirm;
+import pi.admin.service_address_sorting.generated.ServiceAddressSkipped;
 import pi.admin.service_address_sorting.generated.ServiceAddressSortingServiceGrpc;
 import pi.admin.service_address_sorting.generated.ServiceAddressUnsorted;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
+import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SortingImpossibleSet;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.metrics.ImmutableMetricSpec;
@@ -200,6 +202,15 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onError(th);
       metricsAccessor.getCounter(errorMetricSpec).inc("set_service_address_as_non_law_firm");
     }
+  }
+
+  @Override
+  public void skipServiceAddress(SkipServiceAddressRequest request, StreamObserver<ServiceAddressSkipped> responseObserver) {
+    // Simply log the fact and do nothing
+    // Skipping is built into the get next unsorted service address endpoint of ip-data-relational
+    responseObserver.onNext(ServiceAddressSkipped.getDefaultInstance());
+    responseObserver.onCompleted();
+    metricsAccessor.getCounter(sortMetricSpec).inc("skip_service_address", request.getRequestedBy());
   }
 
   @Override
