@@ -22,7 +22,7 @@ import io.grpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
-import pi.ip.data.relational.generated.GetNextUnsortedServiceAddressRequest;
+import pi.ip.data.relational.generated.GetNextServiceAddressForSortingRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.queue.QueueOnPremGrpc;
 import pi.ip.proto.generated.ServiceAddress;
@@ -36,13 +36,13 @@ import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.r
 /**
  * @author shane.xie@practiceinsight.io
  */
-public class UnsortedServiceAddressFetcherTest {
+public class SortableServiceAddressFetcherTest {
 
   private Faker faker = new Faker();
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private Server server;
   private ManagedChannel channel;
-  private UnsortedServiceAddressFetcher unsortedServiceAddressFetcher;
+  private SortableServiceAddressFetcher sortableServiceAddressFetcher;
 
   @Before
   public void setup() throws Exception {
@@ -62,7 +62,7 @@ public class UnsortedServiceAddressFetcherTest {
             .directExecutor()
             .build();
 
-    unsortedServiceAddressFetcher = Guice.createInjector(new AbstractModule() {
+    sortableServiceAddressFetcher = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
         bind(QueueOnPremGrpc.QueueOnPremBlockingStub.class)
@@ -70,7 +70,7 @@ public class UnsortedServiceAddressFetcherTest {
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
       }
-    }).getInstance(UnsortedServiceAddressFetcher.class);
+    }).getInstance(SortableServiceAddressFetcher.class);
   }
 
   @After
@@ -83,9 +83,9 @@ public class UnsortedServiceAddressFetcherTest {
   public void fetchNext_not_found() throws Exception {
     replyWithError(Status.NOT_FOUND.asRuntimeException())
         .when(serviceAddressService)
-        .getNextUnsortedServiceAddress(any(GetNextUnsortedServiceAddressRequest.class), any(StreamObserver.class));
+        .getNextServiceAddressForSorting(any(GetNextServiceAddressForSortingRequest.class), any(StreamObserver.class));
 
-    final Optional<ServiceAddress> queuedServiceAddress = unsortedServiceAddressFetcher.fetchNext(faker.name().username());
+    final Optional<ServiceAddress> queuedServiceAddress = sortableServiceAddressFetcher.fetchNext(faker.name().username());
 
     assertThat(queuedServiceAddress)
         .as("No unsorted service address found. We should get an empty Optional back")
@@ -96,9 +96,9 @@ public class UnsortedServiceAddressFetcherTest {
   public void fetchNext_found() throws Exception {
     replyWith(ServiceAddress.newBuilder().build())
         .when(serviceAddressService)
-        .getNextUnsortedServiceAddress(any(GetNextUnsortedServiceAddressRequest.class), any(StreamObserver.class));
+        .getNextServiceAddressForSorting(any(GetNextServiceAddressForSortingRequest.class), any(StreamObserver.class));
 
-    final Optional<ServiceAddress> queuedServiceAddress = unsortedServiceAddressFetcher.fetchNext(faker.name().username());
+    final Optional<ServiceAddress> queuedServiceAddress = sortableServiceAddressFetcher.fetchNext(faker.name().username());
 
     assertThat(queuedServiceAddress)
         .as("Service address found. We should get a non-empty Optional back")

@@ -37,7 +37,7 @@ import pi.analytics.admin.serviceaddress.metrics.MetricsAccessor;
 import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressBundleFetcher;
 import pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressSorter;
-import pi.analytics.admin.serviceaddress.service.service_address.UnsortedServiceAddressFetcher;
+import pi.analytics.admin.serviceaddress.service.service_address.SortableServiceAddressFetcher;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -93,7 +93,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
           .build();
 
   @Inject
-  private UnsortedServiceAddressFetcher unsortedServiceAddressFetcher;
+  private SortableServiceAddressFetcher sortableServiceAddressFetcher;
 
   @Inject
   ServiceAddressBundleFetcher serviceAddressBundleFetcher;
@@ -109,7 +109,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
                                          final StreamObserver<ServiceAddressBundle> responseObserver) {
     try {
       final Optional<ServiceAddressBundle> serviceAddressBundle =
-          unsortedServiceAddressFetcher
+          sortableServiceAddressFetcher
               .fetchNext(request.getRequestedBy())
               .map(serviceAddressBundleFetcher::fetch);
 

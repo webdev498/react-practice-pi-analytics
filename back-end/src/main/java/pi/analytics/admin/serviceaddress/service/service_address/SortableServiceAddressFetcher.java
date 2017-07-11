@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import pi.ip.data.relational.generated.GetNextUnsortedServiceAddressRequest;
+import pi.ip.data.relational.generated.GetNextServiceAddressForSortingRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.ServiceAddress;
@@ -27,9 +27,9 @@ import pi.ip.proto.generated.ServiceAddress;
  * @author shane.xie@practiceinsight.io
  */
 @Singleton
-public class UnsortedServiceAddressFetcher {
+public class SortableServiceAddressFetcher {
 
-  private static final Logger log = LoggerFactory.getLogger(UnsortedServiceAddressFetcher.class);
+  private static final Logger log = LoggerFactory.getLogger(SortableServiceAddressFetcher.class);
 
   private static final Set<String> COUNTRIES_TO_SORT =
     ImmutableSet.of("AU", "AT", "BE", "BR", "CA", "CN", "CZ", "DK", "FI", "FR",
@@ -49,15 +49,16 @@ public class UnsortedServiceAddressFetcher {
             .filter(country -> !DISABLED_COUNTRIES.contains(country))
             .collect(Collectors.toSet());
 
-    final GetNextUnsortedServiceAddressRequest request =
-        GetNextUnsortedServiceAddressRequest
+    // TODO(SX): Implement support for the already_sorted_weighted_chance field in the request protobuf message
+    final GetNextServiceAddressForSortingRequest request =
+        GetNextServiceAddressForSortingRequest
             .newBuilder()
             .addAllRestrictToLangTypes(langTypesForUser(username))
             .addAllRestrictToOfficeCodes(officeCodes)
             .build();
 
     try {
-      return Optional.of(serviceAddressServiceBlockingStub.getNextUnsortedServiceAddress(request));
+      return Optional.of(serviceAddressServiceBlockingStub.getNextServiceAddressForSorting(request));
     } catch (StatusRuntimeException sre) {
       if (sre.getStatus().equals(Status.NOT_FOUND)) {
         return Optional.empty();
