@@ -4,6 +4,7 @@
 
 package pi.analytics.admin.serviceaddress.service.service_address;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,12 +50,12 @@ public class SortableServiceAddressFetcher {
             .filter(country -> !DISABLED_COUNTRIES.contains(country))
             .collect(Collectors.toSet());
 
-    // TODO(SX): Implement support for the already_sorted_weighted_chance field in the request protobuf message
     final GetNextServiceAddressForSortingRequest request =
         GetNextServiceAddressForSortingRequest
             .newBuilder()
             .addAllRestrictToLangTypes(langTypesForUser(username))
             .addAllRestrictToOfficeCodes(officeCodes)
+            .setAlreadySortedWeightedChance(alreadySortedWeightedChanceForUser(username))
             .build();
 
     try {
@@ -68,8 +69,8 @@ public class SortableServiceAddressFetcher {
     }
   }
 
-  private Set<LangType> langTypesForUser(final String userName) {
-    if (StringUtils.equalsIgnoreCase(userName, "hellen")) {
+  private Set<LangType> langTypesForUser(final String username) {
+    if (StringUtils.equalsIgnoreCase(username, "hellen")) {
       // Hellen specialises in sorting chinese addresses. Provide her with a reduced set that includes chinese.
       return ImmutableSet.of(
           LangType.CHINESE,
@@ -83,6 +84,23 @@ public class SortableServiceAddressFetcher {
           LangType.JAPANESE,
           LangType.CYRILLIC
       );
+    }
+  }
+
+  @VisibleForTesting
+  float alreadySortedWeightedChanceForUser(final String username) {
+    final Set<String> staffUsers = ImmutableSet.of(
+        "floremer",
+        "flor",
+        "hellen",
+        "janel",
+        "shane",
+        "thomas"
+    );
+    if (staffUsers.contains(username.toLowerCase())) {
+      return 0;
+    } else {
+      return 1;
     }
   }
 }

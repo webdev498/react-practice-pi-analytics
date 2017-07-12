@@ -104,4 +104,18 @@ public class SortableServiceAddressFetcherTest {
         .as("Service address found. We should get a non-empty Optional back")
         .isPresent();
   }
+
+  @Test
+  public void alreadySortedWeightedChanceForUser_staff() throws Exception {
+    assertThat(sortableServiceAddressFetcher.alreadySortedWeightedChanceForUser("shane"))
+        .isEqualTo(0)
+        .as("User shane is a staff member and should always sort unsorted service addresses");
+  }
+
+  @Test
+  public void alreadySortedWeightedChanceForUser_nonstaff() throws Exception {
+    assertThat(sortableServiceAddressFetcher.alreadySortedWeightedChanceForUser("trialuser"))
+        .isEqualTo(1)
+        .as("User 'trialuser' is not a staff member and should always be given already-sorted service addresses");
+  }
 }
