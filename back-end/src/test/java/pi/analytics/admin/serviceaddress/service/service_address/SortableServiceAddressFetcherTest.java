@@ -12,6 +12,7 @@ import com.github.javafaker.Faker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -30,6 +31,7 @@ import pi.ip.proto.generated.ServiceAddress;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWithError;
 
@@ -94,15 +96,21 @@ public class SortableServiceAddressFetcherTest {
 
   @Test
   public void fetchNext_found() throws Exception {
-    replyWith(ServiceAddress.newBuilder().build())
+    replyWith(ServiceAddress.getDefaultInstance())
         .when(serviceAddressService)
         .getNextServiceAddressForSorting(any(GetNextServiceAddressForSortingRequest.class), any(StreamObserver.class));
 
+    final ArgumentCaptor<GetNextServiceAddressForSortingRequest> argument =
+        ArgumentCaptor.forClass(GetNextServiceAddressForSortingRequest.class);
     final Optional<ServiceAddress> queuedServiceAddress = sortableServiceAddressFetcher.fetchNext(faker.name().username());
 
     assertThat(queuedServiceAddress)
         .as("Service address found. We should get a non-empty Optional back")
         .isPresent();
+
+    verify(serviceAddressService).getNextServiceAddressForSorting(argument.capture(), any(StreamObserver.class));
+    assertThat(argument.getValue().getRestrictToLangTypesList()).isNotEmpty();
+    assertThat(argument.getValue().getRestrictToOfficeCodesList()).isNotEmpty();
   }
 
   @Test
