@@ -4,6 +4,7 @@
 
 package pi.analytics.admin.serviceaddress.service.service_address;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 
@@ -23,15 +24,18 @@ import io.grpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
+import pi.analytics.admin.serviceaddress.service.user.UserService;
 import pi.ip.data.relational.generated.GetNextServiceAddressForSortingRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
-import pi.ip.generated.queue.QueueOnPremGrpc;
+import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.ServiceAddress;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWithError;
 
@@ -41,6 +45,7 @@ import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.r
 public class SortableServiceAddressFetcherTest {
 
   private Faker faker = new Faker();
+  private UserService userService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private Server server;
   private ManagedChannel channel;
@@ -48,6 +53,7 @@ public class SortableServiceAddressFetcherTest {
 
   @Before
   public void setup() throws Exception {
+    userService = mock(UserService.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
 
     final String serverName = "unsorted-service-address-fetcher-test-".concat(UUID.randomUUID().toString());
@@ -67,8 +73,7 @@ public class SortableServiceAddressFetcherTest {
     sortableServiceAddressFetcher = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(QueueOnPremGrpc.QueueOnPremBlockingStub.class)
-            .toInstance(QueueOnPremGrpc.newBlockingStub(channel));
+        bind(UserService.class).toInstance(userService);
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
       }
@@ -96,6 +101,9 @@ public class SortableServiceAddressFetcherTest {
 
   @Test
   public void fetchNext_found() throws Exception {
+    when(userService.getAlreadySortedWeightedChance(anyString())).thenReturn(1f);
+    when(userService.getLangTypes(anyString())).thenReturn(ImmutableSet.of(LangType.WESTERN_SCRIPT));
+
     replyWith(ServiceAddress.getDefaultInstance())
         .when(serviceAddressService)
         .getNextServiceAddressForSorting(any(GetNextServiceAddressForSortingRequest.class), any(StreamObserver.class));
@@ -109,21 +117,14 @@ public class SortableServiceAddressFetcherTest {
         .isPresent();
 
     verify(serviceAddressService).getNextServiceAddressForSorting(argument.capture(), any(StreamObserver.class));
-    assertThat(argument.getValue().getRestrictToLangTypesList()).isNotEmpty();
-    assertThat(argument.getValue().getRestrictToOfficeCodesList()).isNotEmpty();
-  }
-
-  @Test
-  public void alreadySortedWeightedChanceForUser_staff() throws Exception {
-    assertThat(sortableServiceAddressFetcher.alreadySortedWeightedChanceForUser("shane"))
-        .isEqualTo(0)
-        .as("User shane is a staff member and should always sort unsorted service addresses");
-  }
-
-  @Test
-  public void alreadySortedWeightedChanceForUser_nonstaff() throws Exception {
-    assertThat(sortableServiceAddressFetcher.alreadySortedWeightedChanceForUser("trialuser"))
-        .isEqualTo(1)
-        .as("User 'trialuser' is not a staff member and should always be given already-sorted service addresses");
+    assertThat(argument.getValue().getAlreadySortedWeightedChance())
+        .as("The already sorted weighted chance should be what the user service gave us")
+        .isEqualTo(1f);
+    assertThat(argument.getValue().getRestrictToLangTypesList())
+        .as("The language types should be what the user service gave us")
+        .containsExactly(LangType.WESTERN_SCRIPT);
+    assertThat(argument.getValue().getRestrictToOfficeCodesList())
+        .as("The list of countries to sort should never be empty")
+        .isNotEmpty();
   }
 }

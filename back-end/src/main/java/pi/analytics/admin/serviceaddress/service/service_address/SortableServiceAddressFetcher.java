@@ -4,12 +4,10 @@
 
 package pi.analytics.admin.serviceaddress.service.service_address;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,9 +17,9 @@ import java.util.stream.Collectors;
 
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import pi.analytics.admin.serviceaddress.service.user.UserService;
 import pi.ip.data.relational.generated.GetNextServiceAddressForSortingRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
-import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.ServiceAddress;
 
 /**
@@ -41,6 +39,9 @@ public class SortableServiceAddressFetcher {
   private static final Set<String> DISABLED_COUNTRIES = ImmutableSet.of("TW");  // Taiwan addresses not ready for sorting
 
   @Inject
+  private UserService userService;
+
+  @Inject
   private ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   public Optional<ServiceAddress> fetchNext(final String username) {
@@ -53,9 +54,9 @@ public class SortableServiceAddressFetcher {
     final GetNextServiceAddressForSortingRequest request =
         GetNextServiceAddressForSortingRequest
             .newBuilder()
-            .addAllRestrictToLangTypes(langTypesForUser(username))
+            .addAllRestrictToLangTypes(userService.getLangTypes(username))
             .addAllRestrictToOfficeCodes(officeCodes)
-            .setAlreadySortedWeightedChance(alreadySortedWeightedChanceForUser(username))
+            .setAlreadySortedWeightedChance(userService.getAlreadySortedWeightedChance(username))
             .build();
 
     try {
@@ -66,41 +67,6 @@ public class SortableServiceAddressFetcher {
       }
       // Any other status is an error
       throw sre;
-    }
-  }
-
-  private Set<LangType> langTypesForUser(final String username) {
-    if (StringUtils.equalsIgnoreCase(username, "hellen")) {
-      // Hellen specialises in sorting chinese addresses. Provide her with a reduced set that includes chinese.
-      return ImmutableSet.of(
-          LangType.CHINESE,
-          LangType.WESTERN_SCRIPT,
-          LangType.JAPANESE
-      );
-    } else {
-      return ImmutableSet.of(
-          LangType.WESTERN_SCRIPT,
-          LangType.KOREAN,
-          LangType.JAPANESE,
-          LangType.CYRILLIC
-      );
-    }
-  }
-
-  @VisibleForTesting
-  float alreadySortedWeightedChanceForUser(final String username) {
-    final Set<String> staffUsers = ImmutableSet.of(
-        "floremer",
-        "flor",
-        "hellen",
-        "janel",
-        "shane",
-        "thomas"
-    );
-    if (staffUsers.contains(username.toLowerCase())) {
-      return 0;
-    } else {
-      return 1;
     }
   }
 }
