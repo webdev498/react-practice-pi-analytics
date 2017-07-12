@@ -18,9 +18,9 @@ public class UserServiceTest {
   private UserService userService = new UserService();
 
   @Test
-  public void isStaff() throws Exception {
-    assertThat(userService.isStaff("shane")).isTrue();
-    assertThat(userService.isStaff("nonstaff")).isFalse();
+  public void canSort() throws Exception {
+    assertThat(userService.canSort("shane")).isTrue();
+    assertThat(userService.canSort("nonstaff")).isFalse();
   }
 
   @Test

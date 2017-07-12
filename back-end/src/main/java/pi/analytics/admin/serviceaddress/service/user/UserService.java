@@ -19,7 +19,7 @@ import pi.ip.proto.generated.LangType;
 @Singleton
 public class UserService {
 
-  public boolean isStaff(final String username) {
+  private boolean isStaff(final String username) {
     final Set<String> staffUsers = ImmutableSet.of(
         "floremer",
         "flor",
@@ -29,6 +29,10 @@ public class UserService {
         "thomas"
     );
     return staffUsers.contains(username.toLowerCase());
+  }
+
+  public boolean canSort(final String username) {
+    return isStaff(username);
   }
 
   public float getAlreadySortedWeightedChance(final String username) {
