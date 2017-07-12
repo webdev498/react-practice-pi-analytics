@@ -114,7 +114,6 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
               .map(serviceAddressBundleFetcher::fetch);
 
       if (!serviceAddressBundle.isPresent()) {
-        // Nothing in queues
         responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
       }
       responseObserver.onNext(serviceAddressBundle.get());
