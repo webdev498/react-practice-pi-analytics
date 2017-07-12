@@ -74,7 +74,11 @@ class AddressesList extends React.Component {
   }
 
   renderAddressLine(agentIndex: number, index: number, value: ServiceAddress, testValue: string): React.Element<any> {
-    let result = value.name + ", " + value.address
+    let result = value.name
+    if (value.address) {
+      result = result + ", " + value.address
+    }
+    const fullText = "" + result;
     const upperCase = result.toUpperCase()
 
     //here we going to add highlight tags to indicate service address and law firm address/name intersections.
@@ -111,8 +115,8 @@ class AddressesList extends React.Component {
            className={"address-line " + this.getSelectedClassName(agentIndex, index)}>
         <AddressLine
           parentClass={"address-line"}
-          text={value.address ? result : ""}
-          fullText={value.address ? value.name + ", " + value.address : ""}/>
+          text={value.address || value.name ? result : ""}
+          fullText={value.address || value.name ? fullText : ""}/>
       </div>
     );
   }
