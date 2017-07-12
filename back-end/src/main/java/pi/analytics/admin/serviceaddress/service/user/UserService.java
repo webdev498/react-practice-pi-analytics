@@ -24,7 +24,9 @@ public class UserService {
         "floremer",
         "flor",
         "hellen",
+        "ivan",
         "janel",
+        "pavel",
         "shane",
         "thomas"
     );
