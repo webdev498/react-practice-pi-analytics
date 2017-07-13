@@ -126,4 +126,16 @@ public class ServiceAddressUtilsTest {
         .as("The pre sort service address and the post sort service address are sorted differently")
         .isEqualTo(SortResult.DIFFERENT);
   }
+
+  @Test
+  public void getAssignToLawFirmSortResult_different() throws Exception {
+    // TODO(SX)
+    assert(false);
+  }
+
+  @Test
+  public void getAssignToLawFirmSortResult_same() throws Exception {
+    // TODO(SX)
+    assert(false);
+  }
 }

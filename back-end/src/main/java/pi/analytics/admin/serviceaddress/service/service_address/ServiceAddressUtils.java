@@ -6,7 +6,11 @@ package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.common.base.Preconditions;
 
+import java.util.function.Predicate;
+
 import pi.ip.data.relational.generated.SortResult;
+import pi.ip.data.relational.generated.SortStatus;
+import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
 /**
@@ -43,5 +47,49 @@ public class ServiceAddressUtils {
       return SortResult.DIFFERENT;
     }
     return SortResult.NONE;
+  }
+
+  public static SortResult getAssignToLawFirmSortResult(final ServiceAddress preSort, final long assignedLawFirmId) {
+    Preconditions.checkArgument(assignedLawFirmId != 0, "Invalid assigned law firm id");
+
+    if (!preSort.getLawFirmStatusDetermined()) {
+      return SortResult.NEW_SORT;
+    }
+    if (preSort.getLawFirmId().getValue() == assignedLawFirmId) {
+      return SortResult.SAME;
+    }
+    return SortResult.DIFFERENT;
+  }
+
+  public static SortResult getCreateLawFirmAndAssignSortResult(final ServiceAddress preSort, final LawFirm newLawFirm,
+                                                               final Predicate<LawFirm> similarLawFirmExists) {
+    if (!preSort.getLawFirmStatusDetermined()) {
+      return SortResult.NEW_SORT;
+    }
+    if (similarLawFirmExists.test(newLawFirm)) {
+      return SortResult.SAME;
+    }
+    return SortResult.DIFFERENT;
+  }
+
+  public static SortResult getSetAsNonLawFirmSortResult(final ServiceAddress preSort) {
+    if (!preSort.getLawFirmStatusDetermined()) {
+      return SortResult.NEW_SORT;
+    }
+    if (!preSort.hasLawFirmId()) {
+      return SortResult.SAME;
+    }
+    return SortResult.DIFFERENT;
+  }
+
+  public static SortStatus getDesiredSortStatus(final ServiceAddress preSort, final String username,
+                                                final Predicate<String> canPerformRealSort) {
+    if (canPerformRealSort.test(username)) {
+      if (!isSorted(preSort)) {
+        return SortStatus.SORT_APPLIED;
+      }
+      return SortStatus.SORT_SCORE_UPDATED;
+    }
+    return SortStatus.DRY_RUN_NOT_UPDATED;
   }
 }

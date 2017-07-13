@@ -19,8 +19,8 @@ public class UserServiceTest {
 
   @Test
   public void canSort() throws Exception {
-    assertThat(userService.canSort("shane")).isTrue();
-    assertThat(userService.canSort("nonstaff")).isFalse();
+    assertThat(userService.canPerformRealSort("shane")).isTrue();
+    assertThat(userService.canPerformRealSort("nonstaff")).isFalse();
   }
 
   @Test
