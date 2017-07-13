@@ -14,14 +14,20 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
 
   let addressToSort = props.value.serviceAddressToSort;
 
-  const renderGoogleSearchIcon = (value: string) => {
-    if (!value) {
+  const renderServiceAddressCell = (value: Object) => {
+    if (!value || (!value.name && !value.address)) {
       return <span>N/A</span>
     }
-    var url = OuterUrls.googleSearch.concat(value.replace(/ /g, "+"));
-    return (
-      <span>{value} <a href={url} target="_blank"><IconButton accent name="search"/></a></span>
-    )
+    const nameSearchUrl = OuterUrls.googleSearch.concat(value.name.replace(/ /g, "+"))
+    if (value.address) {
+      const addressSearchUrl = OuterUrls.googleSearch.concat(value.address.replace(/ /g, "+"))
+      return <span>
+        <span>{value.name} <a href={nameSearchUrl} target="_blank"><IconButton accent name="search"/></a></span>
+        <span>{value.address} <a href={addressSearchUrl} target="_blank"><IconButton accent name="search"/></a></span>
+      </span>
+    } else {
+      return <span>{value.name} <a href={nameSearchUrl} target="_blank"><IconButton accent name="search"/></a></span>
+    }
   }
 
   const renderCountryEditIcon = (country: string, localId: string) => {
@@ -35,8 +41,7 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
   const mapRows = () => {
     return [addressToSort].map((address) => ({
       lawFirmId: address.lawFirmId,
-      name: address.name,
-      address: address.address,
+      name: {name: address.name, address: address.address},
       phone: address.phone,
       country: renderCountryEditIcon(address.country, address.serviceAddressId),
       serviceAddressId: address.serviceAddressId
@@ -49,8 +54,7 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
         <h5>{props.value.enTranslation}</h5>
       ) : (null)}
       <DataTable className="firm-display" style={{width: "100%"}} rowKeyColumn="lawFirmId" rows={mapRows()}>
-        <TableHeader style={{width: "41%"}} name="name" cellFormatter={renderGoogleSearchIcon}>Name</TableHeader>
-        <TableHeader style={{width: "30%"}} name="address" cellFormatter={renderGoogleSearchIcon}>Address</TableHeader>
+        <TableHeader style={{width: "71%"}} name="name" cellFormatter={renderServiceAddressCell}>Service Address</TableHeader>
         <TableHeader style={{width: "7%"}} name="phone">Phone</TableHeader>
         <TableHeader style={{width: "7%"}} name="country">Country</TableHeader>
         <TableHeader style={{width: "7%"}} name="serviceAddressId">Entity ID</TableHeader>
