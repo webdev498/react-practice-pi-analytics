@@ -18,17 +18,17 @@ class AddressesLine extends React.Component {
   state: Object
   updateElement: () => void
   resize: () => void
-  needsTooltip: () => void
+  getUpdatedState: () => void
 
   constructor(props: AddressLineProps) {
     super(props)
     this.state = {tooltip: false}
     this.updateElement = this.updateElement.bind(this)
     this.resize = this.resize.bind(this)
-    this.needsTooltip = this.needsTooltip.bind(this)
+    this.getUpdatedState = this.getUpdatedState.bind(this)
   }
 
-  needsTooltip() {
+  getUpdatedState() {
     const parentClass = this.props.parentClass || "address-line"
     const elementRect = this.element.getBoundingClientRect()
 
@@ -40,7 +40,7 @@ class AddressesLine extends React.Component {
 
     const parentElementRect = parentElement.getBoundingClientRect()
 
-    return elementRect.right + 8 > parentElementRect.right
+    return {tooltip: elementRect.right + 8 > parentElementRect.right};
   }
 
   updateElement(element: Element) {
@@ -51,11 +51,11 @@ class AddressesLine extends React.Component {
   }
 
   resize() {
-    this.setState({tooltip: this.needsTooltip()})
+    this.setState(this.getUpdatedState())
   }
 
   componentDidMount() {
-    this.setState({tooltip: this.needsTooltip()})
+    this.setState(this.getUpdatedState())
     window.addEventListener('resize', this.resize)
   }
 

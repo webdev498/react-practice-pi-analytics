@@ -21,13 +21,23 @@ const AddressTooltip = (props: Object) => {
     element = React.Children.only(children);
   }
 
+  var width = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+
+  var positionClass = ""
+  if (width < 900) {
+    positionClass = 'mdl-tooltip--media-medium'
+  }
+  if (width < 500){
+    positionClass = 'mdl-tooltip--media-small'
+  }
+
   return (
     <div style={{ display: 'inline-block' }} {...otherProps}>
       {React.cloneElement(element, { id })}
       <MDLComponent>
         {React.cloneElement(newLabel, {
           htmlFor: id,
-          className: classNames('mdl-tooltip', 'mdl-tooltip--top'),
+          className: classNames('mdl-tooltip', 'mdl-tooltip--top', positionClass),
         })}
       </MDLComponent>
     </div>
