@@ -15,7 +15,8 @@ import {
   undoServiceAddressSuccess,
   unsortedServiceAddressFulfilled,
   unsortedServiceAddressPreFetched,
-  unsortedServiceAddressFetchError
+  unsortedServiceAddressFetchError,
+  serviceAddressSkipped
 } from "../reducers/root";
 import {searchQueryError, searchQueryFulfilled} from "../reducers/search";
 import {firmCreationError, lawFirmCreated} from "../reducers/createfirmdialog";
@@ -29,7 +30,8 @@ import {
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
   UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS,
-  SET_SORTING_IMPOSSIBLE
+  SET_SORTING_IMPOSSIBLE,
+  SKIP_SERVICE_ADDRESS
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
 import Authentication from "../services/Authentication";
@@ -52,6 +54,13 @@ export const preFetchNextUnsortedServiceAddress = (action$: ActionsObservable<Ac
   action$.ofType(PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
     .mergeMap(action => post(ApiUrls.nextUnsortedServiceAddress, action.payload)
       .map(mapResponse(unsortedServiceAddressPreFetched))
+    );
+
+export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(SKIP_SERVICE_ADDRESS)
+    .mergeMap(action => post(ApiUrls.skipServiceAddress, action.payload)
+      .map(mapResponse(serviceAddressSkipped))
+      .catch(mapError(globalFetchError))
     );
 
 export const searchLawFirm = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
