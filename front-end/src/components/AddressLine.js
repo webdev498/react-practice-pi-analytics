@@ -3,6 +3,7 @@
 //@flow
 import React from "react";
 import {Tooltip} from "react-mdl";
+import AddressTooltip from "./AddressTooltip";
 
 type
 AddressLineProps = {
@@ -68,10 +69,10 @@ class AddressesLine extends React.Component {
 
     if (this.state.tooltip) {
       return (
-        <Tooltip label={this.props.fullText} position="top">
+        <AddressTooltip label={this.props.fullText} >
           <span ref={this.updateElement}
                 dangerouslySetInnerHTML={{__html: innerText}}/>
-        </Tooltip>
+        </AddressTooltip>
       )
     } else {
       return (
