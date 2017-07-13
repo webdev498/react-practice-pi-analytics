@@ -21,7 +21,7 @@ const AddressTooltip = (props: Object) => {
     element = React.Children.only(children);
   }
 
-  var width = Math.min(document.documentElement.clientWidth, window.innerWidth || 0);
+  const width = window.innerWidth
 
   var positionClass = ""
   if (width < 900) {
