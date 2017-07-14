@@ -5,7 +5,6 @@
 package pi.analytics.admin.serviceaddress.service.law_firm;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +19,6 @@ import pi.ip.proto.generated.ServiceAddress;
 /**
  * @author shane.xie@practiceinsight.io
  */
-@Singleton
 public class LawFirmRepository {
 
   @Inject

@@ -6,6 +6,7 @@ package pi.analytics.admin.serviceaddress.service.service_address;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.inject.util.Providers;
 import com.google.protobuf.Int64Value;
 
 import com.github.javafaker.Faker;
@@ -26,7 +27,9 @@ import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
+import pi.analytics.admin.serviceaddress.metrics.MetricsAccessor;
 import pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper;
+import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.user.UserService;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.CreateLawFirmResponse;
@@ -42,7 +45,6 @@ import pi.ip.generated.es.LocationRecord;
 import pi.ip.generated.es.ThinLawFirmRecord;
 import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
 import pi.ip.generated.es.ThinServiceAddressRecord;
-import pi.ip.generated.queue.QueueOnPremGrpc;
 import pi.ip.proto.generated.AckResponse;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -60,8 +62,6 @@ import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.r
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressForNonLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createUnsortedServiceAddress;
 
-//import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
-
 /**
  * @author shane.xie@practiceinsight.io
  */
@@ -69,6 +69,7 @@ public class ServiceAddressSorterTest {
 
   private Faker faker = new Faker();
   private UserService userService;
+  private LawFirmRepository lawFirmRepository;
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private ESMutationServiceGrpc.ESMutationServiceImplBase esMutationService;
@@ -79,6 +80,7 @@ public class ServiceAddressSorterTest {
   @Before
   public void setUp() throws Exception {
     userService = mock(UserService.class);
+    lawFirmRepository = mock(LawFirmRepository.class);
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
     esMutationService = mock(ESMutationServiceGrpc.ESMutationServiceImplBase.class);
@@ -102,16 +104,16 @@ public class ServiceAddressSorterTest {
     serviceAddressSorter = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(UserService.class)
-            .toInstance(userService);
+        bind(UserService.class).toInstance(userService);
+        bind(LawFirmRepository.class).toProvider(Providers.of(lawFirmRepository));
         bind(LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub.class)
             .toInstance(LawFirmDbServiceGrpc.newBlockingStub(channel));
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
         bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
             .toInstance(ESMutationServiceGrpc.newBlockingStub(channel));
-        bind(QueueOnPremGrpc.QueueOnPremBlockingStub.class)
-            .toInstance(QueueOnPremGrpc.newBlockingStub(channel));
+        bind(MetricsAccessor.class)
+            .toInstance(mock(MetricsAccessor.class));
       }
     }).getInstance(ServiceAddressSorter.class);
   }

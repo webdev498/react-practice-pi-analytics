@@ -59,10 +59,10 @@ public class ServiceAddressSorter {
   UserService userService;
 
   @Inject
-  LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
+  private LawFirmRepository lawFirmRepository;
 
   @Inject
-  private LawFirmRepository lawFirmRepository;
+  LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
 
   @Inject
   private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
