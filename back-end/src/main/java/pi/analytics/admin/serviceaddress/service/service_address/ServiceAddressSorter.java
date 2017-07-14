@@ -17,6 +17,10 @@ import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
+import pi.analytics.admin.serviceaddress.metrics.ImmutableMetricSpec;
+import pi.analytics.admin.serviceaddress.metrics.MetricSpec;
+import pi.analytics.admin.serviceaddress.metrics.MetricsAccessor;
+import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.user.UserService;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.DecrementSortScoreRequest;
@@ -58,10 +62,23 @@ public class ServiceAddressSorter {
   LawFirmDbServiceBlockingStub lawFirmDbServiceBlockingStub;
 
   @Inject
+  private LawFirmRepository lawFirmRepository;
+
+  @Inject
   private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   @Inject
   private ESMutationServiceBlockingStub esMutationServiceBlockingStub;
+
+  @Inject
+  private MetricsAccessor metricsAccessor;
+
+  private final MetricSpec sortOutcomeMetricSpec =
+      ImmutableMetricSpec
+          .builder()
+          .action("sort_outcome")
+          .addLabels("user", "action", "status", "result")
+          .build();
 
   public void assignServiceAddress(final AssignServiceAddressRequest request) {
     Preconditions.checkArgument(request.getLawFirmId() != 0, "Law firm ID is required");
@@ -117,7 +134,9 @@ public class ServiceAddressSorter {
             .build();
 
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
-    // TODO(SX): Add Prometheus metrics
+    metricsAccessor
+        .getCounter(sortOutcomeMetricSpec)
+        .inc(request.getRequestedBy(), "assign_to_law_firm", desiredSortStatus.name(), sortResult.name());
   }
 
   // The returned law firm id may be 0 if an actual sort was not carried out e.g. because we're trialling the user.
@@ -173,8 +192,17 @@ public class ServiceAddressSorter {
       );
     }
 
-    final SortResult sortResult = getCreateLawFirmAndAssignSortResult(
-        request.getServiceAddress(), lawFirmToBeCreated, (LawFirm lawFirm) -> { return true; /* TODO */ });
+    final SortResult sortResult = getCreateLawFirmAndAssignSortResult(request.getServiceAddress(), lawFirmToBeCreated,
+        (final LawFirm lawFirm) ->
+            // Does a law firm exist that has the same name as the one that we want to create,
+            // and is assigned the service address that is being sorted?
+            lawFirmRepository
+                .searchLawFirms(lawFirm.getName())
+                .stream()
+                .filter(agent -> agent.getServiceAddressesList().contains(request.getServiceAddress()))
+                .findFirst()
+                .isPresent()
+    );
 
     updateSortScoreIfNecessary(request.getServiceAddress(), desiredSortStatus, sortResult);
 
@@ -190,7 +218,9 @@ public class ServiceAddressSorter {
             .build();
 
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
-    // TODO(SX): Add Prometheus metrics
+    metricsAccessor
+        .getCounter(sortOutcomeMetricSpec)
+        .inc(request.getRequestedBy(), "create_law_firm", desiredSortStatus.name(), sortResult.name());
 
     return lawFirmId;
   }
@@ -245,7 +275,9 @@ public class ServiceAddressSorter {
             .build();
 
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
-    // TODO(SX): Add Prometheus metrics
+    metricsAccessor
+        .getCounter(sortOutcomeMetricSpec)
+        .inc(request.getRequestedBy(), "non_law_firm", desiredSortStatus.name(), sortResult.name());
   }
 
   public void unsortServiceAddress(final UnsortServiceAddressRequest request) {
@@ -266,6 +298,9 @@ public class ServiceAddressSorter {
 
   public void setSortingImpossible(final SetSortingImpossibleRequest request) {
     // TODO: This needs to be implemented. Current behaviour is to skip sorting the service address.
+//    metricsAccessor
+//        .getCounter(sortOutcomeMetricSpec)
+//        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortStatus.name(), sortResult.name());
   }
 
   private boolean updateSortScoreIfNecessary(final ServiceAddress serviceAddress,
