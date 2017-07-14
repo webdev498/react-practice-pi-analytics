@@ -30,25 +30,6 @@ public class ServiceAddressUtils {
     return isSorted(serviceAddress) && !serviceAddress.hasLawFirmId();
   }
 
-  public static SortResult getSortResult(final ServiceAddress preSort, final ServiceAddress postSort) {
-    Preconditions.checkArgument(preSort.getServiceAddressId() == postSort.getServiceAddressId(),
-        "Pre-sort and post-sort service address ids are different");
-
-    if (!isSorted(postSort)) {
-      return SortResult.NONE;
-    }
-    if (!isSorted(preSort) && isSorted(postSort)) {
-      return SortResult.NEW_SORT;
-    }
-    if (preSort.getLawFirmId() == postSort.getLawFirmId()) {
-      return SortResult.SAME;
-    }
-    if (preSort.getLawFirmId() != postSort.getLawFirmId()) {
-      return SortResult.DIFFERENT;
-    }
-    return SortResult.NONE;
-  }
-
   public static SortResult getAssignToLawFirmSortResult(final ServiceAddress preSort, final long assignedLawFirmId) {
     Preconditions.checkArgument(assignedLawFirmId != 0, "Invalid assigned law firm id");
 
