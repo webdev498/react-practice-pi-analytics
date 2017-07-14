@@ -4,6 +4,7 @@
 
 package pi.analytics.admin.serviceaddress.service.service_address;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.protobuf.Int64Value;
@@ -119,7 +120,7 @@ public class ServiceAddressSorter {
     }
 
     final SortResult sortResult = resultOfAssignToLawFirm(preSortServiceAddress, lawFirm.getLawFirmId());
-    updateSortScoreIfNecessary(preSortServiceAddress, desiredSortStatus, sortResult);
+    updateSortScoreIfNecessary(preSortServiceAddress.getServiceAddressId(), desiredSortStatus, sortResult);
 
     // Log sort decision/outcome
     final LogSortDecisionRequest logSortDecisionRequest =
@@ -201,7 +202,7 @@ public class ServiceAddressSorter {
                 .isPresent()
     );
 
-    updateSortScoreIfNecessary(request.getServiceAddress(), desiredSortStatus, sortResult);
+    updateSortScoreIfNecessary(request.getServiceAddress().getServiceAddressId(), desiredSortStatus, sortResult);
 
     // Log sort decision/outcome
     final LogSortDecisionRequest logSortDecisionRequest =
@@ -255,7 +256,7 @@ public class ServiceAddressSorter {
     }
 
     final SortResult sortResult = resultOfSetAsNonLawFirm(preSortServiceAddress);
-    updateSortScoreIfNecessary(preSortServiceAddress, desiredSortStatus, sortResult);
+    updateSortScoreIfNecessary(preSortServiceAddress.getServiceAddressId(), desiredSortStatus, sortResult);
 
     // Log sort decision/outcome
     final LogSortDecisionRequest logSortDecisionRequest =
@@ -296,7 +297,8 @@ public class ServiceAddressSorter {
 //        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortStatus.name(), sortResult.name());
   }
 
-  private SortStatus getDesiredSortStatus(final ServiceAddress preSort, final String username) {
+  @VisibleForTesting
+  SortStatus getDesiredSortStatus(final ServiceAddress preSort, final String username) {
     if (userService.canPerformRealSort(username)) {
       if (!isSorted(preSort)) {
         return SortStatus.SORT_APPLIED;
@@ -306,8 +308,8 @@ public class ServiceAddressSorter {
     return SortStatus.DRY_RUN_NOT_UPDATED;
   }
 
-  private boolean updateSortScoreIfNecessary(final ServiceAddress serviceAddress,
-                                             final SortStatus sortStatus, final SortResult sortResult) {
+  @VisibleForTesting
+  boolean updateSortScoreIfNecessary(final long serviceAddressId, final SortStatus sortStatus, final SortResult sortResult) {
     if (sortStatus != SortStatus.SORT_SCORE_UPDATED) {
       return false;
     }
@@ -316,7 +318,7 @@ public class ServiceAddressSorter {
         serviceAddressServiceBlockingStub.incrementSortScore(
             IncrementSortScoreRequest
                 .newBuilder()
-                .setServiceAddressId(serviceAddress.getServiceAddressId())
+                .setServiceAddressId(serviceAddressId)
                 .build()
         );
         return true;
@@ -324,7 +326,7 @@ public class ServiceAddressSorter {
         serviceAddressServiceBlockingStub.decrementSortScore(
             DecrementSortScoreRequest
                 .newBuilder()
-                .setServiceAddressId(serviceAddress.getServiceAddressId())
+                .setServiceAddressId(serviceAddressId)
                 .build()
         );
         return true;

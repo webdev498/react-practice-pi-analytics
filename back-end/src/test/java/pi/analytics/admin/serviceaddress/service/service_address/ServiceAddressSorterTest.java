@@ -33,12 +33,16 @@ import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.user.UserService;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
 import pi.ip.data.relational.generated.CreateLawFirmResponse;
+import pi.ip.data.relational.generated.DecrementSortScoreRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
+import pi.ip.data.relational.generated.IncrementSortScoreRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.ip.data.relational.generated.SortResult;
+import pi.ip.data.relational.generated.SortStatus;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.es.ESMutationServiceGrpc;
 import pi.ip.generated.es.LocationRecord;
@@ -49,11 +53,13 @@ import pi.ip.proto.generated.AckResponse;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -415,6 +421,48 @@ public class ServiceAddressSorterTest {
   @Test
   public void setSortingImpossible() throws Exception {
     // TODO
+  }
+
+  @Test
+  public void getDesiredSortStatus() throws Exception {
+    // TODO
+  }
+
+  @Test
+  public void updateSortScoreIfNecessary() throws Exception {
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .incrementSortScore(any(IncrementSortScoreRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .decrementSortScore(any(DecrementSortScoreRequest.class), any(StreamObserver.class));
+    final long id = faker.number().randomNumber();
+
+    // Test no update required
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.SORT_APPLIED, SortResult.SAME))
+        .isFalse()
+        .as("Sort score was not updated");
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.DRY_RUN_NOT_UPDATED, SortResult.DIFFERENT))
+        .isFalse()
+        .as("Sort score was not updated");
+    verify(serviceAddressService, never())
+        .incrementSortScore(any(IncrementSortScoreRequest.class), any(StreamObserver.class));
+    verify(serviceAddressService, never())
+        .decrementSortScore(any(DecrementSortScoreRequest.class), any(StreamObserver.class));
+
+    // Test score increment
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.SORT_SCORE_UPDATED, SortResult.SAME))
+        .isTrue()
+        .as("Sort score was updated");
+    verify(serviceAddressService, times(1))
+        .incrementSortScore(any(IncrementSortScoreRequest.class), any(StreamObserver.class));
+
+    // Test score decrement
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.SORT_SCORE_UPDATED, SortResult.DIFFERENT))
+        .isTrue()
+        .as("Sort score was updated");
+    verify(serviceAddressService, times(1))
+        .decrementSortScore(any(DecrementSortScoreRequest.class), any(StreamObserver.class));
   }
 
   private Stubber replyWithAckResponse() {
