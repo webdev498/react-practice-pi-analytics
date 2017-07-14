@@ -12,6 +12,9 @@ import pi.ip.data.relational.generated.SortResult;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isNonLawFirm;
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isSorted;
+
 /**
  * @author shane.xie@practiceinsight.io
  */
@@ -20,7 +23,7 @@ public class SortResultUtils {
   public static SortResult resultOfAssignToLawFirm(final ServiceAddress preSort, final long assignedLawFirmId) {
     Preconditions.checkArgument(assignedLawFirmId != 0, "Invalid assigned law firm id");
 
-    if (!preSort.getLawFirmStatusDetermined()) {
+    if (!isSorted(preSort)) {
       return SortResult.NEW_SORT;
     }
     if (preSort.getLawFirmId().getValue() == assignedLawFirmId) {
@@ -31,8 +34,11 @@ public class SortResultUtils {
 
   public static SortResult resultOfCreateLawFirmAndAssign(final ServiceAddress preSort, final LawFirm newLawFirm,
                                                           final Predicate<LawFirm> similarLawFirmExists) {
-    if (!preSort.getLawFirmStatusDetermined()) {
+    if (!isSorted(preSort)) {
       return SortResult.NEW_SORT;
+    }
+    if (isNonLawFirm(preSort)) {
+      return SortResult.DIFFERENT;
     }
     if (similarLawFirmExists.test(newLawFirm)) {
       return SortResult.SAME;
@@ -41,10 +47,10 @@ public class SortResultUtils {
   }
 
   public static SortResult resultOfSetAsNonLawFirm(final ServiceAddress preSort) {
-    if (!preSort.getLawFirmStatusDetermined()) {
+    if (!isSorted(preSort)) {
       return SortResult.NEW_SORT;
     }
-    if (!preSort.hasLawFirmId()) {
+    if (isNonLawFirm(preSort)) {
       return SortResult.SAME;
     }
     return SortResult.DIFFERENT;
