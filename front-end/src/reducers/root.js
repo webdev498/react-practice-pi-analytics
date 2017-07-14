@@ -94,6 +94,7 @@ export const globalFetchError = (): Action => ({
   type: Actions.MESSAGE,
   payload: {
     loading: false,
+    skipping: false,
     message: {
       text: "Error fetching data",
       error: true
@@ -106,6 +107,13 @@ export const unsortedServiceAddressFetchError = (): Action => ({
   payload: {
     loading: false,
     value: null
+  }
+});
+
+export const serviceAddressSkipped = (): Action => ({
+  type: Actions.MESSAGE,
+  payload: {
+    skipping: false
   }
 });
 
@@ -160,6 +168,15 @@ export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) 
     dispatch({type: FetchActions.FETCH_NEXT_UNSORTED_SERVICE_ADDRESS});
   }
 };
+
+export const skipServiceAddress = (serviceAddressId: string): Action => (dispatch: Dispatch) => {
+  dispatch(
+    {
+      type: FetchActions.SKIP_SERVICE_ADDRESS,
+      payload: {skipping: true, request: {serviceAddressId: serviceAddressId}}
+    });
+  dispatch(getNextUnsortedServiceAddress());
+}
 
 export const dismissServiceAddress = (serviceAddressId: string, fetchActionType: string): Action => (dispatch: Dispatch) => {
   dispatch({type: Actions.START_FETCH, payload: {value: undefined, loading: true}})

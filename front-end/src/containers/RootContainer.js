@@ -8,7 +8,8 @@ import {
   getNextUnsortedServiceAddress,
   undoServiceAddress,
   toggleApplicationsPanel,
-  hideMessage
+  hideMessage,
+  skipServiceAddress
 } from "../reducers/root";
 import * as FetchActions from "../actions/FetchActions";
 import type {Dispatch, State} from "redux";
@@ -21,15 +22,16 @@ const mapStateToProps = (state: State) => ({
   loading: state.root.loading,
   undo: state.root.undo,
   message: state.root.message,
-  applicationsPanelOpen: state.root.applicationsPanelOpen
+  applicationsPanelOpen: state.root.applicationsPanelOpen,
+  skipping: state.root.skipping
 })
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   onCreateFirm: () => {
     dispatch(createFirm());
   },
-  onSkip: () => {
-    dispatch(getNextUnsortedServiceAddress());
+  onSkip: (serviceAddressId: string) => {
+    dispatch(skipServiceAddress(serviceAddressId));
   },
   onGetNextServiceAddress: () => {
     dispatch(!Authentication.user ? {type: FetchActions.GET_CURRENT_USER} : getNextUnsortedServiceAddress());
