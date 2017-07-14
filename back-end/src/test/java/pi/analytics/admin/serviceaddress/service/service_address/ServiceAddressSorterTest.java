@@ -66,6 +66,7 @@ import static org.mockito.Mockito.when;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWith;
 import static pi.analytics.admin.serviceaddress.service.helpers.GrpcTestHelper.replyWithError;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressForNonLawFirm;
+import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createUnsortedServiceAddress;
 
 /**
@@ -424,8 +425,43 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void getDesiredSortStatus() throws Exception {
-    // TODO
+  public void getDesiredSortStatus_dry_run() throws Exception {
+    when(userService.canPerformRealSort(anyString())).thenReturn(false);
+    assertThat(serviceAddressSorter.getDesiredSortStatus(
+        createUnsortedServiceAddress(faker.company().name()), faker.name().username())
+    )
+    .as("User is not allowed to perform a real sort")
+    .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
+    assertThat(serviceAddressSorter.getDesiredSortStatus(
+        createServiceAddressForNonLawFirm(faker.company().name()), faker.name().username())
+    )
+    .as("User is not allowed to perform a real sort")
+    .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
+  }
+
+  @Test
+  public void getDesiredSortStatus_score_updated() throws Exception {
+    when(userService.canPerformRealSort(anyString())).thenReturn(true);
+    assertThat(serviceAddressSorter.getDesiredSortStatus(
+        createServiceAddressForNonLawFirm(faker.company().name()), faker.name().username())
+    )
+    .as("User is allowed to perform a real sort but the service address is already sorted")
+    .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
+    assertThat(serviceAddressSorter.getDesiredSortStatus(
+        createServiceAddressToMatchLawFirm(LawFirmTestHelper.createLawFirm()), faker.name().username())
+    )
+    .as("User is allowed to perform a real sort but the service address is already sorted")
+    .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
+  }
+
+  @Test
+  public void getDesiredSortStatus_sort_applied() throws Exception {
+    when(userService.canPerformRealSort(anyString())).thenReturn(true);
+    assertThat(serviceAddressSorter.getDesiredSortStatus(
+        createUnsortedServiceAddress(faker.company().name()), faker.name().username())
+    )
+    .as("User is allowed to perform a real sort and the service address is unsorted")
+    .isEqualTo(SortStatus.SORT_APPLIED);
   }
 
   @Test
