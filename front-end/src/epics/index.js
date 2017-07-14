@@ -12,13 +12,15 @@ import {
   setServiceAddressAsNonLawFirm,
   undoServiceAddress,
   unsortServiceAddress,
-  setSortingImpossible
+  setSortingImpossible,
+  skipServiceAddress
 } from "./Backend";
 
 const rootEpic = combineEpics(
   createLawFirm,
   searchLawFirm,
   getCurrentUser,
+  skipServiceAddress,
   undoServiceAddress,
   setSortingImpossible,
   assignServiceAddress,
