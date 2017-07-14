@@ -42,10 +42,10 @@ import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
-import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.getAssignToLawFirmSortResult;
-import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.getCreateLawFirmAndAssignSortResult;
-import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.getDesiredSortStatus;
-import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.getSetAsNonLawFirmSortResult;
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isSorted;
+import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfAssignToLawFirm;
+import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfCreateLawFirmAndAssign;
+import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfSetAsNonLawFirm;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -101,8 +101,7 @@ public class ServiceAddressSorter {
       throw new IllegalArgumentException("Cannot assign service address to a non-existent law firm");
     }
     final LawFirm lawFirm = getLawFirmResponse.getLawFirm();
-    final SortStatus desiredSortStatus = getDesiredSortStatus(preSortServiceAddress, request.getRequestedBy(),
-        userService::canPerformRealSort);
+    final SortStatus desiredSortStatus = getDesiredSortStatus(preSortServiceAddress, request.getRequestedBy());
 
     if (desiredSortStatus == SortStatus.SORT_APPLIED) {
       // Perform an actual sort
@@ -119,10 +118,10 @@ public class ServiceAddressSorter {
       esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
     }
 
-    final SortResult sortResult = getAssignToLawFirmSortResult(preSortServiceAddress, lawFirm.getLawFirmId());
+    final SortResult sortResult = resultOfAssignToLawFirm(preSortServiceAddress, lawFirm.getLawFirmId());
     updateSortScoreIfNecessary(preSortServiceAddress, desiredSortStatus, sortResult);
 
-    // Log sort decision
+    // Log sort decision/outcome
     final LogSortDecisionRequest logSortDecisionRequest =
         LogSortDecisionRequest
             .newBuilder()
@@ -132,7 +131,6 @@ public class ServiceAddressSorter {
             .setSortStatus(desiredSortStatus)
             .setSortResult(sortResult)
             .build();
-
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
     metricsAccessor
         .getCounter(sortOutcomeMetricSpec)
@@ -154,8 +152,7 @@ public class ServiceAddressSorter {
             .setWebsiteUrl(request.getWebsiteUrl())
             .build();
 
-    final SortStatus desiredSortStatus = getDesiredSortStatus(request.getServiceAddress(), request.getRequestedBy(),
-        userService::canPerformRealSort);
+    final SortStatus desiredSortStatus = getDesiredSortStatus(request.getServiceAddress(), request.getRequestedBy());
 
     long lawFirmId = 0;
 
@@ -192,7 +189,7 @@ public class ServiceAddressSorter {
       );
     }
 
-    final SortResult sortResult = getCreateLawFirmAndAssignSortResult(request.getServiceAddress(), lawFirmToBeCreated,
+    final SortResult sortResult = resultOfCreateLawFirmAndAssign(request.getServiceAddress(), lawFirmToBeCreated,
         (final LawFirm lawFirm) ->
             // Does a law firm exist that has the same name as the one that we want to create,
             // and is assigned the service address that is being sorted?
@@ -206,7 +203,7 @@ public class ServiceAddressSorter {
 
     updateSortScoreIfNecessary(request.getServiceAddress(), desiredSortStatus, sortResult);
 
-    // Log sort decision
+    // Log sort decision/outcome
     final LogSortDecisionRequest logSortDecisionRequest =
         LogSortDecisionRequest
             .newBuilder()
@@ -216,7 +213,6 @@ public class ServiceAddressSorter {
             .setSortStatus(desiredSortStatus)
             .setSortResult(sortResult)
             .build();
-
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
     metricsAccessor
         .getCounter(sortOutcomeMetricSpec)
@@ -235,8 +231,7 @@ public class ServiceAddressSorter {
             .build()
     );
 
-    final SortStatus desiredSortStatus = getDesiredSortStatus(preSortServiceAddress, request.getRequestedBy(),
-        userService::canPerformRealSort);
+    final SortStatus desiredSortStatus = getDesiredSortStatus(preSortServiceAddress, request.getRequestedBy());
 
     if (desiredSortStatus == SortStatus.SORT_APPLIED) {
       // Perform an actual sort
@@ -259,11 +254,10 @@ public class ServiceAddressSorter {
       esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
     }
 
-    final SortResult sortResult = getSetAsNonLawFirmSortResult(preSortServiceAddress);
-
+    final SortResult sortResult = resultOfSetAsNonLawFirm(preSortServiceAddress);
     updateSortScoreIfNecessary(preSortServiceAddress, desiredSortStatus, sortResult);
 
-    // Log sort decision
+    // Log sort decision/outcome
     final LogSortDecisionRequest logSortDecisionRequest =
         LogSortDecisionRequest
             .newBuilder()
@@ -273,7 +267,6 @@ public class ServiceAddressSorter {
             .setSortStatus(desiredSortStatus)
             .setSortResult(sortResult)
             .build();
-
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
     metricsAccessor
         .getCounter(sortOutcomeMetricSpec)
@@ -301,6 +294,16 @@ public class ServiceAddressSorter {
 //    metricsAccessor
 //        .getCounter(sortOutcomeMetricSpec)
 //        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortStatus.name(), sortResult.name());
+  }
+
+  private SortStatus getDesiredSortStatus(final ServiceAddress preSort, final String username) {
+    if (userService.canPerformRealSort(username)) {
+      if (!isSorted(preSort)) {
+        return SortStatus.SORT_APPLIED;
+      }
+      return SortStatus.SORT_SCORE_UPDATED;
+    }
+    return SortStatus.DRY_RUN_NOT_UPDATED;
   }
 
   private boolean updateSortScoreIfNecessary(final ServiceAddress serviceAddress,
