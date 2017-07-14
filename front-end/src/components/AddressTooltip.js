@@ -4,7 +4,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import MDLComponent from "react-mdl/src/utils/MDLComponent";
+import {MDLComponent} from "react-mdl";
 
 const AddressTooltip = (props: Object) => {
   const { label, children, ...otherProps } = props;
