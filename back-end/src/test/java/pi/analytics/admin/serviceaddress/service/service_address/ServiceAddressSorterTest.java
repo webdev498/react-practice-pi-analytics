@@ -14,6 +14,7 @@ import com.github.javafaker.Faker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Stubber;
 
 import java.util.UUID;
@@ -27,7 +28,6 @@ import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
-import pi.analytics.admin.serviceaddress.metrics.MetricsAccessor;
 import pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper;
 import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.user.UserService;
@@ -39,6 +39,7 @@ import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.IncrementSortScoreRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
+import pi.ip.data.relational.generated.LogSortDecisionRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
 import pi.ip.data.relational.generated.SortResult;
@@ -119,8 +120,6 @@ public class ServiceAddressSorterTest {
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
         bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
             .toInstance(ESMutationServiceGrpc.newBlockingStub(channel));
-        bind(MetricsAccessor.class)
-            .toInstance(mock(MetricsAccessor.class));
       }
     }).getInstance(ServiceAddressSorter.class);
   }
@@ -144,8 +143,9 @@ public class ServiceAddressSorterTest {
         serviceAddressSorter.assignServiceAddress(
             AssignServiceAddressRequest
                 .newBuilder()
-                .setServiceAddressId(faker.number().randomNumber())
+                .setServiceAddressId(faker.number().randomNumber(8, true))
                 .setLawFirmId(lawFirm.getLawFirmId())
+                .setRequestedBy(faker.name().username())
                 .build()
         )
     )
@@ -173,7 +173,8 @@ public class ServiceAddressSorterTest {
                 AssignServiceAddressRequest
                     .newBuilder()
                     .setServiceAddressId(serviceAddress.getServiceAddressId())
-                    .setLawFirmId(faker.number().randomNumber())
+                    .setLawFirmId(faker.number().randomNumber(8, true))
+                    .setRequestedBy(faker.name().username())
                     .build()
             )
     )
@@ -186,31 +187,43 @@ public class ServiceAddressSorterTest {
     final LawFirm lawFirm = LawFirmTestHelper.createLawFirm();
     final ServiceAddress serviceAddress = createUnsortedServiceAddress(lawFirm.getName());
 
-    when(userService.canPerformRealSort(anyString())).thenReturn(true);
+    final String username = faker.name().username();
+    when(userService.canPerformRealSort(eq(username))).thenReturn(true);
 
     replyWithAckResponse()
         .when(serviceAddressService)
         .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
-
     replyWithAckResponse()
         .when(esMutationService)
         .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
-
     replyWith(GetLawFirmByIdResponse.newBuilder().setLawFirm(lawFirm).build())
         .when(lawFirmDbService)
         .getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
-
     replyWith(serviceAddress)
         .when(serviceAddressService)
         .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
 
     serviceAddressSorter.assignServiceAddress(
         AssignServiceAddressRequest
             .newBuilder()
             .setLawFirmId(lawFirm.getLawFirmId())
             .setServiceAddressId(serviceAddress.getServiceAddressId())
-            .setRequestedBy("shane")
+            .setRequestedBy(username)
             .build()
+    );
+
+    verify(serviceAddressService).assignServiceAddressToLawFirm(
+        eq(
+            AssignServiceAddressToLawFirmRequest
+                .newBuilder()
+                .setLawFirmId(lawFirm.getLawFirmId())
+                .setServiceAddressId(serviceAddress.getServiceAddressId())
+                .build()
+        ),
+        any(StreamObserver.class)
     );
 
     verify(esMutationService).upsertThinLawFirmServiceAddressRecord(
@@ -240,12 +253,16 @@ public class ServiceAddressSorterTest {
         ),
         any(StreamObserver.class)
     );
-    verify(serviceAddressService).assignServiceAddressToLawFirm(
+
+    verify(serviceAddressService).logSortDecision(
         eq(
-            AssignServiceAddressToLawFirmRequest
+            LogSortDecisionRequest
                 .newBuilder()
-                .setLawFirmId(lawFirm.getLawFirmId())
-                .setServiceAddressId(serviceAddress.getServiceAddressId())
+                .setUsername(username)
+                .setServiceAddress(serviceAddress)
+                .setAssignToLawFirm(lawFirm)
+                .setSortStatus(SortStatus.SORT_APPLIED)
+                .setSortResult(SortResult.NEW_SORT)
                 .build()
         ),
         any(StreamObserver.class)
@@ -254,20 +271,22 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void createLawFirm() throws Exception {
+    final String username = faker.name().username();
+    when(userService.canPerformRealSort(eq(username))).thenReturn(true);
+
     final CreateLawFirmRequest createLawFirmRequest =
         CreateLawFirmRequest
             .newBuilder()
-            .setRequestedBy(faker.name().username())
+            .setRequestedBy(username)
             .setName(faker.company().name())
             .setState(faker.address().state())
             .setCountryCode(faker.address().countryCode())
             .setWebsiteUrl(faker.internet().url())
-            .setServiceAddress(createUnsortedServiceAddress(faker.company().name()))
+            .setServiceAddress(createUnsortedServiceAddress(faker.name().fullName()))
             .build();
 
     final long newLawFirmId = faker.number().randomNumber(8, true);
 
-    // lawFirmDbService.createLawFirm()
     replyWith(
         CreateLawFirmResponse
             .newBuilder()
@@ -277,20 +296,20 @@ public class ServiceAddressSorterTest {
     .when(lawFirmDbService)
     .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
 
-    // serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm()
     replyWith(AckResponse.getDefaultInstance())
         .when(serviceAddressService)
         .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
-
-    // datastoreSg3ServiceBlockingStub.upsertIntoLawFirmCaches()
     replyWith(AckResponse.getDefaultInstance())
         .when(esMutationService)
         .upsertLawFirm(any(LawFirm.class), any(StreamObserver.class));
-
-    // datastoreSg3ServiceBlockingStub.upsertThinLawFirmServiceAddress()
     replyWith(AckResponse.getDefaultInstance())
         .when(esMutationService)
         .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
+    final ArgumentCaptor<LogSortDecisionRequest> logSortDecisionRequestArgument =
+        ArgumentCaptor.forClass(LogSortDecisionRequest.class);
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .logSortDecision(logSortDecisionRequestArgument.capture(), any(StreamObserver.class));
 
     // Run test
     serviceAddressSorter.createLawFirmAndAssignServiceAddress(createLawFirmRequest);
@@ -359,6 +378,26 @@ public class ServiceAddressSorterTest {
             ),
             any(StreamObserver.class)
         );
+
+    assertThat(logSortDecisionRequestArgument.getValue().getUsername())
+        .as("The username must match")
+        .isEqualTo(username);
+
+    assertThat(logSortDecisionRequestArgument.getValue().getCreateLawFirm().getName())
+        .as("The law firm names must match")
+        .isEqualTo(createLawFirmRequest.getName());
+
+    assertThat(logSortDecisionRequestArgument.getValue().getServiceAddress().getName())
+        .as("The service address names must match")
+        .isEqualTo(createLawFirmRequest.getServiceAddress().getName());
+
+    assertThat(logSortDecisionRequestArgument.getValue().getSortStatus())
+        .as("Applied sort status because the user is allowed to sort service addresses")
+        .isEqualTo(SortStatus.SORT_APPLIED);
+
+    assertThat(logSortDecisionRequestArgument.getValue().getSortResult())
+        .as("This is a new sort because the service address was unsorted")
+        .isEqualTo(SortResult.NEW_SORT);
   }
 
   @Test
@@ -380,7 +419,14 @@ public class ServiceAddressSorterTest {
 
   @Test
   public void setServiceAddressAsNonLawFirm() throws Exception {
-    final ServiceAddress serviceAddress = createServiceAddressForNonLawFirm(faker.company().name());
+    final ServiceAddress serviceAddress =
+        ServiceAddress
+            .newBuilder(createServiceAddressForNonLawFirm(faker.company().name()))
+            .setLawFirmStatusDetermined(false)  // Unsorted
+            .build();
+
+    final String username = faker.name().username();
+    when(userService.canPerformRealSort(eq(username))).thenReturn(true);
 
     replyWithAckResponse()
         .when(serviceAddressService)
@@ -391,10 +437,28 @@ public class ServiceAddressSorterTest {
     replyWithAckResponse()
         .when(esMutationService)
         .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
 
     serviceAddressSorter.setServiceAddressAsNonLawFirm(
         pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
-            .newBuilder().setServiceAddressId(1L).build());
+            .newBuilder()
+            .setServiceAddressId(serviceAddress.getServiceAddressId())
+            .setRequestedBy(username)
+            .build()
+    );
+
+    verify(serviceAddressService, times(1))
+        .setServiceAddressAsNonLawFirm(
+            eq(
+                SetServiceAddressAsNonLawFirmRequest
+                    .newBuilder()
+                    .setServiceAddressId(serviceAddress.getServiceAddressId())
+                    .build()
+            ),
+            any(StreamObserver.class)
+        );
 
     verify(esMutationService).upsertThinLawFirmServiceAddressRecord(
         eq(
@@ -414,6 +478,20 @@ public class ServiceAddressSorterTest {
                                 .setLat((float) serviceAddress.getLatitude())
                         )
                 ).build()
+        ),
+        any(StreamObserver.class)
+    );
+
+    verify(serviceAddressService).logSortDecision(
+        eq(
+            LogSortDecisionRequest
+                .newBuilder()
+                .setUsername(username)
+                .setServiceAddress(serviceAddress)
+                .setNonLawFirm(true)
+                .setSortStatus(SortStatus.SORT_APPLIED)
+                .setSortResult(SortResult.NEW_SORT)
+                .build()
         ),
         any(StreamObserver.class)
     );
@@ -472,7 +550,7 @@ public class ServiceAddressSorterTest {
     replyWithAckResponse()
         .when(serviceAddressService)
         .decrementSortScore(any(DecrementSortScoreRequest.class), any(StreamObserver.class));
-    final long id = faker.number().randomNumber();
+    final long id = faker.number().randomNumber(8, true);
 
     // Test no update required
     assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.SORT_APPLIED, SortResult.SAME))
