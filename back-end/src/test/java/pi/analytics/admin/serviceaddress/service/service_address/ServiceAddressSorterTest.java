@@ -27,6 +27,7 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
+import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper;
 import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
@@ -38,6 +39,7 @@ import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.IncrementSortScoreRequest;
+import pi.ip.data.relational.generated.InsufficientInfoToSortRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.LogSortDecisionRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
@@ -149,8 +151,8 @@ public class ServiceAddressSorterTest {
                 .build()
         )
     )
-    .as("The service address does not exist")
-    .isInstanceOf(Status.NOT_FOUND.asRuntimeException().getClass());
+        .as("The service address does not exist")
+        .isInstanceOf(Status.NOT_FOUND.asRuntimeException().getClass());
   }
 
   @Test
@@ -178,8 +180,8 @@ public class ServiceAddressSorterTest {
                     .build()
             )
     )
-    .as("The law firm does not exist")
-    .isInstanceOf(IllegalArgumentException.class);
+        .as("The law firm does not exist")
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -293,8 +295,8 @@ public class ServiceAddressSorterTest {
             .setLawFirmId(newLawFirmId)
             .build()
     )
-    .when(lawFirmDbService)
-    .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
+        .when(lawFirmDbService)
+        .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
 
     replyWith(AckResponse.getDefaultInstance())
         .when(serviceAddressService)
@@ -418,6 +420,36 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
+  public void testSetInsufficientInfoSortStatus() {
+    final String username = faker.name().username();
+    final ServiceAddress serviceAddress = createUnsortedServiceAddress(faker.company().name());
+
+    when(userService.canPerformRealSort(eq(username))).thenReturn(true);
+
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .insufficientInfoToSort(any(InsufficientInfoToSortRequest.class), any(StreamObserver.class));
+
+    serviceAddressSorter.setInsufficientInfoStatus(
+        SetInsufficientInfoStatusRequest
+            .newBuilder()
+            .setServiceAddressId(1L)
+            .setRequestedBy(username)
+            .build()
+    );
+
+    verify(serviceAddressService, times(1))
+        .insufficientInfoToSort(
+            eq(InsufficientInfoToSortRequest.newBuilder().setServiceAddressId(1L).build()),
+            any(StreamObserver.class)
+        );
+  }
+
+  @Test
   public void setServiceAddressAsNonLawFirm() throws Exception {
     final ServiceAddress serviceAddress =
         ServiceAddress
@@ -508,13 +540,13 @@ public class ServiceAddressSorterTest {
     assertThat(serviceAddressSorter.getDesiredSortStatus(
         createUnsortedServiceAddress(faker.company().name()), faker.name().username())
     )
-    .as("User is not allowed to perform a real sort")
-    .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
+        .as("User is not allowed to perform a real sort")
+        .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
     assertThat(serviceAddressSorter.getDesiredSortStatus(
         createServiceAddressForNonLawFirm(faker.company().name()), faker.name().username())
     )
-    .as("User is not allowed to perform a real sort")
-    .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
+        .as("User is not allowed to perform a real sort")
+        .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
   }
 
   @Test
@@ -523,13 +555,13 @@ public class ServiceAddressSorterTest {
     assertThat(serviceAddressSorter.getDesiredSortStatus(
         createServiceAddressForNonLawFirm(faker.company().name()), faker.name().username())
     )
-    .as("User is allowed to perform a real sort but the service address is already sorted")
-    .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
+        .as("User is allowed to perform a real sort but the service address is already sorted")
+        .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
     assertThat(serviceAddressSorter.getDesiredSortStatus(
         createServiceAddressToMatchLawFirm(LawFirmTestHelper.createLawFirm()), faker.name().username())
     )
-    .as("User is allowed to perform a real sort but the service address is already sorted")
-    .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
+        .as("User is allowed to perform a real sort but the service address is already sorted")
+        .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
   }
 
   @Test
@@ -538,8 +570,8 @@ public class ServiceAddressSorterTest {
     assertThat(serviceAddressSorter.getDesiredSortStatus(
         createUnsortedServiceAddress(faker.company().name()), faker.name().username())
     )
-    .as("User is allowed to perform a real sort and the service address is unsorted")
-    .isEqualTo(SortStatus.SORT_APPLIED);
+        .as("User is allowed to perform a real sort and the service address is unsorted")
+        .isEqualTo(SortStatus.SORT_APPLIED);
   }
 
   @Test
