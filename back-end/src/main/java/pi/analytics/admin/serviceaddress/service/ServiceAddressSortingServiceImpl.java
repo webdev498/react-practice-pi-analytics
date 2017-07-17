@@ -178,12 +178,13 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   }
 
   @Override
-  public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<LawFirmCreated> responseObserver) {
+  public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<LawFirmCreated>
+      responseObserver) {
     try {
       responseObserver.onNext(
           LawFirmCreated
               .newBuilder()
-              .setLawFirmId(lawFirmRepository.createLawFirm(request))
+              .setLawFirmId(serviceAddressSorter.createLawFirmAndAssignServiceAddress(request))
               .build()
       );
       responseObserver.onCompleted();

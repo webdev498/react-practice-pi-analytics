@@ -33,7 +33,7 @@ public class UserService {
     return staffUsers.contains(username.toLowerCase());
   }
 
-  public boolean canSort(final String username) {
+  public boolean canPerformRealSort(final String username) {
     return isStaff(username);
   }
 
