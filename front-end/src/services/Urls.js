@@ -12,7 +12,7 @@ export const ApiUrls = {
   createLawFirm: API_BASE_URL + "api/v1/addressing/createlawfirm",
   setServiceAddressAsNonLawFirm: API_BASE_URL + "api/v1/addressing/setserviceaddressasnonlawfirm",
   skipServiceAddress: API_BASE_URL + "api/v1/addressing/skipserviceaddress",
-  setSortingImpossible: API_BASE_URL + "api/v1/addressing/setsortingimpossible"
+  setInsufficientInfoStatus: API_BASE_URL + "api/v1/addressing/insufficientinfotosort"
 }
 
 export const OuterUrls = {

@@ -6,8 +6,8 @@ import "react-mdl/extra/material.js";
 import "../styles/main.scss";
 import FirmDisplay from "./FirmDisplay";
 import {Button, Cell, Content, Grid, Header, HeaderRow, Icon, Layout, ProgressBar, Snackbar} from "react-mdl";
-import AddressesContainer from "../containers/AddressesContainer";
-import CreateFirmDialogContainer from "../containers/CreateFirmDialogContainer";
+import SuggestedAgentsContainer from "../containers/SuggestedAgentsContainer";
+import CreateLawFirmDialogContainer from "../containers/CreateLawFirmDialogContainer";
 import UndoFooter from "./UndoFooter";
 import PatentApplicationsPanel from "./PatentApplicationsPanel";
 
@@ -21,7 +21,7 @@ RootProps = {
   applicationsPanelOpen: boolean,
   onCreateFirm: (event: Event) => void,
   onSetAsNonLawFirm: (serviceAddressId: string) => void,
-  onSetSortingImpossible: (serviceAddressId: string) => void,
+  onSetInsufficientInfoStatus: (serviceAddressId: string) => void,
   onSkip: (serviceAddressId: string) => void,
   onUndo: (serviceAddressId: string) => void,
   onGetNextServiceAddress: () => void,
@@ -64,7 +64,7 @@ class Root extends React.Component {
               <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}>
                 <Icon name="not_interested"/> Not a Law Firm
               </Button>
-              <Button disabled raised onClick={() => this.props.onSetSortingImpossible(serviceAddressId)}>
+              <Button raised onClick={() => this.props.onSetInsufficientInfoStatus(serviceAddressId)}>
                 <Icon name="highlight_off"/> Sorting Impossible
               </Button>
               <Button raised onClick={() => {this.props.onSkip(serviceAddressId)}}><Icon name="skip_next"/> Skip</Button>
@@ -72,8 +72,8 @@ class Root extends React.Component {
                 name="description"/> View Sample Applications</Button>
           </div>
           <PatentApplicationsPanel open={this.props.applicationsPanelOpen} applications={this.props.value.samplePatentApps}/>
-          <AddressesContainer/>
-          <CreateFirmDialogContainer/>
+          <SuggestedAgentsContainer/>
+          <CreateLawFirmDialogContainer/>
         </Content>
       )
     } else if (!this.props.loading) {
