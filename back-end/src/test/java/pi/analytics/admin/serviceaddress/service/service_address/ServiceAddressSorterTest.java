@@ -42,8 +42,8 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.LogSortDecisionRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.ip.data.relational.generated.SortEffect;
 import pi.ip.data.relational.generated.SortResult;
-import pi.ip.data.relational.generated.SortStatus;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.es.ESMutationServiceGrpc;
 import pi.ip.generated.es.LocationRecord;
@@ -261,7 +261,7 @@ public class ServiceAddressSorterTest {
                 .setUsername(username)
                 .setServiceAddress(serviceAddress)
                 .setAssignToLawFirm(lawFirm)
-                .setSortStatus(SortStatus.SORT_APPLIED)
+                .setSortEffect(SortEffect.SORT_APPLIED)
                 .setSortResult(SortResult.NEW_SORT)
                 .build()
         ),
@@ -391,9 +391,9 @@ public class ServiceAddressSorterTest {
         .as("The service address names must match")
         .isEqualTo(createLawFirmRequest.getServiceAddress().getName());
 
-    assertThat(logSortDecisionRequestArgument.getValue().getSortStatus())
+    assertThat(logSortDecisionRequestArgument.getValue().getSortEffect())
         .as("Applied sort status because the user is allowed to sort service addresses")
-        .isEqualTo(SortStatus.SORT_APPLIED);
+        .isEqualTo(SortEffect.SORT_APPLIED);
 
     assertThat(logSortDecisionRequestArgument.getValue().getSortResult())
         .as("This is a new sort because the service address was unsorted")
@@ -489,7 +489,7 @@ public class ServiceAddressSorterTest {
                 .setUsername(username)
                 .setServiceAddress(serviceAddress)
                 .setNonLawFirm(true)
-                .setSortStatus(SortStatus.SORT_APPLIED)
+                .setSortEffect(SortEffect.SORT_APPLIED)
                 .setSortResult(SortResult.NEW_SORT)
                 .build()
         ),
@@ -498,48 +498,48 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void setSortingImpossible() throws Exception {
+  public void setInsufficientInfoToSort() throws Exception {
     // TODO
   }
 
   @Test
   public void getDesiredSortStatus_dry_run() throws Exception {
     when(userService.canPerformRealSort(anyString())).thenReturn(false);
-    assertThat(serviceAddressSorter.getDesiredSortStatus(
+    assertThat(serviceAddressSorter.getDesiredSortEffect(
         createUnsortedServiceAddress(faker.company().name()), faker.name().username())
     )
     .as("User is not allowed to perform a real sort")
-    .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
-    assertThat(serviceAddressSorter.getDesiredSortStatus(
+    .isEqualTo(SortEffect.DRY_RUN_NOT_UPDATED);
+    assertThat(serviceAddressSorter.getDesiredSortEffect(
         createServiceAddressForNonLawFirm(faker.company().name()), faker.name().username())
     )
     .as("User is not allowed to perform a real sort")
-    .isEqualTo(SortStatus.DRY_RUN_NOT_UPDATED);
+    .isEqualTo(SortEffect.DRY_RUN_NOT_UPDATED);
   }
 
   @Test
   public void getDesiredSortStatus_score_updated() throws Exception {
     when(userService.canPerformRealSort(anyString())).thenReturn(true);
-    assertThat(serviceAddressSorter.getDesiredSortStatus(
+    assertThat(serviceAddressSorter.getDesiredSortEffect(
         createServiceAddressForNonLawFirm(faker.company().name()), faker.name().username())
     )
     .as("User is allowed to perform a real sort but the service address is already sorted")
-    .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
-    assertThat(serviceAddressSorter.getDesiredSortStatus(
+    .isEqualTo(SortEffect.SORT_SCORE_UPDATED);
+    assertThat(serviceAddressSorter.getDesiredSortEffect(
         createServiceAddressToMatchLawFirm(LawFirmTestHelper.createLawFirm()), faker.name().username())
     )
     .as("User is allowed to perform a real sort but the service address is already sorted")
-    .isEqualTo(SortStatus.SORT_SCORE_UPDATED);
+    .isEqualTo(SortEffect.SORT_SCORE_UPDATED);
   }
 
   @Test
   public void getDesiredSortStatus_sort_applied() throws Exception {
     when(userService.canPerformRealSort(anyString())).thenReturn(true);
-    assertThat(serviceAddressSorter.getDesiredSortStatus(
+    assertThat(serviceAddressSorter.getDesiredSortEffect(
         createUnsortedServiceAddress(faker.company().name()), faker.name().username())
     )
     .as("User is allowed to perform a real sort and the service address is unsorted")
-    .isEqualTo(SortStatus.SORT_APPLIED);
+    .isEqualTo(SortEffect.SORT_APPLIED);
   }
 
   @Test
@@ -553,10 +553,10 @@ public class ServiceAddressSorterTest {
     final long id = faker.number().randomNumber(8, true);
 
     // Test no update required
-    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.SORT_APPLIED, SortResult.SAME))
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortEffect.SORT_APPLIED, SortResult.SAME))
         .isFalse()
         .as("Sort score was not updated");
-    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.DRY_RUN_NOT_UPDATED, SortResult.DIFFERENT))
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortEffect.DRY_RUN_NOT_UPDATED, SortResult.DIFFERENT))
         .isFalse()
         .as("Sort score was not updated");
     verify(serviceAddressService, never())
@@ -565,14 +565,14 @@ public class ServiceAddressSorterTest {
         .decrementSortScore(any(DecrementSortScoreRequest.class), any(StreamObserver.class));
 
     // Test score increment
-    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.SORT_SCORE_UPDATED, SortResult.SAME))
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortEffect.SORT_SCORE_UPDATED, SortResult.SAME))
         .isTrue()
         .as("Sort score was updated");
     verify(serviceAddressService, times(1))
         .incrementSortScore(any(IncrementSortScoreRequest.class), any(StreamObserver.class));
 
     // Test score decrement
-    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortStatus.SORT_SCORE_UPDATED, SortResult.DIFFERENT))
+    assertThat(serviceAddressSorter.updateSortScoreIfNecessary(id, SortEffect.SORT_SCORE_UPDATED, SortResult.DIFFERENT))
         .isTrue()
         .as("Sort score was updated");
     verify(serviceAddressService, times(1))

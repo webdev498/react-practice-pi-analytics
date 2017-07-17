@@ -16,6 +16,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
+import pi.admin.service_address_sorting.generated.InsufficientInfoStatusSet;
 import pi.admin.service_address_sorting.generated.LawFirmCreated;
 import pi.admin.service_address_sorting.generated.NextUnsortedServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SearchLawFirmsRequest;
@@ -26,10 +27,9 @@ import pi.admin.service_address_sorting.generated.ServiceAddressSetAsNonLawFirm;
 import pi.admin.service_address_sorting.generated.ServiceAddressSkipped;
 import pi.admin.service_address_sorting.generated.ServiceAddressSortingServiceGrpc;
 import pi.admin.service_address_sorting.generated.ServiceAddressUnsorted;
+import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusRequest;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
-import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
-import pi.admin.service_address_sorting.generated.SortingImpossibleSet;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.metrics.ImmutableMetricSpec;
 import pi.analytics.admin.serviceaddress.metrics.MetricSpec;
@@ -221,11 +221,11 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   }
 
   @Override
-  public void setSortingImpossible(final SetSortingImpossibleRequest request,
-                                   final StreamObserver<SortingImpossibleSet> responseObserver) {
+  public void insufficientInfoToSort(final SetInsufficientInfoStatusRequest request,
+                                     final StreamObserver<InsufficientInfoStatusSet> responseObserver) {
     try {
-      serviceAddressSorter.setSortingImpossible(request);
-      responseObserver.onNext(SortingImpossibleSet.getDefaultInstance());
+      serviceAddressSorter.setInsufficientInfoToSort(request);
+      responseObserver.onNext(InsufficientInfoStatusSet.getDefaultInstance());
       responseObserver.onCompleted();
       metricsAccessor.getCounter(sortingImpossibleMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {
