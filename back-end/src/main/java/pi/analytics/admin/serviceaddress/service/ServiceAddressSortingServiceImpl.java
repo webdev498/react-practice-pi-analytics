@@ -108,6 +108,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   public void nextUnsortedServiceAddress(final NextUnsortedServiceAddressRequest request,
                                          final StreamObserver<ServiceAddressBundle> responseObserver) {
     try {
+      log.info("Get next unsorted service address request: {}", request);  // TODO: Remove this
       final Optional<ServiceAddressBundle> serviceAddressBundle =
           sortableServiceAddressFetcher
               .fetchNext(request.getRequestedBy())
@@ -117,6 +118,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
         responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
       }
       responseObserver.onNext(serviceAddressBundle.get());
+      log.info("Get next unsorted service address response: {}", serviceAddressBundle.get());  // TODO: Remove this
       responseObserver.onCompleted();
       metricsAccessor.getCounter(requestNextUnsortedMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {
