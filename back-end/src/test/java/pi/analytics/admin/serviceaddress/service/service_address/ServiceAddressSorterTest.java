@@ -503,7 +503,7 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void getDesiredSortStatus_dry_run() throws Exception {
+  public void getDesiredSortEffect_dry_run() throws Exception {
     when(userService.canPerformRealSort(anyString())).thenReturn(false);
     assertThat(serviceAddressSorter.getDesiredSortEffect(
         createUnsortedServiceAddress(faker.company().name()), faker.name().username())
@@ -518,7 +518,7 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void getDesiredSortStatus_score_updated() throws Exception {
+  public void getDesiredSortEffect_score_updated() throws Exception {
     when(userService.canPerformRealSort(anyString())).thenReturn(true);
     assertThat(serviceAddressSorter.getDesiredSortEffect(
         createServiceAddressForNonLawFirm(faker.company().name()), faker.name().username())
@@ -533,7 +533,7 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void getDesiredSortStatus_sort_applied() throws Exception {
+  public void getDesiredSortEffect_sort_applied() throws Exception {
     when(userService.canPerformRealSort(anyString())).thenReturn(true);
     assertThat(serviceAddressSorter.getDesiredSortEffect(
         createUnsortedServiceAddress(faker.company().name()), faker.name().username())

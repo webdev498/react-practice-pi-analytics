@@ -294,7 +294,7 @@ public class ServiceAddressSorter {
     // TODO: This needs to be implemented. Current behaviour is to skip sorting the service address.
 //    metricsAccessor
 //        .getCounter(sortOutcomeMetricSpec)
-//        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortStatus.name(), sortResult.name());
+//        .inc(request.getRequestedBy(), "sorting_impossible", sortEffect.name(), sortResult.name());
   }
 
   @VisibleForTesting
@@ -309,8 +309,8 @@ public class ServiceAddressSorter {
   }
 
   @VisibleForTesting
-  boolean updateSortScoreIfNecessary(final long serviceAddressId, final SortEffect sortStatus, final SortResult sortResult) {
-    if (sortStatus != SortEffect.SORT_SCORE_UPDATED) {
+  boolean updateSortScoreIfNecessary(final long serviceAddressId, final SortEffect sortEffect, final SortResult sortResult) {
+    if (sortEffect != SortEffect.SORT_SCORE_UPDATED) {
       return false;
     }
     switch (sortResult) {
