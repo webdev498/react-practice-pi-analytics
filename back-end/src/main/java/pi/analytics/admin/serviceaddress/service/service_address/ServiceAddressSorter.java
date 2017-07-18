@@ -291,10 +291,37 @@ public class ServiceAddressSorter {
   }
 
   public void setInsufficientInfoToSort(final SetInsufficientInfoStatusRequest request) {
-    // TODO: This needs to be implemented. Current behaviour is to skip sorting the service address.
-//    metricsAccessor
-//        .getCounter(sortOutcomeMetricSpec)
-//        .inc(request.getRequestedBy(), "sorting_impossible", sortEffect.name(), sortResult.name());
+    Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
+
+    final ServiceAddress preSortServiceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
+        GetServiceAddressByIdRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+
+    serviceAddressServiceBlockingStub.insufficientInfoToSort(
+        pi.ip.data.relational.generated.InsufficientInfoToSortRequest.newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+
+    // Log sort decision/outcome
+    final SortEffect desiredSortEffect = getDesiredSortEffect(preSortServiceAddress, request.getRequestedBy());  // TODO: Check
+    final SortResult sortResult = resultOfSetAsNonLawFirm(preSortServiceAddress);  // FIXME: Handle sorting impossible
+    final LogSortDecisionRequest logSortDecisionRequest =
+        LogSortDecisionRequest
+            .newBuilder()
+            .setUsername(request.getRequestedBy())
+            .setServiceAddress(preSortServiceAddress)
+            .setSortingImpossible(true)
+            .setSortEffect(desiredSortEffect)
+            .setSortResult(sortResult)
+            .build();
+    serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
+    metricsAccessor
+        .getCounter(sortOutcomeMetricSpec)
+        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortEffect.name(), sortResult.name());
   }
 
   @VisibleForTesting

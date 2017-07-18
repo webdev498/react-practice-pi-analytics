@@ -61,8 +61,8 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       ImmutableMetricSpec
           .builder()
           .action("sort")
-            .addLabels("type", "user")
-            .build();
+          .addLabels("type", "user")
+          .build();
 
   private final MetricSpec unsortMetricSpec =
       ImmutableMetricSpec
@@ -229,9 +229,9 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onCompleted();
       metricsAccessor.getCounter(sortingImpossibleMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {
-      log.error("Error setting service address as impossible to sort for request: " + request.toString(), th);
+      log.error("Error setting insufficient info to sort request: " + request.toString(), th);
       responseObserver.onError(th);
-      metricsAccessor.getCounter(errorMetricSpec).inc("set_sorting_impossible");
+      metricsAccessor.getCounter(errorMetricSpec).inc("insufficient_info_to_sort");
     }
   }
 }

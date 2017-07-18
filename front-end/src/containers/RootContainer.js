@@ -39,8 +39,8 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   onSetAsNonLawFirm: (serviceAddressId: string) => {
     dispatch(dismissServiceAddress(serviceAddressId, FetchActions.SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM));
   },
-  onSetSortingImpossible: (serviceAddressId: string) => {
-    dispatch(dismissServiceAddress(serviceAddressId, FetchActions.SET_SORTING_IMPOSSIBLE));
+  onSetInsufficientInfoStatus: (serviceAddressId: string) => {
+    dispatch(dismissServiceAddress(serviceAddressId, FetchActions.SET_INSUFFICIENT_INFO_STATUS));
   },
   onUndo: (serviceAddressId: string) => {
     dispatch(undoServiceAddress(serviceAddressId));

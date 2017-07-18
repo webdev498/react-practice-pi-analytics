@@ -85,7 +85,7 @@ const usStates = {
 }
 
 type
-CreateFirmDialogProps = {
+CreateLawFirmDialogProps = {
   value: Object,
   open: boolean,
   loading: boolean,
@@ -93,13 +93,13 @@ CreateFirmDialogProps = {
   onClose: () => void
 }
 
-class CreateFirmDialog extends React.Component {
-  props: CreateFirmDialogProps;
+class CreateLawFirmDialog extends React.Component {
+  props: CreateLawFirmDialogProps;
   state: Object;
   initialState: Object;
   nameInput: any;
 
-  constructor(props: CreateFirmDialogProps) {
+  constructor(props: CreateLawFirmDialogProps) {
     super(props);
     this.initialState = {
       name: "",
@@ -111,7 +111,7 @@ class CreateFirmDialog extends React.Component {
     this.state = u({}, this.initialState);
   }
 
-  componentWillReceiveProps(nextProps: CreateFirmDialogProps) {
+  componentWillReceiveProps(nextProps: CreateLawFirmDialogProps) {
     if (!this.props.open && nextProps.open) {
       this.setState(u({}, this.initialState));
     }
@@ -211,4 +211,4 @@ class CreateFirmDialog extends React.Component {
 
 }
 
-export default onClickOutside(CreateFirmDialog)
+export default onClickOutside(CreateLawFirmDialog)
