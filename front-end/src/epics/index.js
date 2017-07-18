@@ -12,7 +12,7 @@ import {
   setServiceAddressAsNonLawFirm,
   undoServiceAddress,
   unsortServiceAddress,
-  setSortingImpossible,
+  setInsufficientInfoStatus,
   skipServiceAddress
 } from "./Backend";
 
@@ -22,7 +22,7 @@ const rootEpic = combineEpics(
   getCurrentUser,
   skipServiceAddress,
   undoServiceAddress,
-  setSortingImpossible,
+  setInsufficientInfoStatus,
   assignServiceAddress,
   unsortServiceAddress,
   setServiceAddressAsNonLawFirm,
