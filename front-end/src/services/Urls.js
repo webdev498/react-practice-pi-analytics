@@ -2,7 +2,14 @@
 //jshint esversion:6
 //@flow
 
-const API_BASE_URL = "http://172.16.44.212/int/";
+const getBaseUrl = (): string => {
+  if (window.location.href.toString().startsWith("http://172.16.37.6/")) {
+    return "http://172.16.44.212/int/"  // service-address-admin-grpc-gateway IP address
+  }
+  return "/int/"
+}
+
+const API_BASE_URL = getBaseUrl()
 
 export const ApiUrls = {
   nextUnsortedServiceAddress: API_BASE_URL + "api/v1/addressing/nextunsortedserviceaddress",
@@ -12,7 +19,7 @@ export const ApiUrls = {
   createLawFirm: API_BASE_URL + "api/v1/addressing/createlawfirm",
   setServiceAddressAsNonLawFirm: API_BASE_URL + "api/v1/addressing/setserviceaddressasnonlawfirm",
   skipServiceAddress: API_BASE_URL + "api/v1/addressing/skipserviceaddress",
-  setInsufficientInfoStatus: API_BASE_URL + "api/v1/addressing/insufficientinfotosort"
+  setInsufficientInfoStatus: API_BASE_URL + "api/v1/addressing/insufficientinfotosort",
 }
 
 export const OuterUrls = {
@@ -20,5 +27,5 @@ export const OuterUrls = {
   login: "http://practiceinsight.io/int/login.jsp#agents",
   firmInfo: "http://practiceinsight.io/int/dataServices/firmInfo.jsp?id=",
   googleSearch: "https://www.google.com/search?q=",
-  country: "https://practiceinsight.io/int/addressing/localCountryC.jsp?findLocalEntity=Find&localID="
+  country: "https://practiceinsight.io/int/addressing/localCountryC.jsp?findLocalEntity=Find&localID=",
 }
