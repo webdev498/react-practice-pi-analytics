@@ -8,11 +8,10 @@ import com.google.protobuf.Int64Value;
 
 import com.github.javafaker.Faker;
 
-import java.util.Optional;
-
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
+import pi.ip.proto.generated.SortStatus;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -21,23 +20,28 @@ public class ServiceAddressTestHelper {
 
   private static Faker faker = new Faker();
 
+  public static ServiceAddress createServiceAddress(final SortStatus sortStatus) {
+    return createServiceAddress(faker.name().fullName(), faker.address().countryCode(), sortStatus);
+  }
+
   public static ServiceAddress createServiceAddressToMatchLawFirm(final LawFirm lawFirm) {
-    return createServiceAddress(
-        Optional.of(lawFirm.getLawFirmId()), lawFirm.getName(), lawFirm.getCountry(), true);
+    return ServiceAddress
+        .newBuilder(createServiceAddress(lawFirm.getName(), lawFirm.getCountry(), SortStatus.LAW_FIRM_SORTED))
+        .setLawFirmId(Int64Value.newBuilder().setValue(lawFirm.getLawFirmId()))
+        .build();
   }
 
   public static ServiceAddress createServiceAddressForNonLawFirm(final String name) {
-    return createServiceAddress(
-        Optional.empty(), name, faker.address().countryCode(), true);
+    return ServiceAddress
+        .newBuilder(createServiceAddress(name, faker.address().countryCode(), SortStatus.APPLICANT_FILED_SORTED))
+        .build();
   }
 
   public static ServiceAddress createUnsortedServiceAddress(final String name) {
-    return createServiceAddress(
-        Optional.empty(), name, faker.address().countryCode(), false);
+    return createServiceAddress(name, faker.address().countryCode(), SortStatus.PENDING);
   }
 
-  private static ServiceAddress createServiceAddress(final Optional<Long> lawFirmId, final String name,
-                                                     final String country, final boolean lawFirmStatusDetermined) {
+  private static ServiceAddress createServiceAddress(final String name, final String country, final SortStatus sortStatus) {
     ServiceAddress.Builder builder =
         ServiceAddress
             .newBuilder()
@@ -46,11 +50,9 @@ public class ServiceAddressTestHelper {
             .setAddress(faker.address().streetAddress(true))
             .setCountry(country)
             .setTelephone(faker.phoneNumber().phoneNumber())
-            .setLawFirmStatusDetermined(lawFirmStatusDetermined)
+            .setLawFirmStatusDetermined(sortStatus != SortStatus.PENDING)
+            .setSortStatus(sortStatus)
             .setLanguageType(LangType.WESTERN_SCRIPT);
-    if (lawFirmId.isPresent()) {
-      builder.setLawFirmId(Int64Value.newBuilder().setValue(lawFirmId.get()));
-    }
     return builder.build();
   }
 }

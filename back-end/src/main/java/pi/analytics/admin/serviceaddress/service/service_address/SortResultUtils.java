@@ -11,9 +11,10 @@ import java.util.function.Predicate;
 import pi.ip.data.relational.generated.SortResult;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
+import pi.ip.proto.generated.SortStatus;
 
 import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isNonLawFirm;
-import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isSorted;
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.needsSorting;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -23,7 +24,7 @@ public class SortResultUtils {
   public static SortResult resultOfAssignToLawFirm(final ServiceAddress preSort, final long assignedLawFirmId) {
     Preconditions.checkArgument(assignedLawFirmId != 0, "Invalid assigned law firm id");
 
-    if (!isSorted(preSort)) {
+    if (needsSorting(preSort)) {
       return SortResult.NEW_SORT;
     }
     if (preSort.getLawFirmId().getValue() == assignedLawFirmId) {
@@ -34,7 +35,7 @@ public class SortResultUtils {
 
   public static SortResult resultOfCreateLawFirmAndAssign(final ServiceAddress preSort, final LawFirm newLawFirm,
                                                           final Predicate<LawFirm> similarLawFirmExists) {
-    if (!isSorted(preSort)) {
+    if (needsSorting(preSort)) {
       return SortResult.NEW_SORT;
     }
     if (isNonLawFirm(preSort)) {
@@ -47,10 +48,20 @@ public class SortResultUtils {
   }
 
   public static SortResult resultOfSetAsNonLawFirm(final ServiceAddress preSort) {
-    if (!isSorted(preSort)) {
+    if (needsSorting(preSort)) {
       return SortResult.NEW_SORT;
     }
     if (isNonLawFirm(preSort)) {
+      return SortResult.SAME;
+    }
+    return SortResult.DIFFERENT;
+  }
+
+  public static SortResult resultOfSetInsufficientInfoToSort(final ServiceAddress preSort) {
+    if (needsSorting(preSort)) {
+      return SortResult.NEW_SORT;
+    }
+    if (preSort.getSortStatus() == SortStatus.INSUFFICIENT_INFO) {
       return SortResult.SAME;
     }
     return SortResult.DIFFERENT;

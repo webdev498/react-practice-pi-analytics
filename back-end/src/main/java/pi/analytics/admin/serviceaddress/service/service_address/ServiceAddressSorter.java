@@ -43,10 +43,11 @@ import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
-import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isSorted;
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.needsSorting;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfAssignToLawFirm;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfCreateLawFirmAndAssign;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfSetAsNonLawFirm;
+import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfSetInsufficientInfoToSort;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -104,7 +105,7 @@ public class ServiceAddressSorter {
     final LawFirm lawFirm = getLawFirmResponse.getLawFirm();
     final SortEffect desiredSortEffect = getDesiredSortEffect(preSortServiceAddress, request.getRequestedBy());
 
-    if (desiredSortEffect == SortEffect.SORT_APPLIED) {
+    if (desiredSortEffect == SortEffect.SORT_STATUS_UPDATED) {
       // Perform an actual sort
       serviceAddressServiceBlockingStub.assignServiceAddressToLawFirm(
           AssignServiceAddressToLawFirmRequest
@@ -157,7 +158,7 @@ public class ServiceAddressSorter {
 
     long lawFirmId = 0;
 
-    if (desiredSortEffect == SortEffect.SORT_APPLIED) {
+    if (desiredSortEffect == SortEffect.SORT_STATUS_UPDATED) {
       // Perform an actual sort
       // Create the new law firm record in MySQL
       lawFirmId = lawFirmDbServiceBlockingStub.createLawFirm(
@@ -234,7 +235,7 @@ public class ServiceAddressSorter {
 
     final SortEffect desiredSortEffect = getDesiredSortEffect(preSortServiceAddress, request.getRequestedBy());
 
-    if (desiredSortEffect == SortEffect.SORT_APPLIED) {
+    if (desiredSortEffect == SortEffect.SORT_STATUS_UPDATED) {
       // Perform an actual sort
       serviceAddressServiceBlockingStub.setServiceAddressAsNonLawFirm(
           pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest
@@ -307,32 +308,32 @@ public class ServiceAddressSorter {
     );
 
     // Log sort decision/outcome
-    final SortEffect desiredSortEffect = getDesiredSortEffect(preSortServiceAddress, request.getRequestedBy());  // TODO: Check
-    final SortResult sortResult = resultOfSetAsNonLawFirm(preSortServiceAddress);  // FIXME: Handle sorting impossible
+    final SortResult sortResult = resultOfSetInsufficientInfoToSort(preSortServiceAddress);
+    final SortEffect sortEffect = getDesiredSortEffect(preSortServiceAddress, request.getRequestedBy());
     final LogSortDecisionRequest logSortDecisionRequest =
         LogSortDecisionRequest
             .newBuilder()
             .setUsername(request.getRequestedBy())
             .setServiceAddress(preSortServiceAddress)
-            .setSortingImpossible(true)
-            .setSortEffect(desiredSortEffect)
+            .setInsufficientInfoToSort(true)
+            .setSortEffect(sortEffect)
             .setSortResult(sortResult)
             .build();
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
     metricsAccessor
         .getCounter(sortOutcomeMetricSpec)
-        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortEffect.name(), sortResult.name());
+        .inc(request.getRequestedBy(), "sorting_impossible", sortEffect.name(), sortResult.name());
   }
 
   @VisibleForTesting
   SortEffect getDesiredSortEffect(final ServiceAddress preSort, final String username) {
     if (userService.canPerformRealSort(username)) {
-      if (!isSorted(preSort)) {
-        return SortEffect.SORT_APPLIED;
+      if (needsSorting(preSort)) {
+        return SortEffect.SORT_STATUS_UPDATED;
       }
       return SortEffect.SORT_SCORE_UPDATED;
     }
-    return SortEffect.DRY_RUN_NOT_UPDATED;
+    return SortEffect.NOT_UPDATED;
   }
 
   @VisibleForTesting

@@ -12,15 +12,18 @@ import java.util.function.Predicate;
 
 import pi.ip.data.relational.generated.SortResult;
 import pi.ip.proto.generated.LawFirm;
+import pi.ip.proto.generated.SortStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper.createLawFirm;
+import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddress;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressForNonLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createServiceAddressToMatchLawFirm;
 import static pi.analytics.admin.serviceaddress.service.helpers.ServiceAddressTestHelper.createUnsortedServiceAddress;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfAssignToLawFirm;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfCreateLawFirmAndAssign;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfSetAsNonLawFirm;
+import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfSetInsufficientInfoToSort;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -87,6 +90,21 @@ public class SortResultUtilsTest {
 
     assertThat(resultOfSetAsNonLawFirm(createServiceAddressToMatchLawFirm(createLawFirm())))
         .as("The service address is assigned to a law firm")
+        .isEqualTo(SortResult.DIFFERENT);
+  }
+
+  @Test
+  public void testResultOfSetInsufficientInfoToSort() throws Exception {
+    assertThat(resultOfSetInsufficientInfoToSort(createServiceAddress(SortStatus.PENDING)))
+        .as("The service address is unsorted")
+        .isEqualTo(SortResult.NEW_SORT);
+
+    assertThat(resultOfSetInsufficientInfoToSort(createServiceAddress(SortStatus.INSUFFICIENT_INFO)))
+        .as("The service address is already set as insufficient info to sort")
+        .isEqualTo(SortResult.SAME);
+
+    assertThat(resultOfSetInsufficientInfoToSort(createServiceAddress(SortStatus.APPLICANT_FILED_SORTED)))
+        .as("The service address is sorted")
         .isEqualTo(SortResult.DIFFERENT);
   }
 }
