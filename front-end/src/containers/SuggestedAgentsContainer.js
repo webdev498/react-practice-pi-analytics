@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import Addresses from "../components/Addresses";
+import Addresses from "../components/SuggestedAgents";
 import {changeTab} from "../reducers/addresses";
 import {sortServiceAddress, unsortServiceAddress} from "../reducers/root";
 import type {Dispatch, State} from "redux";
@@ -25,5 +25,5 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   }
 })
 
-const AddressesContainer = connect(mapStateToProps, mapDispatchToProps)(Addresses)
-export default AddressesContainer
+const SuggestedAgentsContainer = connect(mapStateToProps, mapDispatchToProps)(Addresses)
+export default SuggestedAgentsContainer

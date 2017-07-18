@@ -30,7 +30,7 @@ import {
   SET_SERVICE_ADDRESS_AS_NON_LAW_FIRM,
   UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS,
-  SET_SORTING_IMPOSSIBLE,
+  SET_INSUFFICIENT_INFO_STATUS,
   SKIP_SERVICE_ADDRESS
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
@@ -104,9 +104,9 @@ export const setServiceAddressAsNonLawFirm = (action$: ActionsObservable<Action>
       .catch(mapError(globalFetchError))
     );
 
-export const setSortingImpossible = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
-  action$.ofType(SET_SORTING_IMPOSSIBLE)
-    .mergeMap(action => post(ApiUrls.setSortingImpossible, action.payload)
+export const setInsufficientInfoStatus = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
+  action$.ofType(SET_INSUFFICIENT_INFO_STATUS)
+    .mergeMap(action => post(ApiUrls.setInsufficientInfoStatus, action.payload)
       .map(mapResponse(getNextUnsortedServiceAddress))
       .catch(mapError(globalFetchError))
     );

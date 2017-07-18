@@ -8,7 +8,7 @@ import AddressesList from "./AddressesList";
 import type {Agent} from "../services/Types";
 
 type
-AddressesProps = {
+SuggestedAgentsProps = {
   tab: number,
   agents: Array < Agent >,
   serviceAddress: Object,
@@ -17,7 +17,7 @@ AddressesProps = {
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
 
-const Addresses = (props: AddressesProps): React.Element<Layout> => {
+const SuggestedAgents = (props: SuggestedAgentsProps): React.Element<Layout> => {
 
   const suggestions = props.agents ?
                       <AddressesList agents={props.agents} serviceAddress={props.serviceAddress}
@@ -39,4 +39,4 @@ const Addresses = (props: AddressesProps): React.Element<Layout> => {
     </div >)
 }
 
-export default Addresses
+export default SuggestedAgents

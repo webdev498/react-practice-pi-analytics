@@ -15,8 +15,8 @@ import org.slf4j.LoggerFactory;
 
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
+import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusRequest;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
-import pi.admin.service_address_sorting.generated.SetSortingImpossibleRequest;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.metrics.ImmutableMetricSpec;
 import pi.analytics.admin.serviceaddress.metrics.MetricSpec;
@@ -290,11 +290,27 @@ public class ServiceAddressSorter {
     );
   }
 
-  public void setSortingImpossible(final SetSortingImpossibleRequest request) {
-    // TODO: This needs to be implemented. Current behaviour is to skip sorting the service address.
-//    metricsAccessor
-//        .getCounter(sortOutcomeMetricSpec)
-//        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortStatus.name(), sortResult.name());
+  public void setInsufficientInfoStatus(final SetInsufficientInfoStatusRequest request) {
+    Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
+
+    final ServiceAddress preSortServiceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
+        GetServiceAddressByIdRequest
+            .newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+
+    final SortStatus desiredSortStatus = getDesiredSortStatus(preSortServiceAddress, request.getRequestedBy());
+    final SortResult sortResult = resultOfSetAsNonLawFirm(preSortServiceAddress);
+
+    serviceAddressServiceBlockingStub.insufficientInfoToSort(
+        pi.ip.data.relational.generated.InsufficientInfoToSortRequest.newBuilder()
+            .setServiceAddressId(request.getServiceAddressId())
+            .build()
+    );
+    metricsAccessor
+        .getCounter(sortOutcomeMetricSpec)
+        .inc(request.getRequestedBy(), "sorting_impossible", desiredSortStatus.name(), sortResult.name());
   }
 
   @VisibleForTesting

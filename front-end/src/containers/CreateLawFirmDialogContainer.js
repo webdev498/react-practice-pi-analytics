@@ -1,7 +1,7 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import CreateFirmDialog from "../components/CreateFirmDialog";
+import CreateLawFirmDialog from "../components/CreateLawFirmDialog";
 import {closeFirmDialog} from "../reducers/root";
 import {submitNewFirm} from "../reducers/createfirmdialog";
 import type {Dispatch, State} from "redux";
@@ -22,5 +22,5 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
   }
 })
 
-const CreateFirmDialogContainer = connect(mapStateToProps, mapDispatchToProps)(CreateFirmDialog)
-export default CreateFirmDialogContainer;
+const CreateLawFirmDialogContainer = connect(mapStateToProps, mapDispatchToProps)(CreateLawFirmDialog)
+export default CreateLawFirmDialogContainer;
