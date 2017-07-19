@@ -24,7 +24,8 @@ export const ApiUrls = {
 
 export const OuterUrls = {
   sessionInfo: "http://practiceinsight.io/int/addressing/sessionInfo.jsp",
-  login: "http://practiceinsight.io/int/login.jsp#agents",
+  // login: "http://practiceinsight.io/int/login.jsp#agents",
+  login: "/int/addressing",
   firmInfo: "http://practiceinsight.io/int/dataServices/firmInfo.jsp?id=",
   googleSearch: "https://www.google.com/search?q=",
   country: "https://practiceinsight.io/int/addressing/localCountryC.jsp?findLocalEntity=Find&localID=",
