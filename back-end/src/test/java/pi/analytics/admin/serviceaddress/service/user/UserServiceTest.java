@@ -25,7 +25,7 @@ public class UserServiceTest {
 
   @Test
   public void getAlreadySortedWeightedChance() throws Exception {
-    assertThat(userService.getAlreadySortedWeightedChance("shane"))
+    assertThat(userService.getAlreadySortedWeightedChance("flor"))
         .as("Staff users currently always sort unsorted service addresses")
         .isEqualTo(0f);
     assertThat(userService.getAlreadySortedWeightedChance("nonstaff"))
@@ -35,7 +35,7 @@ public class UserServiceTest {
 
   @Test
   public void getAlreadySortedWeightedChance_staff() throws Exception {
-    assertThat(userService.getAlreadySortedWeightedChance("shane"))
+    assertThat(userService.getAlreadySortedWeightedChance("flor"))
         .isEqualTo(0)
         .as("User shane is a staff member and should always sort unsorted service addresses");
   }
