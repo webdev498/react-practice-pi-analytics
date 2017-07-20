@@ -118,9 +118,11 @@ public class ServiceAddressBundleFetcher {
             .getSuggestionsList()
             .stream()
 
-            // Convert to service address from primary source and sanity check. We don't trust the ES index.
+            // Convert to service address from primary source and sanity check. The ES index might not be in sync with db.
             .map(this::fetchServiceAddress)
             .map(this::pruneUnsortedServiceAddresses)
+            // When sorting an already sorted service address, we don't want to show it in the suggestions.
+            .map(s -> pruneSuggestionsForSameServiceAddress(s, bundle.getServiceAddressToSort()))
             .filter(Optional::isPresent)
             .map(Optional::get)
 
@@ -189,6 +191,13 @@ public class ServiceAddressBundleFetcher {
 
   private Optional<ServiceAddress> pruneUnsortedServiceAddresses(final Optional<ServiceAddress> serviceAddress) {
     return serviceAddress.flatMap(sa -> isUnsorted(sa) ? Optional.empty() : Optional.of(sa));
+  }
+
+  private Optional<ServiceAddress> pruneSuggestionsForSameServiceAddress(final Optional<ServiceAddress> suggestion,
+                                                                         final ServiceAddress serviceAddressToBeSorted) {
+    return suggestion.flatMap(s ->
+        s.getServiceAddressId() == serviceAddressToBeSorted.getServiceAddressId() ? Optional.empty() : Optional.of(s)
+    );
   }
 
   private String getAgentGroupingKey(final ServiceAddress serviceAddress) {

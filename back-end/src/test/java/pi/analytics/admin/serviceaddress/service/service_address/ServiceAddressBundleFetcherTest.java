@@ -234,6 +234,11 @@ public class ServiceAddressBundleFetcherTest {
 
   @Test
   public void addAgentSuggestions_suggestions_found() throws Exception {
+    final ServiceAddressBundle originalBundle =
+        ServiceAddressBundle
+            .newBuilder()
+            .setServiceAddressToSort(createServiceAddressForNonLawFirm(faker.name().fullName()))
+            .build();
 
     // Set up a law firm suggestion with two service addresses
     final LawFirm lawFirm1 = createLawFirm();
@@ -246,6 +251,11 @@ public class ServiceAddressBundleFetcherTest {
         createThinLawFirmServiceAddressRecordMatchingServiceAddress(lawFirm1ServiceAddress1);
     final ThinLawFirmServiceAddressRecord lawFirm1ThinAddress2 =
         createThinLawFirmServiceAddressRecordMatchingServiceAddress(lawFirm1ServiceAddress2);
+
+    // Include the service address to be sorted. It should get skipped
+    setupGetServiceAddressByIdAnswer(originalBundle.getServiceAddressToSort());
+    final ThinLawFirmServiceAddressRecord toBeSortedThinAddress =
+        createThinLawFirmServiceAddressRecordMatchingServiceAddress(originalBundle.getServiceAddressToSort());
 
     // Set up a service address that is unsorted and hence skipped
     final ServiceAddress unsortedServiceAddress = createUnsortedServiceAddress(faker.company().name());
@@ -283,6 +293,7 @@ public class ServiceAddressBundleFetcherTest {
         SuggestSimilarThinLawFirmServiceAddressRecordResponse
             .newBuilder()
             .addSuggestions(lawFirm1ThinAddress1)
+            .addSuggestions(toBeSortedThinAddress)
             .addSuggestions(unsortedThinAddress)
             .addSuggestions(lawFirm1ThinAddress2)
             .addSuggestions(nonLawFirmThinAddress1)
@@ -295,7 +306,6 @@ public class ServiceAddressBundleFetcherTest {
         .when(esReadService)
         .suggestSimilarThinLawFirmServiceAddressRecord(any(ThinServiceAddressRecord.class), any(StreamObserver.class));
 
-    final ServiceAddressBundle originalBundle = ServiceAddressBundle.getDefaultInstance();
     final ServiceAddressBundle bundleWithSuggestions = serviceAddressBundleFetcher.addAgentSuggestions.apply(originalBundle);
 
     assertThat(bundleWithSuggestions.getSuggestedAgentsList())
