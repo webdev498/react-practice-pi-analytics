@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Optional;
 import java.util.Set;
 
 import pi.ip.proto.generated.LangType;
@@ -26,11 +27,27 @@ public class UserService {
         "hellen",
         "ivan",
         "janel",
-        "pavel",
-        "shane",
         "thomas"
     );
     return staffUsers.contains(username.toLowerCase());
+  }
+
+  private boolean isInterviewCandidate(final String username) {
+    final Set<String> interviewCandidates = ImmutableSet.of(
+        "shane"
+    );
+    return interviewCandidates.contains(username.toLowerCase());
+  }
+
+  public Optional<String> getPlaylist(final String username) {
+    if (isInterviewCandidate(username)) {
+      return Optional.of("interview_test");
+    }
+    return Optional.empty();
+  }
+
+  public boolean hasPlaylist(final String username) {
+    return getPlaylist(username).isPresent();
   }
 
   public boolean canPerformRealSort(final String username) {
@@ -38,9 +55,6 @@ public class UserService {
   }
 
   public float getAlreadySortedWeightedChance(final String username) {
-    if (username.equalsIgnoreCase("shane")) {
-      return 1.0f;
-    }
     return isStaff(username) ? 0 : 1;
   }
 
