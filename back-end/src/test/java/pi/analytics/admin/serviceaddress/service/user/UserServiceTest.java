@@ -6,6 +6,8 @@ package pi.analytics.admin.serviceaddress.service.user;
 
 import org.junit.Test;
 
+import java.util.Optional;
+
 import pi.ip.proto.generated.LangType;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,8 +20,19 @@ public class UserServiceTest {
   private UserService userService = new UserService();
 
   @Test
-  public void canSort() throws Exception {
-    assertThat(userService.canPerformRealSort("shane")).isTrue();
+  public void hasPlaylist() throws Exception {
+    assertThat(userService.hasPlaylist("flor")).isFalse();
+    assertThat(userService.hasPlaylist("shane")).isTrue();
+  }
+
+  @Test
+  public void getPlayList() throws Exception {
+    assertThat(userService.getPlaylist("shane")).isEqualTo(Optional.of("interview_test"));
+  }
+
+  @Test
+  public void canPerformRealSort() throws Exception {
+    assertThat(userService.canPerformRealSort("flor")).isTrue();
     assertThat(userService.canPerformRealSort("nonstaff")).isFalse();
   }
 
@@ -37,14 +50,14 @@ public class UserServiceTest {
   public void getAlreadySortedWeightedChance_staff() throws Exception {
     assertThat(userService.getAlreadySortedWeightedChance("flor"))
         .isEqualTo(0)
-        .as("User shane is a staff member and should always sort unsorted service addresses");
+        .as("User flor is a staff member and should always sort unsorted service addresses");
   }
 
   @Test
   public void getAlreadySortedWeightedChance_nonstaff() throws Exception {
     assertThat(userService.getAlreadySortedWeightedChance("trialuser"))
         .isEqualTo(1)
-        .as("User 'trialuser' is not a staff member and should always be given already-sorted service addresses");
+        .as("User trialuser is not a staff member and should always be given already-sorted service addresses");
   }
 
   @Test

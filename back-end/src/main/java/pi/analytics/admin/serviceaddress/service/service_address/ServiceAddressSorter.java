@@ -271,7 +271,8 @@ public class ServiceAddressSorter {
             .build();
     serviceAddressServiceBlockingStub.logSortDecision(logSortDecisionRequest);
     metricsAccessor
-        .getCounter(sortOutcomeMetricSpec)
+        .getCounter(sortOutcomeMetricSpec
+        )
         .inc(request.getRequestedBy(), "non_law_firm", desiredSortEffect.name(), sortResult.name());
   }
 

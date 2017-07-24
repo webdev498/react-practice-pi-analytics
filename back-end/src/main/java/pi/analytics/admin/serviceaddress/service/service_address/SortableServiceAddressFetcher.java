@@ -19,10 +19,13 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import pi.analytics.admin.serviceaddress.service.user.UserService;
 import pi.ip.data.relational.generated.GetNextServiceAddressForSortingRequest;
+import pi.ip.data.relational.generated.GetNextServiceAddressFromPlaylistRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.proto.generated.ServiceAddress;
 
 /**
+ * Fetch service addresses for sorting
+ *
  * @author shane.xie@practiceinsight.io
  */
 @Singleton
@@ -45,6 +48,13 @@ public class SortableServiceAddressFetcher {
   private ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   public Optional<ServiceAddress> fetchNext(final String username) {
+    if (userService.hasPlaylist(username)) {
+      return fetchFromPlaylist(userService.getPlaylist(username).get(), username);
+    }
+    return fetchForUser(username);
+  }
+
+  private Optional<ServiceAddress> fetchForUser(final String username) {
     final Set<String> officeCodes =
         COUNTRIES_TO_SORT
             .stream()
@@ -58,9 +68,26 @@ public class SortableServiceAddressFetcher {
             .addAllRestrictToOfficeCodes(officeCodes)
             .setAlreadySortedWeightedChance(userService.getAlreadySortedWeightedChance(username))
             .build();
-
     try {
       return Optional.of(serviceAddressServiceBlockingStub.getNextServiceAddressForSorting(request));
+    } catch (StatusRuntimeException sre) {
+      if (sre.getStatus().equals(Status.NOT_FOUND)) {
+        return Optional.empty();
+      }
+      // Any other status is an error
+      throw sre;
+    }
+  }
+
+  private Optional<ServiceAddress> fetchFromPlaylist(final String playlist, final String username) {
+    final GetNextServiceAddressFromPlaylistRequest request =
+        GetNextServiceAddressFromPlaylistRequest
+            .newBuilder()
+            .setPlaylist(playlist)
+            .setUsername(username)
+            .build();
+    try {
+      return Optional.of(serviceAddressServiceBlockingStub.getNextServiceAddressFromPlaylist(request));
     } catch (StatusRuntimeException sre) {
       if (sre.getStatus().equals(Status.NOT_FOUND)) {
         return Optional.empty();
