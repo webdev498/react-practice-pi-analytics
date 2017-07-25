@@ -63,7 +63,7 @@ public class UserService {
       // Hellen specialises in sorting chinese addresses. Provide her with a reduced set that includes chinese.
       return ImmutableSet.of(
           LangType.CHINESE,
-          LangType.WESTERN_SCRIPT,
+          LangType.KOREAN,
           LangType.JAPANESE
       );
     } else {
