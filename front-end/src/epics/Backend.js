@@ -54,6 +54,7 @@ export const preFetchNextUnsortedServiceAddress = (action$: ActionsObservable<Ac
   action$.ofType(PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
     .mergeMap(action => post(ApiUrls.nextUnsortedServiceAddress, action.payload)
       .map(mapResponse(unsortedServiceAddressPreFetched))
+      .catch(error => {})
     );
 
 export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>
