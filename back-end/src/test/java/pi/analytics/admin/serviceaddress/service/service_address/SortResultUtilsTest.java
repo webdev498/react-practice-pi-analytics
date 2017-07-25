@@ -95,7 +95,7 @@ public class SortResultUtilsTest {
 
   @Test
   public void testResultOfSetInsufficientInfoToSort() throws Exception {
-    assertThat(resultOfSetInsufficientInfoToSort(createServiceAddress(SortStatus.PENDING)))
+    assertThat(resultOfSetInsufficientInfoToSort(createServiceAddress(SortStatus.SORT_PENDING)))
         .as("The service address is unsorted")
         .isEqualTo(SortResult.NEW_SORT);
 

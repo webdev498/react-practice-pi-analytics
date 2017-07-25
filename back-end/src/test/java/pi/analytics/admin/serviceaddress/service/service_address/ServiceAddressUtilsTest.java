@@ -47,7 +47,7 @@ public class ServiceAddressUtilsTest {
         .as("This service address cannot be sorted")
         .isFalse();
 
-    assertThat(ServiceAddressUtils.needsSorting(createServiceAddress(SortStatus.UNTRACKED_APPLICANT)))
+    assertThat(ServiceAddressUtils.needsSorting(createServiceAddress(SortStatus.SMALL_APPLICANT)))
         .as("This service address cannot be sorted")
         .isFalse();
 

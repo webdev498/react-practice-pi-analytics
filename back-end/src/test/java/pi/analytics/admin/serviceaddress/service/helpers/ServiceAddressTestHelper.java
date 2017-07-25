@@ -38,7 +38,7 @@ public class ServiceAddressTestHelper {
   }
 
   public static ServiceAddress createUnsortedServiceAddress(final String name) {
-    return createServiceAddress(name, faker.address().countryCode(), SortStatus.PENDING);
+    return createServiceAddress(name, faker.address().countryCode(), SortStatus.SORT_PENDING);
   }
 
   private static ServiceAddress createServiceAddress(final String name, final String country, final SortStatus sortStatus) {
@@ -50,7 +50,7 @@ public class ServiceAddressTestHelper {
             .setAddress(faker.address().streetAddress(true))
             .setCountry(country)
             .setTelephone(faker.phoneNumber().phoneNumber())
-            .setLawFirmStatusDetermined(sortStatus != SortStatus.PENDING)
+            .setLawFirmStatusDetermined(sortStatus != SortStatus.SORT_PENDING)
             .setSortStatus(sortStatus)
             .setLanguageType(LangType.WESTERN_SCRIPT);
     return builder.build();
