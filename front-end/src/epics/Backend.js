@@ -114,18 +114,13 @@ export const setInsufficientInfoStatus = (action$: ActionsObservable<Action>): A
 
 export const getCurrentUser = (acitons$: ActionsObservable<Action>): ActionsObservable<Action> =>
   acitons$.ofType(GET_CURRENT_USER)
-    .mergeMap(action => get(OuterUrls.sessionInfo)
-      .map(response => {
-        Authentication.user = response.username;
-        return Observable.of(response).mapTo(getNextUnsortedServiceAddress());
-      })
-      .catch(error => {
-        var urlParams = new URLSearchParams(location.search);
-        if (urlParams.has("username")) {
-          Authentication.user = urlParams.get("username");
-          return Observable.of(error).mapTo(getNextUnsortedServiceAddress());
-        } else {
-          window.location = OuterUrls.login;
-          console.log(error);
-        }
-      }));
+    .mergeMap(action => {
+      const urlParams = new URLSearchParams(location.search)
+      if (urlParams.has("username")) {
+        Authentication.user = urlParams.get("username")
+        return Observable.of(getNextUnsortedServiceAddress())
+      } else {
+        window.location = OuterUrls.login
+        return Observable.empty()
+      }
+    })
