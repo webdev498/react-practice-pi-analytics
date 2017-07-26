@@ -3,7 +3,9 @@
 //@flow
 
 const getBaseUrl = (): string => {
-  if (window.location.href.toString().startsWith("http://172.16.37.6/")) {
+  const url = window.location.href.toString()
+  if (url.startsWith("http://localhost")  // Local development
+      || url.startsWith("http://172.16.37.6/")) {  // IP address of service address sorting front-end k8s service
     return "http://172.16.44.212/int/"  // service-address-admin-grpc-gateway IP address
   }
   return "/int/"
