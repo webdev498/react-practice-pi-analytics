@@ -62,9 +62,7 @@ public class UserService {
     if (StringUtils.equalsIgnoreCase(username, "hellen")) {
       // Hellen specialises in sorting chinese addresses. Provide her with a reduced set that includes chinese.
       return ImmutableSet.of(
-          LangType.CHINESE,
-          LangType.KOREAN,
-          LangType.JAPANESE
+          LangType.CHINESE
       );
     } else {
       return ImmutableSet.of(
