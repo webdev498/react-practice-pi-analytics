@@ -64,7 +64,7 @@ public class UserServiceTest {
   public void getLangTypes() throws Exception {
     assertThat(userService.getLangTypes("hellen"))
         .as("Hellen sorts Chinese, Korean and Japanese language types")
-        .containsExactlyInAnyOrder(LangType.CHINESE, LangType.KOREAN, LangType.JAPANESE);
+        .containsExactlyInAnyOrder(LangType.CHINESE);
     assertThat(userService.getLangTypes("anyuser"))
         .as("All other users sort Western, Korean, Japanese and Cyrillic language types")
         .containsExactlyInAnyOrder(LangType.WESTERN_SCRIPT, LangType.KOREAN, LangType.JAPANESE, LangType.CYRILLIC);
