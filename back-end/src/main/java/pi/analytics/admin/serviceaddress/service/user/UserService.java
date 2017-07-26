@@ -34,7 +34,8 @@ public class UserService {
 
   private boolean isInterviewCandidate(final String username) {
     final Set<String> interviewCandidates = ImmutableSet.of(
-        "shane"
+        "shane",
+        "doris"
     );
     return interviewCandidates.contains(username.toLowerCase());
   }
