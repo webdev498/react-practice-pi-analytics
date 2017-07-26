@@ -1,11 +1,11 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import Search from "../components/Search";
-import {doSearch, stopSearch} from "../reducers/search";
-import type {Dispatch, State} from "redux";
-import {connect} from "react-redux";
-import {sortServiceAddress, unsortServiceAddress} from "../reducers/root";
+import Search from "../components/Search"
+import {doSearch, stopSearch} from "../reducers/search"
+import type {Dispatch, State} from "redux"
+import {connect} from "react-redux"
+import {sortServiceAddress, unsortServiceAddress} from "../reducers/root"
 
 const mapStateToProps = (state: State) => ({
   agents: state.search.agents,
@@ -15,19 +15,19 @@ const mapStateToProps = (state: State) => ({
 })
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-  onSearch: (query: string) => {
+  onSearch: (query: string, countryCode: string) => {
     if (query && query.length > 0) {
-      dispatch(doSearch(query));
+      dispatch(doSearch(query, countryCode))
     } else {
-      dispatch(stopSearch());
+      dispatch(stopSearch())
     }
   },
   onSortServiceAddress: (serviceAddressId: string, address: Object) => {
-    dispatch(sortServiceAddress(serviceAddressId, address));
+    dispatch(sortServiceAddress(serviceAddressId, address))
   },
   onUnsortServiceAddress: (serviceAddressId: string) => {
-    dispatch(unsortServiceAddress(serviceAddressId));
-  }
+    dispatch(unsortServiceAddress(serviceAddressId))
+  },
 })
 
 const SearchContainer = connect(mapStateToProps, mapDispatchToProps)(Search)

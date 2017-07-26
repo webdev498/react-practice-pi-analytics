@@ -1,13 +1,13 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import {Content, Icon, Spinner, Textfield} from "react-mdl";
-import React from "react";
-import AddressesList from "./AddressesList";
-import Rx from "rxjs";
-import "rxjs/add/operator/map";
-import "rxjs/add/operator/debounceTime";
-import { findDOMNode } from 'react-dom';
+import {Content, Icon, Spinner, Textfield} from "react-mdl"
+import React from "react"
+import AddressesList from "./AddressesList"
+import Rx from "rxjs"
+import "rxjs/add/operator/map"
+import "rxjs/add/operator/debounceTime"
+import { findDOMNode } from 'react-dom'
 
 type
 SearchProps = {
@@ -15,7 +15,7 @@ SearchProps = {
   loading: boolean,
   query: string,
   serviceAddress: Object,
-  onSearch: (query: string) => void,
+  onSearch: (query: string, countryCode: string) => void,
   onSortServiceAddress: (serviceAddressId: string, address: Object) => void,
   onUnsortServiceAddress: (serviceAddressId: string) => void
 }
@@ -43,11 +43,11 @@ class Search extends React.Component {
     if (!input) {
       return
     }
-    this.searchInput = input;
+    this.searchInput = input
     Rx.Observable.fromEvent(this.searchInput.inputRef, "keyup")
       .map(event => event.target.value)
       .debounceTime(200)
-      .subscribe(this.props.onSearch)
+      .subscribe(query => this.props.onSearch(query, this.props.serviceAddress.country))
   }
 
   render() {
