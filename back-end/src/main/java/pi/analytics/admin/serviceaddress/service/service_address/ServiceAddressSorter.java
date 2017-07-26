@@ -193,10 +193,10 @@ public class ServiceAddressSorter {
 
     final SortResult sortResult = resultOfCreateLawFirmAndAssign(request.getServiceAddress(), lawFirmToBeCreated,
         (final LawFirm lawFirm) ->
-            // Does a law firm exist that has the same name as the one that we want to create,
+            // Does a law firm exist that has the same name and country as the one that we want to create,
             // and is assigned the service address that is being sorted?
             lawFirmRepository
-                .searchLawFirms(lawFirm.getName())
+                .searchLawFirms(lawFirm.getName(), lawFirm.getCountry())
                 .stream()
                 .filter(agent -> agent.getServiceAddressesList().contains(request.getServiceAddress()))
                 .findFirst()

@@ -136,7 +136,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
       responseObserver.onNext(
           SearchResults
               .newBuilder()
-              .addAllLawFirmAgents(lawFirmRepository.searchLawFirms(request.getSearchTerm()))
+              .addAllLawFirmAgents(lawFirmRepository.searchLawFirms(request.getSearchTerm(), request.getCountryCode()))
               .build()
       );
       responseObserver.onCompleted();

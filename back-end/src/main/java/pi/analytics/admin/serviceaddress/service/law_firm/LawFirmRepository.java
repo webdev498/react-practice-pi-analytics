@@ -27,11 +27,12 @@ public class LawFirmRepository {
   @Inject
   private ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
-  public List<Agent> searchLawFirms(final String searchTerm) {
+  public List<Agent> searchLawFirms(final String searchTerm, final String countryCode) {
     final LawFirmSearchRequest searchRequest =
         LawFirmSearchRequest
             .newBuilder()
             .setLawFirmPrefix(searchTerm)
+            .setCountryCode(countryCode)
             .build();
 
     return lawFirmSearchServiceBlockingStub

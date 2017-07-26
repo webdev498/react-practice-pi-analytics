@@ -7,6 +7,8 @@ package pi.analytics.admin.serviceaddress.service.law_firm;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 
+import com.github.javafaker.Faker;
+
 import org.assertj.core.util.Lists;
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +53,7 @@ public class LawFirmRepositoryTest {
   private Server server;
   private ManagedChannel channel;
   private LawFirmRepository lawFirmRepository;
+  private Faker faker = new Faker();
 
   @Before
   public void setup() throws Exception {
@@ -119,7 +122,7 @@ public class LawFirmRepositoryTest {
         createServiceAddressToMatchLawFirm(lawFirm2), createServiceAddressToMatchLawFirm(lawFirm2));
     setupGetServiceAddressesForLawFirmAnswer(lawFirm2.getLawFirmId(), lawFirm2ServiceAddresses);
 
-    assertThat(lawFirmRepository.searchLawFirms("test query")).containsExactly(
+    assertThat(lawFirmRepository.searchLawFirms("test query", faker.address().countryCode())).containsExactly(
         Agent.newBuilder().setLawFirm(lawFirm1).addAllServiceAddresses(lawFirm1ServiceAddresses).build(),
         Agent.newBuilder().setLawFirm(lawFirm2).addAllServiceAddresses(lawFirm2ServiceAddresses).build()
     );
