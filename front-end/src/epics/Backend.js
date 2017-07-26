@@ -16,7 +16,8 @@ import {
   unsortedServiceAddressFulfilled,
   unsortedServiceAddressPreFetched,
   unsortedServiceAddressFetchError,
-  serviceAddressSkipped
+  unsortedServiceAddressPreFetchError,
+  serviceAddressSkipped,
 } from "../reducers/root";
 import {searchQueryError, searchQueryFulfilled} from "../reducers/search";
 import {firmCreationError, lawFirmCreated} from "../reducers/createfirmdialog";
@@ -54,7 +55,7 @@ export const preFetchNextUnsortedServiceAddress = (action$: ActionsObservable<Ac
   action$.ofType(PRE_FETCH_NEXT_UNSORTED_SERVICE_ADDRESS)
     .mergeMap(action => post(ApiUrls.nextUnsortedServiceAddress, action.payload)
       .map(mapResponse(unsortedServiceAddressPreFetched))
-      .catch(error => {})
+      .catch(mapError(unsortedServiceAddressPreFetchError))
     );
 
 export const skipServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>

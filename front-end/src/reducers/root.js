@@ -110,6 +110,13 @@ export const unsortedServiceAddressFetchError = (): Action => ({
   }
 });
 
+export const unsortedServiceAddressPreFetchError = (): Action => ({
+  type: Actions.UNSORTED_SERVICE_ADDRESS_FETCH_ERROR,
+  payload: {
+    loading: false,
+  }
+});
+
 export const serviceAddressSkipped = (): Action => ({
   type: Actions.MESSAGE,
   payload: {
