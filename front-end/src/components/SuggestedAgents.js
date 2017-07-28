@@ -28,8 +28,8 @@ const SuggestedAgents = (props: SuggestedAgentsProps): React.Element<Layout> => 
   return (
     <div className="addresses-container">
       <Tabs activeTab={props.tab} onChange={props.onTabChange} ripple style={{marginTop: "16px"}}>
-        <Tab>Suggestions ({props.serviceAddress.country})</Tab>
-        <Tab>Search</Tab>
+        <Tab>Suggestions - {props.serviceAddress.country}</Tab>
+        <Tab>Search - {props.serviceAddress.country}</Tab>
       </Tabs>
       <section className={"center"}>
         {props.tab == 0 ? suggestions : (
