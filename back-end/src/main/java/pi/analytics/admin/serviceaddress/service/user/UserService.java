@@ -22,7 +22,6 @@ public class UserService {
 
   private boolean isStaff(final String username) {
     final Set<String> staffUsers = ImmutableSet.of(
-//        "doris",  // Temporarily send Doris only already sorted so she can select for playlist
         "floremer",
         "flor",
         "hellen",
@@ -35,7 +34,8 @@ public class UserService {
 
   private boolean isInterviewCandidate(final String username) {
     final Set<String> interviewCandidates = ImmutableSet.of(
-        "shane"
+        "shane",
+        "doris"
     );
     return interviewCandidates.contains(username.toLowerCase());
   }
