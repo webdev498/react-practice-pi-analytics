@@ -26,8 +26,8 @@ public class UserService {
         "flor",
         "hellen",
         "ivan",
-        "janel",
-        "thomas"
+        "janel"
+//        "thomas"
     );
     return staffUsers.contains(username.toLowerCase());
   }
@@ -53,6 +53,9 @@ public class UserService {
   public Optional<String> getPlaylist(final String username) {
     if (isInterviewCandidate(username)) {
       return Optional.of("interview_test");
+    }
+    if (username.equalsIgnoreCase("thomas")) {
+      return Optional.of("interview_test_check");
     }
     return Optional.empty();
   }
