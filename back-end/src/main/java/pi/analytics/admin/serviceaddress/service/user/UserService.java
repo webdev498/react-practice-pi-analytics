@@ -26,7 +26,8 @@ public class UserService {
         "flor",
         "hellen",
         "ivan",
-        "janel"
+        "janel",
+        "shane"
 //        "thomas"
     );
     return staffUsers.contains(username.toLowerCase());
@@ -34,7 +35,6 @@ public class UserService {
 
   private boolean isInterviewCandidate(final String username) {
     final Set<String> interviewCandidates = ImmutableSet.of(
-        "shane",
         "doris",
         // Doris' contacts
         "christoph.resinger",  // cresinger@hotmail.com
@@ -56,6 +56,9 @@ public class UserService {
     }
     if (username.equalsIgnoreCase("thomas")) {
       return Optional.of("interview_test_check");
+    }
+    if (username.equalsIgnoreCase("shane")) {
+      return Optional.of("ad_hoc");
     }
     return Optional.empty();
   }
