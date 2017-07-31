@@ -36,8 +36,16 @@ public class UserService {
     final Set<String> interviewCandidates = ImmutableSet.of(
         "shane",
         "doris",
+        // Doris' contacts
         "christoph.resinger",  // cresinger@hotmail.com
-        "ryan.jales"  // ryan.jales@gmail.com
+        "ryan.jales",  // ryan.jales@gmail.com
+        // 121OUTSource Management Staff
+        "melissa.cleofe.121",  // melissa@121outsource.com
+        "peter.mercader.121",  // peter@121outsource.com
+        // 121OUTSource Staff
+        "chona.bultron.121",  // chona@121outsource.com
+        "rachelle.loyola.121",  // rachelle@121outsource.com
+        "rennie.bucud.121"  // rennie@121outsource.com
     );
     return interviewCandidates.contains(username.toLowerCase());
   }
