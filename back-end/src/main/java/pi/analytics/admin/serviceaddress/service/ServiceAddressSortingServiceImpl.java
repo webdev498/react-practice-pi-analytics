@@ -115,6 +115,7 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
       if (!serviceAddressBundle.isPresent()) {
         responseObserver.onError(Status.NOT_FOUND.asRuntimeException());
+        return;
       }
       responseObserver.onNext(serviceAddressBundle.get());
       responseObserver.onCompleted();
