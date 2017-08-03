@@ -38,6 +38,8 @@ import pi.ip.proto.generated.ServiceAddress;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isAssignedToLawFirm;
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.needsSorting;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -127,7 +129,7 @@ public class ServiceAddressBundleFetcher {
             .map(Optional::get)
 
             // Group by law firm, preserving suggestion list order
-            // Service addresses remain ungrouped as long as the suggestions list nas no duplicates
+            // Service addresses remain ungrouped as long as the suggestions list has no duplicates
             .collect(groupingBy(this::getAgentGroupingKey, LinkedHashMap::new, toList()))
             .entrySet()
             .stream()
@@ -190,7 +192,7 @@ public class ServiceAddressBundleFetcher {
   }
 
   private Optional<ServiceAddress> pruneUnsortedServiceAddresses(final Optional<ServiceAddress> serviceAddress) {
-    return serviceAddress.flatMap(sa -> isUnsorted(sa) ? Optional.empty() : Optional.of(sa));
+    return serviceAddress.flatMap(sa -> needsSorting(sa) ? Optional.empty() : Optional.of(sa));
   }
 
   private Optional<ServiceAddress> pruneSuggestionsForSameServiceAddress(final Optional<ServiceAddress> suggestion,
@@ -201,7 +203,7 @@ public class ServiceAddressBundleFetcher {
   }
 
   private String getAgentGroupingKey(final ServiceAddress serviceAddress) {
-    if (isLawFirm(serviceAddress)) {
+    if (isAssignedToLawFirm(serviceAddress)) {
       return "lf_" + String.valueOf(serviceAddress.getLawFirmId().getValue());
     } else {
       return "sa_" + String.valueOf(serviceAddress.getServiceAddressId());
@@ -215,7 +217,7 @@ public class ServiceAddressBundleFetcher {
 
     // If there are multiple service addresses, they will all refer to the same law firm.
     // Inspecting the first one will do.
-    if (!isLawFirm(serviceAddresses.get(0))) {
+    if (!isAssignedToLawFirm(serviceAddresses.get(0))) {
       // Not a law firm. There will only be one service address in this list
       agentBuilder.setNonLawFirm(NonLawFirm.newBuilder().setName(serviceAddresses.get(0).getName()));
     } else {
@@ -227,13 +229,5 @@ public class ServiceAddressBundleFetcher {
     }
     agentBuilder.addAllServiceAddresses(serviceAddresses);
     return agentBuilder.build();
-  }
-
-  private boolean isUnsorted(final ServiceAddress serviceAddress) {
-    return !serviceAddress.hasLawFirmId() && !serviceAddress.getLawFirmStatusDetermined();
-  }
-
-  private boolean isLawFirm(final ServiceAddress serviceAddress) {
-    return serviceAddress.hasLawFirmId();
   }
 }
