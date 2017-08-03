@@ -72,7 +72,7 @@ public class UserService {
   }
 
   public float getAlreadySortedWeightedChance(final String username) {
-    return isStaff(username) ? 0 : 1;
+    return isStaff(username) ? 0.1f : 1f;
   }
 
   public Set<LangType> getLangTypes(final String username) {

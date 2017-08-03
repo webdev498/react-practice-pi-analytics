@@ -40,7 +40,7 @@ public class UserServiceTest {
   public void getAlreadySortedWeightedChance() throws Exception {
     assertThat(userService.getAlreadySortedWeightedChance("flor"))
         .as("Staff users currently always sort unsorted service addresses")
-        .isEqualTo(0f);
+        .isEqualTo(0.1f);
     assertThat(userService.getAlreadySortedWeightedChance("nonstaff"))
         .as("Non staff users currently never sort unsorted service addresses")
         .isEqualTo(1f);
