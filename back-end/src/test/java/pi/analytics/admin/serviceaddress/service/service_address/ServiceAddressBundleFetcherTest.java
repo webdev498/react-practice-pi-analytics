@@ -33,10 +33,10 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.SamplePatentApp;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.es.ESMutationServiceGrpc;
-import pi.ip.generated.es.ESReadServiceGrpc;
 import pi.ip.generated.es.LocationRecord;
 import pi.ip.generated.es.SuggestSimilarThinLawFirmServiceAddressRecordResponse;
 import pi.ip.generated.es.ThinLawFirmRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressReadServiceGrpc;
 import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
 import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.proto.generated.LangType;
@@ -64,8 +64,8 @@ public class ServiceAddressBundleFetcherTest {
   private Faker faker = new Faker();
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
-  private ESReadServiceGrpc.ESReadServiceImplBase esReadService;
-  private ESMutationServiceGrpc.ESMutationServiceImplBase esMutationService;
+  private ThinLawFirmServiceAddressReadServiceGrpc.ThinLawFirmServiceAddressReadServiceImplBase
+      thinLawFirmServiceAddressReadService;
   private Translator translator;
   private Server server;
   private ManagedChannel channel;
@@ -75,8 +75,8 @@ public class ServiceAddressBundleFetcherTest {
   public void setUp() throws Exception {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
-    esReadService = mock(ESReadServiceGrpc.ESReadServiceImplBase.class);
-    esMutationService = mock(ESMutationServiceGrpc.ESMutationServiceImplBase.class);
+    thinLawFirmServiceAddressReadService =
+        mock(ThinLawFirmServiceAddressReadServiceGrpc.ThinLawFirmServiceAddressReadServiceImplBase.class);
     translator = mock(Translator.class);
 
     final String serverName = "service-address-bundle-fetcher-test-".concat(UUID.randomUUID().toString());
@@ -85,8 +85,7 @@ public class ServiceAddressBundleFetcherTest {
             .forName(serverName)
             .addService(lawFirmDbService.bindService())
             .addService(serviceAddressService.bindService())
-            .addService(esReadService.bindService())
-            .addService(esMutationService.bindService())
+            .addService(thinLawFirmServiceAddressReadService.bindService())
             .directExecutor()
             .build()
             .start();
@@ -103,8 +102,8 @@ public class ServiceAddressBundleFetcherTest {
             .toInstance(LawFirmDbServiceGrpc.newBlockingStub(channel));
         bind(ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub.class)
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
-        bind(ESReadServiceGrpc.ESReadServiceBlockingStub.class)
-            .toInstance(ESReadServiceGrpc.newBlockingStub(channel));
+        bind(ThinLawFirmServiceAddressReadServiceGrpc.ThinLawFirmServiceAddressReadServiceBlockingStub.class)
+            .toInstance(ThinLawFirmServiceAddressReadServiceGrpc.newBlockingStub(channel));
         bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
             .toInstance(ESMutationServiceGrpc.newBlockingStub(channel));
         bind(Translator.class)
@@ -218,7 +217,7 @@ public class ServiceAddressBundleFetcherTest {
   @Test
   public void addAgentSuggestions_no_suggestions_found() throws Exception {
     replyWith(SuggestSimilarThinLawFirmServiceAddressRecordResponse.getDefaultInstance())
-        .when(esReadService)
+        .when(thinLawFirmServiceAddressReadService)
         .suggestSimilarThinLawFirmServiceAddressRecord(any(ThinServiceAddressRecord.class), any(StreamObserver.class));
 
     final ServiceAddressBundle originalBundle =
@@ -303,7 +302,7 @@ public class ServiceAddressBundleFetcherTest {
             .build();
 
     replyWith(suggestSimilarThinServiceAddressResponse)
-        .when(esReadService)
+        .when(thinLawFirmServiceAddressReadService)
         .suggestSimilarThinLawFirmServiceAddressRecord(any(ThinServiceAddressRecord.class), any(StreamObserver.class));
 
     final ServiceAddressBundle bundleWithSuggestions = serviceAddressBundleFetcher.addAgentSuggestions.apply(originalBundle);
