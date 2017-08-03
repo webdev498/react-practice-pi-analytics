@@ -28,8 +28,8 @@ import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressReque
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
-import pi.ip.generated.es.ESReadServiceGrpc.ESReadServiceBlockingStub;
 import pi.ip.generated.es.LocationRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressReadServiceGrpc.ThinLawFirmServiceAddressReadServiceBlockingStub;
 import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
 import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.proto.generated.LangType;
@@ -56,7 +56,7 @@ public class ServiceAddressBundleFetcher {
   ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   @Inject
-  ESReadServiceBlockingStub esReadServiceBlockingStub;
+  ThinLawFirmServiceAddressReadServiceBlockingStub thinLawFirmServiceAddressReadServiceBlockingStub;
 
   @Inject
   Translator translator;
@@ -114,7 +114,7 @@ public class ServiceAddressBundleFetcher {
             .build();
 
     final List<Agent> suggestedAgents =
-        esReadServiceBlockingStub
+        thinLawFirmServiceAddressReadServiceBlockingStub
             // Fetch suggestions from Elasticsearch
             .suggestSimilarThinLawFirmServiceAddressRecord(getSuggestionsRequest)
             .getSuggestionsList()

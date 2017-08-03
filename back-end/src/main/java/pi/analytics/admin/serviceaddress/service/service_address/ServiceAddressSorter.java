@@ -39,6 +39,7 @@ import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
 import pi.ip.generated.es.LocationRecord;
 import pi.ip.generated.es.ThinLawFirmRecord;
 import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
+import pi.ip.generated.es.ThinLawFirmServiceAddressUpdateServiceGrpc.ThinLawFirmServiceAddressUpdateServiceBlockingStub;
 import pi.ip.generated.es.ThinServiceAddressRecord;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -71,6 +72,9 @@ public class ServiceAddressSorter {
 
   @Inject
   private ESMutationServiceBlockingStub esMutationServiceBlockingStub;
+
+  @Inject
+  private ThinLawFirmServiceAddressUpdateServiceBlockingStub thinLawFirmServiceAddressUpdateServiceBlockingStub;
 
   @Inject
   private MetricsAccessor metricsAccessor;
@@ -117,7 +121,8 @@ public class ServiceAddressSorter {
       // Also update Elasticsearch index
       final ThinLawFirmServiceAddressRecord thinLawFirmServiceAddressRecord =
           buildThinLawFirmServiceAddressRecordForLawFirmAssignment(preSortServiceAddress, lawFirm);
-      esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
+      thinLawFirmServiceAddressUpdateServiceBlockingStub
+          .upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
     }
 
     final SortResult sortResult = resultOfAssignToLawFirm(preSortServiceAddress, lawFirm.getLawFirmId());
@@ -186,7 +191,7 @@ public class ServiceAddressSorter {
 
       // Update Elasticsearch caches
       esMutationServiceBlockingStub.upsertLawFirm(newLawFirm);  // Used by law firm search by name
-      esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(
+      thinLawFirmServiceAddressUpdateServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(
           buildThinLawFirmServiceAddressRecordForLawFirm(request.getServiceAddress(), newLawFirm)
       );
     }
@@ -253,7 +258,8 @@ public class ServiceAddressSorter {
       );
       final ThinLawFirmServiceAddressRecord thinLawFirmServiceAddressRecord =
           buildThinLawFirmServiceAddressRecordForNonLawFirm(serviceAddress);
-      esMutationServiceBlockingStub.upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
+      thinLawFirmServiceAddressUpdateServiceBlockingStub
+          .upsertThinLawFirmServiceAddressRecord(thinLawFirmServiceAddressRecord);
     }
 
     final SortResult sortResult = resultOfSetAsNonLawFirm(preSortServiceAddress);
@@ -284,7 +290,7 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    esMutationServiceBlockingStub.deleteThinLawFirmServiceAddressRecord(
+    thinLawFirmServiceAddressUpdateServiceBlockingStub.deleteThinLawFirmServiceAddressRecord(
         Int64Value
             .newBuilder()
             .setValue(request.getServiceAddressId())
