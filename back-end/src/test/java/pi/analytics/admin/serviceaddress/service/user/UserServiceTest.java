@@ -49,7 +49,7 @@ public class UserServiceTest {
   @Test
   public void getAlreadySortedWeightedChance_staff() throws Exception {
     assertThat(userService.getAlreadySortedWeightedChance("flor"))
-        .isEqualTo(0)
+        .isEqualTo(0.1f)
         .as("User flor is a staff member and should always sort unsorted service addresses");
   }
 
