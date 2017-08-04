@@ -28,10 +28,10 @@ import pi.ip.data.relational.generated.GetSamplePatentAppsForServiceAddressReque
 import pi.ip.data.relational.generated.GetServiceAddressByIdRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
+import pi.ip.generated.es.LawFirmServiceAddressReadServiceGrpc.LawFirmServiceAddressReadServiceBlockingStub;
+import pi.ip.generated.es.LawFirmServiceAddressRecord;
 import pi.ip.generated.es.LocationRecord;
-import pi.ip.generated.es.ThinLawFirmServiceAddressReadServiceGrpc.ThinLawFirmServiceAddressReadServiceBlockingStub;
-import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
-import pi.ip.generated.es.ThinServiceAddressRecord;
+import pi.ip.generated.es.ServiceAddressRecord;
 import pi.ip.proto.generated.LangType;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -56,7 +56,7 @@ public class ServiceAddressBundleFetcher {
   ServiceAddressServiceBlockingStub serviceAddressServiceBlockingStub;
 
   @Inject
-  ThinLawFirmServiceAddressReadServiceBlockingStub thinLawFirmServiceAddressReadServiceBlockingStub;
+  LawFirmServiceAddressReadServiceBlockingStub lawFirmServiceAddressReadServiceBlockingStub;
 
   @Inject
   Translator translator;
@@ -100,8 +100,8 @@ public class ServiceAddressBundleFetcher {
   final Function<ServiceAddressBundle, ServiceAddressBundle> addAgentSuggestions = bundle -> {
     final ServiceAddress serviceAddress = bundle.getServiceAddressToSort();
 
-    final ThinServiceAddressRecord getSuggestionsRequest =
-        ThinServiceAddressRecord
+    final ServiceAddressRecord getSuggestionsRequest =
+        ServiceAddressRecord
             .newBuilder()
             .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
             .setCountry(serviceAddress.getCountry())
@@ -114,9 +114,9 @@ public class ServiceAddressBundleFetcher {
             .build();
 
     final List<Agent> suggestedAgents =
-        thinLawFirmServiceAddressReadServiceBlockingStub
+        lawFirmServiceAddressReadServiceBlockingStub
             // Fetch suggestions from Elasticsearch
-            .suggestSimilarThinLawFirmServiceAddressRecord(getSuggestionsRequest)
+            .suggestSimilarLawFirmServiceAddressRecord(getSuggestionsRequest)
             .getSuggestionsList()
             .stream()
 
@@ -171,17 +171,17 @@ public class ServiceAddressBundleFetcher {
         .build();
   };
 
-  private Optional<ServiceAddress> fetchServiceAddress(final ThinLawFirmServiceAddressRecord thinLawFirmServiceAddress) {
+  private Optional<ServiceAddress> fetchServiceAddress(final LawFirmServiceAddressRecord lawFirmServiceAddressRecord) {
     try {
-    return Optional.of(
-        serviceAddressServiceBlockingStub
-            .getServiceAddressById(
-                GetServiceAddressByIdRequest
-                    .newBuilder()
-                    .setServiceAddressId(thinLawFirmServiceAddress.getServiceAddress().getId())
-                    .build()
-            )
-        );
+      return Optional.of(
+          serviceAddressServiceBlockingStub
+              .getServiceAddressById(
+                  GetServiceAddressByIdRequest
+                      .newBuilder()
+                      .setServiceAddressId(lawFirmServiceAddressRecord.getServiceAddress().getId())
+                      .build()
+              )
+          );
     } catch (StatusRuntimeException sre) {
       if (sre.getStatus().equals(Status.NOT_FOUND)) {
         return Optional.empty();

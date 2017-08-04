@@ -11,8 +11,8 @@ import io.practiceinsight.licensingalert.citationsearch.generated.NakedLawFirmSe
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.generated.es.ESMutationServiceGrpc;
-import pi.ip.generated.es.ThinLawFirmServiceAddressReadServiceGrpc;
-import pi.ip.generated.es.ThinLawFirmServiceAddressUpdateServiceGrpc;
+import pi.ip.generated.es.LawFirmServiceAddressReadServiceGrpc;
+import pi.ip.generated.es.LawFirmServiceAddressUpdateServiceGrpc;
 
 /**
  * @author shane.xie@practiceinsight.io
@@ -36,11 +36,11 @@ public class ServiceAddressSortingModule extends AbstractModule {
     bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
         .toProvider(EsMutationServiceBlockingStubProvider.class)
         .in(Singleton.class);
-    bind(ThinLawFirmServiceAddressReadServiceGrpc.ThinLawFirmServiceAddressReadServiceBlockingStub.class)
-        .toProvider(ThinLawFirmServiceAddressReadServiceBlockingStubProvider.class)
+    bind(LawFirmServiceAddressReadServiceGrpc.LawFirmServiceAddressReadServiceBlockingStub.class)
+        .toProvider(LawFirmServiceAddressReadServiceBlockingStubProvider.class)
         .in(Singleton.class);
-    bind(ThinLawFirmServiceAddressUpdateServiceGrpc.ThinLawFirmServiceAddressUpdateServiceBlockingStub.class)
-        .toProvider(ThinLawFirmServiceAddressUpdateServiceBlockingStubProvider.class)
+    bind(LawFirmServiceAddressUpdateServiceGrpc.LawFirmServiceAddressUpdateServiceBlockingStub.class)
+        .toProvider(LawFirmServiceAddressUpdateServiceBlockingStubProvider.class)
         .in(Singleton.class);
   }
 }

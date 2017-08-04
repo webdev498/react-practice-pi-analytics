@@ -48,11 +48,10 @@ import pi.ip.data.relational.generated.SortEffect;
 import pi.ip.data.relational.generated.SortResult;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.es.ESMutationServiceGrpc;
+import pi.ip.generated.es.LawFirmServiceAddressRecord;
+import pi.ip.generated.es.LawFirmServiceAddressUpdateServiceGrpc;
 import pi.ip.generated.es.LocationRecord;
-import pi.ip.generated.es.ThinLawFirmRecord;
-import pi.ip.generated.es.ThinLawFirmServiceAddressRecord;
-import pi.ip.generated.es.ThinLawFirmServiceAddressUpdateServiceGrpc;
-import pi.ip.generated.es.ThinServiceAddressRecord;
+import pi.ip.generated.es.ServiceAddressRecord;
 import pi.ip.proto.generated.AckResponse;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
@@ -86,8 +85,8 @@ public class ServiceAddressSorterTest {
   private LawFirmDbServiceGrpc.LawFirmDbServiceImplBase lawFirmDbService;
   private ServiceAddressServiceGrpc.ServiceAddressServiceImplBase serviceAddressService;
   private ESMutationServiceGrpc.ESMutationServiceImplBase esMutationService;
-  private ThinLawFirmServiceAddressUpdateServiceGrpc.ThinLawFirmServiceAddressUpdateServiceImplBase
-      thinLawFirmServiceAddressUpdateService;
+  private LawFirmServiceAddressUpdateServiceGrpc.LawFirmServiceAddressUpdateServiceImplBase
+      lawFirmServiceAddressUpdateService;
   private Server server;
   private ManagedChannel channel;
   private ServiceAddressSorter serviceAddressSorter;
@@ -99,8 +98,8 @@ public class ServiceAddressSorterTest {
     lawFirmDbService = mock(LawFirmDbServiceGrpc.LawFirmDbServiceImplBase.class);
     serviceAddressService = mock(ServiceAddressServiceGrpc.ServiceAddressServiceImplBase.class);
     esMutationService = mock(ESMutationServiceGrpc.ESMutationServiceImplBase.class);
-    thinLawFirmServiceAddressUpdateService = mock(ThinLawFirmServiceAddressUpdateServiceGrpc
-        .ThinLawFirmServiceAddressUpdateServiceImplBase.class);
+    lawFirmServiceAddressUpdateService = mock(LawFirmServiceAddressUpdateServiceGrpc
+        .LawFirmServiceAddressUpdateServiceImplBase.class);
 
     final String serverName = "service-address-sorter-test-".concat(UUID.randomUUID().toString());
     server =
@@ -109,7 +108,7 @@ public class ServiceAddressSorterTest {
             .addService(lawFirmDbService.bindService())
             .addService(serviceAddressService.bindService())
             .addService(esMutationService.bindService())
-            .addService(thinLawFirmServiceAddressUpdateService.bindService())
+            .addService(lawFirmServiceAddressUpdateService.bindService())
             .directExecutor()
             .build()
             .start();
@@ -130,8 +129,8 @@ public class ServiceAddressSorterTest {
             .toInstance(ServiceAddressServiceGrpc.newBlockingStub(channel));
         bind(ESMutationServiceGrpc.ESMutationServiceBlockingStub.class)
             .toInstance(ESMutationServiceGrpc.newBlockingStub(channel));
-        bind(ThinLawFirmServiceAddressUpdateServiceGrpc.ThinLawFirmServiceAddressUpdateServiceBlockingStub.class)
-            .toInstance(ThinLawFirmServiceAddressUpdateServiceGrpc.newBlockingStub(channel));
+        bind(LawFirmServiceAddressUpdateServiceGrpc.LawFirmServiceAddressUpdateServiceBlockingStub.class)
+            .toInstance(LawFirmServiceAddressUpdateServiceGrpc.newBlockingStub(channel));
       }
     }).getInstance(ServiceAddressSorter.class);
   }
@@ -161,8 +160,8 @@ public class ServiceAddressSorterTest {
                 .build()
         )
     )
-        .as("The service address does not exist")
-        .isInstanceOf(Status.NOT_FOUND.asRuntimeException().getClass());
+    .as("The service address does not exist")
+    .isInstanceOf(Status.NOT_FOUND.asRuntimeException().getClass());
   }
 
   @Test
@@ -190,8 +189,8 @@ public class ServiceAddressSorterTest {
                     .build()
             )
     )
-        .as("The law firm does not exist")
-        .isInstanceOf(IllegalArgumentException.class);
+    .as("The law firm does not exist")
+    .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -206,8 +205,8 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .assignServiceAddressToLawFirm(any(AssignServiceAddressToLawFirmRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
-        .when(thinLawFirmServiceAddressUpdateService)
-        .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
+        .when(lawFirmServiceAddressUpdateService)
+        .upsertLawFirmServiceAddressRecord(any(LawFirmServiceAddressRecord.class), any(StreamObserver.class));
     replyWith(GetLawFirmByIdResponse.newBuilder().setLawFirm(lawFirm).build())
         .when(lawFirmDbService)
         .getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
@@ -238,19 +237,14 @@ public class ServiceAddressSorterTest {
         any(StreamObserver.class)
     );
 
-    verify(thinLawFirmServiceAddressUpdateService).upsertThinLawFirmServiceAddressRecord(
+    verify(lawFirmServiceAddressUpdateService).upsertLawFirmServiceAddressRecord(
         eq(
-            ThinLawFirmServiceAddressRecord
+            LawFirmServiceAddressRecord
                 .newBuilder()
                 .setLawFirmFlag(true)
-                .setLawFirm(
-                    ThinLawFirmRecord
-                        .newBuilder()
-                        .setId(lawFirm.getLawFirmId())
-                        .setName(lawFirm.getName())
-                )
+                .setLawFirm(lawFirm)
                 .setServiceAddress(
-                    ThinServiceAddressRecord
+                    ServiceAddressRecord
                         .newBuilder()
                         .setId(serviceAddress.getServiceAddressId())
                         .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
@@ -315,8 +309,8 @@ public class ServiceAddressSorterTest {
         .when(esMutationService)
         .upsertLawFirm(any(LawFirm.class), any(StreamObserver.class));
     replyWith(AckResponse.getDefaultInstance())
-        .when(thinLawFirmServiceAddressUpdateService)
-        .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
+        .when(lawFirmServiceAddressUpdateService)
+        .upsertLawFirmServiceAddressRecord(any(LawFirmServiceAddressRecord.class), any(StreamObserver.class));
     final ArgumentCaptor<LogSortDecisionRequest> logSortDecisionRequestArgument =
         ArgumentCaptor.forClass(LogSortDecisionRequest.class);
     replyWithAckResponse()
@@ -343,30 +337,28 @@ public class ServiceAddressSorterTest {
             any(StreamObserver.class)
         );
 
+    final LawFirm newLawFirm =
+        LawFirm
+            .newBuilder()
+            .setLawFirmId(newLawFirmId)
+            .setName(createLawFirmRequest.getName())
+            .setStateStr(createLawFirmRequest.getState())
+            .setCountry(createLawFirmRequest.getCountryCode())
+            .setWebsiteUrl(createLawFirmRequest.getWebsiteUrl())
+            .build();
+
     // Verify upsert into law firm caches called
     verify(esMutationService, times(1))
-        .upsertLawFirm(
-            eq(
-                LawFirm
-                    .newBuilder()
-                    .setLawFirmId(newLawFirmId)
-                    .setName(createLawFirmRequest.getName())
-                    .setStateStr(createLawFirmRequest.getState())
-                    .setCountry(createLawFirmRequest.getCountryCode())
-                    .setWebsiteUrl(createLawFirmRequest.getWebsiteUrl())
-                    .build()
-            ),
-            any(StreamObserver.class)
-        );
+        .upsertLawFirm(eq(newLawFirm), any(StreamObserver.class));
 
-    // Verify upsert thin law firm service address called
-    verify(thinLawFirmServiceAddressUpdateService, times(1))
-        .upsertThinLawFirmServiceAddressRecord(
+    // Verify upsert law firm service address called
+    verify(lawFirmServiceAddressUpdateService, times(1))
+        .upsertLawFirmServiceAddressRecord(
             eq(
-                ThinLawFirmServiceAddressRecord
+                LawFirmServiceAddressRecord
                     .newBuilder()
                     .setServiceAddress(
-                        ThinServiceAddressRecord
+                        ServiceAddressRecord
                             .newBuilder()
                             .setId(createLawFirmRequest.getServiceAddress().getServiceAddressId())
                             .setNameAddress(createLawFirmRequest.getServiceAddress().getName() + " "
@@ -380,12 +372,7 @@ public class ServiceAddressSorterTest {
                             )
                     )
                     .setLawFirmFlag(true)
-                    .setLawFirm(
-                        ThinLawFirmRecord
-                            .newBuilder()
-                            .setId(newLawFirmId)
-                            .setName(createLawFirmRequest.getName())
-                    )
+                    .setLawFirm(newLawFirm)
                     .build()
             ),
             any(StreamObserver.class)
@@ -418,16 +405,16 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .unassignServiceAddressFromLawFirm(any(UnassignServiceAddressFromLawFirmRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
-        .when(thinLawFirmServiceAddressUpdateService)
-        .deleteThinLawFirmServiceAddressRecord(any(Int64Value.class), any(StreamObserver.class));
+        .when(lawFirmServiceAddressUpdateService)
+        .deleteLawFirmServiceAddressRecord(any(Int64Value.class), any(StreamObserver.class));
     serviceAddressSorter.unsortServiceAddress(UnsortServiceAddressRequest.newBuilder().setServiceAddressId(1L).build());
     verify(serviceAddressService, times(1))
         .unassignServiceAddressFromLawFirm(
             eq(UnassignServiceAddressFromLawFirmRequest.newBuilder().setServiceAddressId(1L).build()),
             any(StreamObserver.class)
         );
-    verify(thinLawFirmServiceAddressUpdateService, times(1))
-        .deleteThinLawFirmServiceAddressRecord(eq(Int64Value.newBuilder().setValue(1L).build()), any(StreamObserver.class));
+    verify(lawFirmServiceAddressUpdateService, times(1))
+        .deleteLawFirmServiceAddressRecord(eq(Int64Value.newBuilder().setValue(1L).build()), any(StreamObserver.class));
   }
 
   @Test
@@ -493,8 +480,8 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
     replyWithAckResponse()
-        .when(thinLawFirmServiceAddressUpdateService)
-        .upsertThinLawFirmServiceAddressRecord(any(ThinLawFirmServiceAddressRecord.class), any(StreamObserver.class));
+        .when(lawFirmServiceAddressUpdateService)
+        .upsertLawFirmServiceAddressRecord(any(LawFirmServiceAddressRecord.class), any(StreamObserver.class));
     replyWithAckResponse()
         .when(serviceAddressService)
         .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
@@ -518,13 +505,13 @@ public class ServiceAddressSorterTest {
             any(StreamObserver.class)
         );
 
-    verify(thinLawFirmServiceAddressUpdateService).upsertThinLawFirmServiceAddressRecord(
+    verify(lawFirmServiceAddressUpdateService).upsertLawFirmServiceAddressRecord(
         eq(
-            ThinLawFirmServiceAddressRecord
+            LawFirmServiceAddressRecord
                 .newBuilder()
                 .setLawFirmFlag(false)
                 .setServiceAddress(
-                    ThinServiceAddressRecord
+                    ServiceAddressRecord
                         .newBuilder()
                         .setId(serviceAddress.getServiceAddressId())
                         .setNameAddress(serviceAddress.getName() + " " + serviceAddress.getAddress())
