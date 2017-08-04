@@ -5,6 +5,7 @@
 package pi.analytics.admin.serviceaddress.guice;
 
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 
 import com.pi.common.config.PiConfig;
 import com.pi.common.config.PiKubeServiceImpl;
@@ -12,17 +13,18 @@ import com.pi.common.config.PiKubeServicePort;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
-import pi.ip.generated.es.ThinLawFirmServiceAddressReadServiceGrpc;
-import pi.ip.generated.es.ThinLawFirmServiceAddressReadServiceGrpc.ThinLawFirmServiceAddressReadServiceBlockingStub;
+import pi.ip.generated.es.LawFirmServiceAddressUpdateServiceGrpc;
+import pi.ip.generated.es.LawFirmServiceAddressUpdateServiceGrpc.LawFirmServiceAddressUpdateServiceBlockingStub;
 
 /**
  * @author shane.xie@practiceinsight.io
  */
-public class ThinLawFirmServiceAddressReadServiceBlockingStubProvider implements
-    Provider<ThinLawFirmServiceAddressReadServiceBlockingStub> {
+@Singleton
+public class LawFirmServiceAddressUpdateServiceBlockingStubProvider
+    implements Provider<LawFirmServiceAddressUpdateServiceBlockingStub> {
 
   @Override
-  public ThinLawFirmServiceAddressReadServiceBlockingStub get() {
+  public LawFirmServiceAddressUpdateServiceBlockingStub get() {
     final PiConfig piConfig = PiConfig.get();
     final ManagedChannel channel =
         ManagedChannelBuilder
@@ -32,6 +34,6 @@ public class ThinLawFirmServiceAddressReadServiceBlockingStubProvider implements
             )
             .usePlaintext(true)
             .build();
-    return ThinLawFirmServiceAddressReadServiceGrpc.newBlockingStub(channel);
+    return LawFirmServiceAddressUpdateServiceGrpc.newBlockingStub(channel);
   }
 }
