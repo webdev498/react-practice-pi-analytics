@@ -59,8 +59,8 @@ class Root extends React.Component {
         <Content>
           <FirmDisplay value={this.props.value}/>
           <div className="button-bar">
-              <Button raised onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
-              <Button raised onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}>
+              <Button raised accent onClick={this.props.onCreateFirm}><Icon name="create"/> Create As New Firm</Button>
+              <Button raised accent onClick={() => this.props.onSetAsNonLawFirm(serviceAddressId)}>
                 <Icon name="not_interested"/> Not a Law Firm
               </Button>
               <Button raised onClick={() => this.props.onSetInsufficientInfoStatus(serviceAddressId)}>
