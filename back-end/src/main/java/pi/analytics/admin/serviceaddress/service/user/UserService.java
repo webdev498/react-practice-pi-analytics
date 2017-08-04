@@ -22,40 +22,50 @@ public class UserService {
 
   private boolean isStaff(final String username) {
     final Set<String> staffUsers = ImmutableSet.of(
+        "doris",
         "floremer",
         "flor",
         "hellen",
         "ivan",
         "janel",
-        "shane"
-//        "thomas"
+        "shane",
+        "thomas"
     );
     return staffUsers.contains(username.toLowerCase());
   }
 
-  private boolean isInterviewCandidate(final String username) {
+  private boolean isInterviewTestOneCandidate(final String username) {
     final Set<String> interviewCandidates = ImmutableSet.of(
-        "doris",
         // Doris' contacts
         "christoph.resinger",  // cresinger@hotmail.com
         "ryan.jales",  // ryan.jales@gmail.com
+        // 121OUTSource Staff
+        "chona.bultron.121",  // chona@121outsource.com
+        "rachelle.loyola.121",  // rachelle@121outsource.com
+        "rennie.bucud.121"  // rennie@121outsource.com
+    );
+    return interviewCandidates.contains(username.toLowerCase());
+  }
+
+  private boolean isInterviewTestTwoCandidate(final String username) {
+    final Set<String> interviewCandidates = ImmutableSet.of(
         // 121OUTSource Management Staff
         "melissa.cleofe.121",  // melissa@121outsource.com
         "peter.mercader.121",  // peter@121outsource.com
         // 121OUTSource Staff
         "chona.bultron.121",  // chona@121outsource.com
         "rachelle.loyola.121",  // rachelle@121outsource.com
-        "rennie.bucud.121",  // rennie@121outsource.com
-        "feljohn.mojica.121",  // feljohn@121outsource.com
-        "marco.ambunan.121",  // marco@121outsource.com
-        "theresa.arbiol.121"  // theresa@121outsource.com
+        "rennie.bucud.121"  // rennie@121outsource.com
     );
     return interviewCandidates.contains(username.toLowerCase());
   }
 
   public Optional<String> getPlaylist(final String username) {
-    if (isInterviewCandidate(username)) {
-      return Optional.of("interview_test");
+    if (isInterviewTestOneCandidate(username)) {
+      return Optional.of("interview_test_one");
+    }
+    if (isInterviewTestTwoCandidate(username)) {
+      return Optional.of("interview_test_two");
     }
     return Optional.empty();
   }

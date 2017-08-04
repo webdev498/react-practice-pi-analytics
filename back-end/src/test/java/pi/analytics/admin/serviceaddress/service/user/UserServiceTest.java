@@ -27,7 +27,7 @@ public class UserServiceTest {
 
   @Test
   public void getPlayList() throws Exception {
-    assertThat(userService.getPlaylist("peter.mercader.121")).isEqualTo(Optional.of("interview_test"));
+    assertThat(userService.getPlaylist("peter.mercader.121")).isEqualTo(Optional.of("interview_test_two"));
   }
 
   @Test
