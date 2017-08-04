@@ -54,12 +54,6 @@ public class UserService {
     if (isInterviewCandidate(username)) {
       return Optional.of("interview_test");
     }
-    if (username.equalsIgnoreCase("thomas")) {
-      return Optional.of("interview_test_check");
-    }
-    if (username.equalsIgnoreCase("shane")) {
-      return Optional.of("ad_hoc");
-    }
     return Optional.empty();
   }
 

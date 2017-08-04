@@ -22,12 +22,12 @@ public class UserServiceTest {
   @Test
   public void hasPlaylist() throws Exception {
     assertThat(userService.hasPlaylist("flor")).isFalse();
-    assertThat(userService.hasPlaylist("shane")).isTrue();
+    assertThat(userService.hasPlaylist("peter.mercader.121")).isTrue();
   }
 
   @Test
   public void getPlayList() throws Exception {
-    assertThat(userService.getPlaylist("shane")).isEqualTo(Optional.of("ad_hoc"));
+    assertThat(userService.getPlaylist("peter.mercader.121")).isEqualTo(Optional.of("interview_test"));
   }
 
   @Test
