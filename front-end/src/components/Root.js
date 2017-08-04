@@ -53,7 +53,6 @@ class Root extends React.Component {
     let content = <Content style={{padding: "32px"}}/>
 
     if (this.props.value) {
-
       const serviceAddressId = this.props.value.serviceAddressToSort.serviceAddressId;
 
       content = (

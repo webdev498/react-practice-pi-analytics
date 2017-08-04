@@ -1,9 +1,9 @@
 // Copyright (c) 2017 Practice Insight Pty Ltd. All rights reserved.
 //jshint esversion:6
 //@flow
-import React from "react";
-import {DataTable, IconButton, Layout, TableHeader} from "react-mdl";
-import {OuterUrls} from "../services/Urls";
+import React from "react"
+import {DataTable, IconButton, Layout, TableHeader} from "react-mdl"
+import {OuterUrls} from "../services/Urls"
 
 type
 FirmDisplayProps = {
@@ -12,7 +12,7 @@ FirmDisplayProps = {
 
 const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
 
-  let addressToSort = props.value.serviceAddressToSort;
+  const addressToSort = props.value.serviceAddressToSort
 
   const renderServiceAddressCell = (value: Object) => {
     if (!value || (!value.name && !value.address)) {
@@ -25,32 +25,29 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
         <span>{value.name} <a href={nameSearchUrl} target="_blank"><IconButton accent name="search"/></a></span>
         <span>{value.address} <a href={addressSearchUrl} target="_blank"><IconButton accent name="search"/></a></span>
       </span>
-    } else {
-      return <span>{value.name} <a href={nameSearchUrl} target="_blank"><IconButton accent name="search"/></a></span>
     }
+    return <span>{value.name} <a href={nameSearchUrl} target="_blank"><IconButton accent name="search"/></a></span>
   }
 
   const renderCountryEditIcon = (country: string, localId: string) => {
-    var url = OuterUrls.country.concat(localId);
+    const url = OuterUrls.country.concat(localId)
     return (
       <span>{country} <a href={url}><IconButton accent name="edit"/></a></span>
     )
   }
 
-  // TODO: Display en translation in second row if service address is not in English
-  const mapRows = () => {
-    return [addressToSort].map((address) => ({
+  const mapRows = () =>
+    [addressToSort].map(address => ({
       lawFirmId: address.lawFirmId,
       name: {name: address.name, address: address.address},
       phone: address.phone,
       country: renderCountryEditIcon(address.country, address.serviceAddressId),
-      serviceAddressId: address.serviceAddressId
-    }));
-  }
+      serviceAddressId: address.serviceAddressId,
+    }))
 
   return (
     <div>
-      {"en" !== addressToSort.languageType ? (
+      {props.value.enTranslation ? (
         <h5>{props.value.enTranslation}</h5>
       ) : (null)}
       <DataTable className="firm-display" style={{width: "100%"}} rowKeyColumn="lawFirmId" rows={mapRows()}>
@@ -62,4 +59,5 @@ const FirmDisplay = (props: FirmDisplayProps): React.Element<Layout> => {
     </div>
   )
 }
-export  default FirmDisplay
+
+export default FirmDisplay
