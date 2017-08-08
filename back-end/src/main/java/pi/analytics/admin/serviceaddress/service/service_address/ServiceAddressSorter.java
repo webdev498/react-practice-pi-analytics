@@ -156,7 +156,6 @@ public class ServiceAddressSorter {
     return response.build();
   }
 
-  // The returned law firm id may be 0 if an actual sort was not carried out e.g. because we're trialling the user
   public CreateLawFirmResponse createLawFirmAndAssignServiceAddress(final CreateLawFirmRequest request) {
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getName()), "Law firm name is required");
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getCountryCode()), "Country code is required");
