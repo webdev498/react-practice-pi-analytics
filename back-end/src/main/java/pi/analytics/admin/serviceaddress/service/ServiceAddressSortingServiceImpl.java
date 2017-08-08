@@ -15,22 +15,22 @@ import java.util.Optional;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.AssignServiceAddressResponse;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
-import pi.admin.service_address_sorting.generated.InsufficientInfoStatusSet;
-import pi.admin.service_address_sorting.generated.LawFirmCreated;
+import pi.admin.service_address_sorting.generated.CreateLawFirmResponse;
 import pi.admin.service_address_sorting.generated.NextUnsortedServiceAddressRequest;
 import pi.admin.service_address_sorting.generated.SearchLawFirmsRequest;
 import pi.admin.service_address_sorting.generated.SearchResults;
-import pi.admin.service_address_sorting.generated.ServiceAddressAssigned;
 import pi.admin.service_address_sorting.generated.ServiceAddressBundle;
-import pi.admin.service_address_sorting.generated.ServiceAddressSetAsNonLawFirm;
-import pi.admin.service_address_sorting.generated.ServiceAddressSkipped;
 import pi.admin.service_address_sorting.generated.ServiceAddressSortingServiceGrpc;
-import pi.admin.service_address_sorting.generated.ServiceAddressUnsorted;
 import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusRequest;
+import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusResponse;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmResponse;
 import pi.admin.service_address_sorting.generated.SkipServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.SkipServiceAddressResponse;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.UnsortServiceAddressResponse;
 import pi.analytics.admin.serviceaddress.metrics.ImmutableMetricSpec;
 import pi.analytics.admin.serviceaddress.metrics.MetricSpec;
 import pi.analytics.admin.serviceaddress.metrics.MetricsAccessor;
@@ -150,10 +150,9 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
   @Override
   public void assignServiceAddress(final AssignServiceAddressRequest request,
-                                   final StreamObserver<ServiceAddressAssigned> responseObserver) {
+                                   final StreamObserver<AssignServiceAddressResponse> responseObserver) {
     try {
-      serviceAddressSorter.assignServiceAddress(request);
-      responseObserver.onNext(ServiceAddressAssigned.getDefaultInstance());
+      responseObserver.onNext(serviceAddressSorter.assignServiceAddress(request));
       responseObserver.onCompleted();
       metricsAccessor.getCounter(sortMetricSpec).inc("assign_to_law_firm", request.getRequestedBy());
     } catch (Throwable th) {
@@ -165,10 +164,10 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
   @Override
   public void unsortServiceAddress(final UnsortServiceAddressRequest request,
-                                   final StreamObserver<ServiceAddressUnsorted> responseObserver) {
+                                   final StreamObserver<UnsortServiceAddressResponse> responseObserver) {
     try {
       serviceAddressSorter.unsortServiceAddress(request);
-      responseObserver.onNext(ServiceAddressUnsorted.getDefaultInstance());
+      responseObserver.onNext(UnsortServiceAddressResponse.getDefaultInstance());
       responseObserver.onCompleted();
       metricsAccessor.getCounter(unsortMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {
@@ -179,15 +178,10 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   }
 
   @Override
-  public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<LawFirmCreated>
+  public void createLawFirm(final CreateLawFirmRequest request, final StreamObserver<CreateLawFirmResponse>
       responseObserver) {
     try {
-      responseObserver.onNext(
-          LawFirmCreated
-              .newBuilder()
-              .setLawFirmId(serviceAddressSorter.createLawFirmAndAssignServiceAddress(request))
-              .build()
-      );
+      responseObserver.onNext(serviceAddressSorter.createLawFirmAndAssignServiceAddress(request));
       responseObserver.onCompleted();
       metricsAccessor.getCounter(sortMetricSpec).inc("create_law_firm", request.getRequestedBy());
     } catch (Throwable th) {
@@ -199,10 +193,9 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
 
   @Override
   public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request,
-                                            final StreamObserver<ServiceAddressSetAsNonLawFirm> responseObserver) {
+                                            final StreamObserver<SetServiceAddressAsNonLawFirmResponse> responseObserver) {
     try {
-      serviceAddressSorter.setServiceAddressAsNonLawFirm(request);
-      responseObserver.onNext(ServiceAddressSetAsNonLawFirm.getDefaultInstance());
+      responseObserver.onNext(serviceAddressSorter.setServiceAddressAsNonLawFirm(request));
       responseObserver.onCompleted();
       metricsAccessor.getCounter(sortMetricSpec).inc("set_non_law_firm", request.getRequestedBy());
     } catch (Throwable th) {
@@ -213,20 +206,20 @@ public class ServiceAddressSortingServiceImpl extends ServiceAddressSortingServi
   }
 
   @Override
-  public void skipServiceAddress(SkipServiceAddressRequest request, StreamObserver<ServiceAddressSkipped> responseObserver) {
+  public void skipServiceAddress(SkipServiceAddressRequest request,
+                                 StreamObserver<SkipServiceAddressResponse> responseObserver) {
     // Simply log the fact and do nothing
     // Skipping is built into the get next unsorted service address endpoint of ip-data-relational
-    responseObserver.onNext(ServiceAddressSkipped.getDefaultInstance());
+    responseObserver.onNext(SkipServiceAddressResponse.getDefaultInstance());
     responseObserver.onCompleted();
     metricsAccessor.getCounter(skipMetricSpec).inc(request.getRequestedBy());
   }
 
   @Override
   public void insufficientInfoToSort(final SetInsufficientInfoStatusRequest request,
-                                     final StreamObserver<InsufficientInfoStatusSet> responseObserver) {
+                                     final StreamObserver<SetInsufficientInfoStatusResponse> responseObserver) {
     try {
-      serviceAddressSorter.setInsufficientInfoToSort(request);
-      responseObserver.onNext(InsufficientInfoStatusSet.getDefaultInstance());
+      responseObserver.onNext(serviceAddressSorter.setInsufficientInfoToSort(request));
       responseObserver.onCompleted();
       metricsAccessor.getCounter(sortingImpossibleMetricSpec).inc(request.getRequestedBy());
     } catch (Throwable th) {

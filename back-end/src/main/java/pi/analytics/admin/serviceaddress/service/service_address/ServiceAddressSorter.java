@@ -13,10 +13,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.AssignServiceAddressResponse;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
+import pi.admin.service_address_sorting.generated.CreateLawFirmResponse;
 import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusRequest;
+import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusResponse;
 import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest;
+import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmResponse;
+import pi.admin.service_address_sorting.generated.SortAssignment;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.metrics.ImmutableMetricSpec;
 import pi.analytics.admin.serviceaddress.metrics.MetricSpec;
@@ -43,6 +50,7 @@ import pi.ip.generated.es.ServiceAddressRecord;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
 
+import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isAssignedToLawFirm;
 import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.needsSorting;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfAssignToLawFirm;
 import static pi.analytics.admin.serviceaddress.service.service_address.SortResultUtils.resultOfCreateLawFirmAndAssign;
@@ -85,7 +93,7 @@ public class ServiceAddressSorter {
           .addLabels("user", "action", "status", "result")
           .build();
 
-  public void assignServiceAddress(final AssignServiceAddressRequest request) {
+  public AssignServiceAddressResponse assignServiceAddress(final AssignServiceAddressRequest request) {
     Preconditions.checkArgument(request.getLawFirmId() != 0, "Law firm ID is required");
     Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getRequestedBy()), "Requestee is required");
@@ -96,16 +104,10 @@ public class ServiceAddressSorter {
             .setServiceAddressId(request.getServiceAddressId())
             .build()
     );
-    final GetLawFirmByIdResponse getLawFirmResponse = lawFirmDbServiceBlockingStub.getLawFirmById(
-        GetLawFirmByIdRequest
-            .newBuilder()
-            .setLawFirmId(request.getLawFirmId())
-            .build()
-    );
-    if (getLawFirmResponse.getResult() == GetLawFirmByIdResponse.GetLawFirmByIdResult.LAW_FIRM_NOT_FOUND) {
-      throw new IllegalArgumentException("Cannot assign service address to a non-existent law firm");
-    }
-    final LawFirm lawFirm = getLawFirmResponse.getLawFirm();
+
+    final LawFirm lawFirm = getLawFirmById(request.getLawFirmId())
+        .orElseThrow(() -> new IllegalArgumentException("Cannot assign service address to a non-existent law firm"));
+
     final SortEffect desiredSortEffect = getDesiredSortEffect(preSortServiceAddress, request.getRequestedBy());
 
     if (desiredSortEffect == SortEffect.SORT_STATUS_UPDATED) {
@@ -141,10 +143,21 @@ public class ServiceAddressSorter {
     metricsAccessor
         .getCounter(sortOutcomeMetricSpec)
         .inc(request.getRequestedBy(), "assign_to_law_firm", desiredSortEffect.name(), sortResult.name());
+
+    final AssignServiceAddressResponse.Builder response =
+        AssignServiceAddressResponse
+            .newBuilder()
+            .setSortEffect(desiredSortEffect)
+            .setSortResult(sortResult);
+    if (!needsSorting(preSortServiceAddress)) {
+      // This service address has previously been sorted
+      response.setExpectedSortAssignment(getCurrentSortAssignment(preSortServiceAddress));
+    }
+    return response.build();
   }
 
-  // The returned law firm id may be 0 if an actual sort was not carried out e.g. because we're trialling the user.
-  public long createLawFirmAndAssignServiceAddress(final CreateLawFirmRequest request) {
+  // The returned law firm id may be 0 if an actual sort was not carried out e.g. because we're trialling the user
+  public CreateLawFirmResponse createLawFirmAndAssignServiceAddress(final CreateLawFirmRequest request) {
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getName()), "Law firm name is required");
     Preconditions.checkArgument(StringUtils.isNotBlank(request.getCountryCode()), "Country code is required");
     Preconditions.checkArgument(request.hasServiceAddress(), "Service address is required");
@@ -197,14 +210,11 @@ public class ServiceAddressSorter {
 
     final SortResult sortResult = resultOfCreateLawFirmAndAssign(request.getServiceAddress(), lawFirmToBeCreated,
         (final LawFirm lawFirm) ->
-            // Does a law firm exist that has the same name and country as the one that we want to create,
-            // and is assigned the service address that is being sorted?
-            lawFirmRepository
-                .searchLawFirms(lawFirm.getName(), lawFirm.getCountry())
-                .stream()
-                .filter(agent -> agent.getServiceAddressesList().contains(request.getServiceAddress()))
-                .findFirst()
-                .isPresent()
+          // Does a law firm exist that has the same name and country as the one that we want to create,
+          // and is assigned the service address that is being sorted?
+          getLawFirmById(request.getServiceAddress().getLawFirmId().getValue())
+              .filter(found -> found.getName() == lawFirm.getName() && found.getCountry() == lawFirm.getCountry())
+              .isPresent()
     );
 
     updateSortScoreIfNecessary(request.getServiceAddress().getServiceAddressId(), desiredSortEffect, sortResult);
@@ -224,10 +234,22 @@ public class ServiceAddressSorter {
         .getCounter(sortOutcomeMetricSpec)
         .inc(request.getRequestedBy(), "create_law_firm", desiredSortEffect.name(), sortResult.name());
 
-    return lawFirmId;
+    final CreateLawFirmResponse.Builder response =
+        CreateLawFirmResponse
+            .newBuilder()
+            .setSortEffect(desiredSortEffect)
+            .setSortResult(sortResult);
+    if (needsSorting(request.getServiceAddress())) {
+      response.setNewLawFirmId(lawFirmId);
+    } else {
+      // This service address has previously been sorted
+      response.setExpectedSortAssignment(getCurrentSortAssignment(request.getServiceAddress()));
+    }
+    return response.build();
   }
 
-  public void setServiceAddressAsNonLawFirm(final SetServiceAddressAsNonLawFirmRequest request) {
+  public SetServiceAddressAsNonLawFirmResponse setServiceAddressAsNonLawFirm(
+      final SetServiceAddressAsNonLawFirmRequest request) {
     Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
 
     final ServiceAddress preSortServiceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
@@ -278,6 +300,16 @@ public class ServiceAddressSorter {
         .getCounter(sortOutcomeMetricSpec
         )
         .inc(request.getRequestedBy(), "non_law_firm", desiredSortEffect.name(), sortResult.name());
+
+    final SetServiceAddressAsNonLawFirmResponse.Builder response =
+        SetServiceAddressAsNonLawFirmResponse
+            .newBuilder()
+            .setSortEffect(desiredSortEffect)
+            .setSortResult(sortResult);
+    if (!needsSorting(preSortServiceAddress)) {
+      response.setExpectedSortAssignment(getCurrentSortAssignment(preSortServiceAddress));
+    }
+    return response.build();
   }
 
   public void unsortServiceAddress(final UnsortServiceAddressRequest request) {
@@ -296,7 +328,7 @@ public class ServiceAddressSorter {
     );
   }
 
-  public void setInsufficientInfoToSort(final SetInsufficientInfoStatusRequest request) {
+  public SetInsufficientInfoStatusResponse setInsufficientInfoToSort(final SetInsufficientInfoStatusRequest request) {
     Preconditions.checkArgument(request.getServiceAddressId() != 0, "Service address ID is required");
 
     final ServiceAddress preSortServiceAddress = serviceAddressServiceBlockingStub.getServiceAddressById(
@@ -328,6 +360,16 @@ public class ServiceAddressSorter {
     metricsAccessor
         .getCounter(sortOutcomeMetricSpec)
         .inc(request.getRequestedBy(), "sorting_impossible", sortEffect.name(), sortResult.name());
+
+    final SetInsufficientInfoStatusResponse.Builder response =
+        SetInsufficientInfoStatusResponse
+            .newBuilder()
+            .setSortEffect(sortEffect)
+            .setSortResult(sortResult);
+    if (!needsSorting(preSortServiceAddress)) {
+      response.setExpectedSortAssignment(getCurrentSortAssignment(preSortServiceAddress));
+    }
+    return response.build();
   }
 
   @VisibleForTesting
@@ -366,6 +408,39 @@ public class ServiceAddressSorter {
       default:
         return false;
     }
+  }
+
+  @VisibleForTesting
+  SortAssignment getCurrentSortAssignment(final ServiceAddress serviceAddress) {
+    final SortAssignment.Builder sortAssignment = SortAssignment.newBuilder().setServiceAddress(serviceAddress);
+    if (isAssignedToLawFirm(serviceAddress)) {
+      final Optional<LawFirm> assignedLawFirm = getLawFirmById(serviceAddress.getLawFirmId().getValue());
+      if (assignedLawFirm.isPresent()) {
+        sortAssignment.setAssignedLawFirm(assignedLawFirm.get());
+      } else {
+        // While we couldn't get the law firm details, the service address is still considered to be assigned
+        sortAssignment.setAssignedLawFirm(
+            LawFirm
+                .newBuilder()
+                .setLawFirmId(serviceAddress.getLawFirmId().getValue())
+        );
+      }
+    }
+    return sortAssignment.build();
+  }
+
+  @VisibleForTesting
+  Optional<LawFirm> getLawFirmById(final long lawFirmId) {
+    final GetLawFirmByIdResponse response = lawFirmDbServiceBlockingStub.getLawFirmById(
+        GetLawFirmByIdRequest
+            .newBuilder()
+            .setLawFirmId(lawFirmId)
+            .build()
+    );
+    if (response.getResult() == GetLawFirmByIdResponse.GetLawFirmByIdResult.LAW_FIRM_NOT_FOUND) {
+      return Optional.empty();
+    }
+    return Optional.of(response.getLawFirm());
   }
 
   private LawFirmServiceAddressRecord buildLawFirmServiceAddressRecordForLawFirmAssignment(
