@@ -9,7 +9,7 @@ npm install
 npm start
 ```
 
-You can now browse to http://localhost:3000/int/addressing
+You can now browse to http://localhost:3000/int/addressing/?username=youruser
 
 ## Type Checking
 
@@ -24,8 +24,4 @@ flow check
 ```
 git submodule update --remote
 ```
-
-## Functionality for v1:
-
-* Link `ServiceAddress`es to `LawFirm`s
 
