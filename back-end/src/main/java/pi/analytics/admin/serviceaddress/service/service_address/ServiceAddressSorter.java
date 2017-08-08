@@ -39,8 +39,6 @@ import pi.ip.data.relational.generated.IncrementSortScoreRequest;
 import pi.ip.data.relational.generated.LawFirmDbServiceGrpc.LawFirmDbServiceBlockingStub;
 import pi.ip.data.relational.generated.LogSortDecisionRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc.ServiceAddressServiceBlockingStub;
-import pi.ip.data.relational.generated.SortEffect;
-import pi.ip.data.relational.generated.SortResult;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.es.ESMutationServiceGrpc.ESMutationServiceBlockingStub;
 import pi.ip.generated.es.LawFirmServiceAddressRecord;
@@ -49,6 +47,8 @@ import pi.ip.generated.es.LocationRecord;
 import pi.ip.generated.es.ServiceAddressRecord;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
+import pi.ip.proto.generated.SortEffect;
+import pi.ip.proto.generated.SortResult;
 
 import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isAssignedToLawFirm;
 import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.needsSorting;

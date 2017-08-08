@@ -48,8 +48,6 @@ import pi.ip.data.relational.generated.LawFirmDbServiceGrpc;
 import pi.ip.data.relational.generated.LogSortDecisionRequest;
 import pi.ip.data.relational.generated.ServiceAddressServiceGrpc;
 import pi.ip.data.relational.generated.SetServiceAddressAsNonLawFirmRequest;
-import pi.ip.data.relational.generated.SortEffect;
-import pi.ip.data.relational.generated.SortResult;
 import pi.ip.data.relational.generated.UnassignServiceAddressFromLawFirmRequest;
 import pi.ip.generated.es.ESMutationServiceGrpc;
 import pi.ip.generated.es.LawFirmServiceAddressRecord;
@@ -59,6 +57,8 @@ import pi.ip.generated.es.ServiceAddressRecord;
 import pi.ip.proto.generated.AckResponse;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
+import pi.ip.proto.generated.SortEffect;
+import pi.ip.proto.generated.SortResult;
 import pi.ip.proto.generated.SortStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;

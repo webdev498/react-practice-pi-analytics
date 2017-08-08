@@ -8,9 +8,9 @@ import com.google.common.base.Preconditions;
 
 import java.util.function.Predicate;
 
-import pi.ip.data.relational.generated.SortResult;
 import pi.ip.proto.generated.LawFirm;
 import pi.ip.proto.generated.ServiceAddress;
+import pi.ip.proto.generated.SortResult;
 import pi.ip.proto.generated.SortStatus;
 
 import static pi.analytics.admin.serviceaddress.service.service_address.ServiceAddressUtils.isNonLawFirm;

@@ -12,7 +12,6 @@ docker:
 	cp -r ../pi-shared-protobuf/src/google/protobuf/. src/grpc-gateway/generated/licensingalert/google/protobuf/
 	cp ../pi-shared-protobuf/src/patent_common.proto src/grpc-gateway/generated/licensingalert/
 	cp ../pi-shared-protobuf/src/service_address_sorting.proto src/grpc-gateway/generated/licensingalert/
-	cp ../pi-shared-protobuf/src/relational_db_service.proto src/grpc-gateway/generated/licensingalert/
 	# Build Docker image
 	docker build -t asia.gcr.io/pi-devops/service-address-admin-grpc-gateway:$(VERSION)-$(BUILD) .
 
