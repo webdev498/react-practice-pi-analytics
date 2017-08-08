@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Stubber;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import io.grpc.ManagedChannel;
@@ -26,14 +27,17 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import pi.admin.service_address_sorting.generated.AssignServiceAddressRequest;
+import pi.admin.service_address_sorting.generated.AssignServiceAddressResponse;
 import pi.admin.service_address_sorting.generated.CreateLawFirmRequest;
+import pi.admin.service_address_sorting.generated.CreateLawFirmResponse;
 import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusRequest;
+import pi.admin.service_address_sorting.generated.SetInsufficientInfoStatusResponse;
+import pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmResponse;
 import pi.admin.service_address_sorting.generated.UnsortServiceAddressRequest;
 import pi.analytics.admin.serviceaddress.service.helpers.LawFirmTestHelper;
 import pi.analytics.admin.serviceaddress.service.law_firm.LawFirmRepository;
 import pi.analytics.admin.serviceaddress.service.user.UserService;
 import pi.ip.data.relational.generated.AssignServiceAddressToLawFirmRequest;
-import pi.ip.data.relational.generated.CreateLawFirmResponse;
 import pi.ip.data.relational.generated.DecrementSortScoreRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdRequest;
 import pi.ip.data.relational.generated.GetLawFirmByIdResponse;
@@ -194,7 +198,7 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void assignServiceAddress_success() throws Exception {
+  public void assignServiceAddress_new_sort_success() throws Exception {
     final LawFirm lawFirm = LawFirmTestHelper.createLawFirm();
     final ServiceAddress serviceAddress = createUnsortedServiceAddress(lawFirm.getName());
 
@@ -217,7 +221,7 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
 
-    serviceAddressSorter.assignServiceAddress(
+    final AssignServiceAddressResponse response = serviceAddressSorter.assignServiceAddress(
         AssignServiceAddressRequest
             .newBuilder()
             .setLawFirmId(lawFirm.getLawFirmId())
@@ -225,6 +229,15 @@ public class ServiceAddressSorterTest {
             .setRequestedBy(username)
             .build()
     );
+    assertThat(response.getSortEffect())
+        .as("This is a new sort")
+        .isEqualTo(SortEffect.SORT_STATUS_UPDATED);
+    assertThat(response.getSortResult())
+        .as("This is a new sort")
+        .isEqualTo(SortResult.NEW_SORT);
+    assertThat(response.hasExpectedSortAssignment())
+        .as("This is a not a re-sort")
+        .isFalse();
 
     verify(serviceAddressService).assignServiceAddressToLawFirm(
         eq(
@@ -276,7 +289,50 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void createLawFirm() throws Exception {
+  public void assignServiceAddress_re_sort() throws Exception {
+    final LawFirm lawFirm = LawFirmTestHelper.createLawFirm();
+    final ServiceAddress serviceAddress = createServiceAddressForNonLawFirm(faker.name().fullName());
+
+    final String username = faker.name().username();
+    when(userService.canPerformRealSort(eq(username))).thenReturn(true);
+
+    replyWith(GetLawFirmByIdResponse.newBuilder().setLawFirm(lawFirm).build())
+        .when(lawFirmDbService)
+        .getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .decrementSortScore(any(DecrementSortScoreRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
+
+    final AssignServiceAddressResponse response = serviceAddressSorter.assignServiceAddress(
+        AssignServiceAddressRequest
+            .newBuilder()
+            .setLawFirmId(lawFirm.getLawFirmId())
+            .setServiceAddressId(serviceAddress.getServiceAddressId())
+            .setRequestedBy(username)
+            .build()
+    );
+    assertThat(response.getSortEffect())
+        .as("This is not a new sort and the user is allowed to do real sorts")
+        .isEqualTo(SortEffect.SORT_SCORE_UPDATED);
+    assertThat(response.getSortResult())
+        .as("The sort result is different")
+        .isEqualTo(SortResult.DIFFERENT);
+    assertThat(response.getExpectedSortAssignment().getServiceAddress())
+        .as("Service address must match")
+        .isEqualTo(serviceAddress);
+    assertThat(response.getExpectedSortAssignment().hasAssignedLawFirm())
+        .as("Service address is not assigned to a law firm")
+        .isFalse();
+  }
+
+  @Test
+  public void createLawFirm_new_sort() throws Exception {
     final String username = faker.name().username();
     when(userService.canPerformRealSort(eq(username))).thenReturn(true);
 
@@ -294,13 +350,13 @@ public class ServiceAddressSorterTest {
     final long newLawFirmId = faker.number().randomNumber(8, true);
 
     replyWith(
-        CreateLawFirmResponse
+        pi.ip.data.relational.generated.CreateLawFirmResponse
             .newBuilder()
             .setLawFirmId(newLawFirmId)
             .build()
     )
-        .when(lawFirmDbService)
-        .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
+    .when(lawFirmDbService)
+    .createLawFirm(any(pi.ip.data.relational.generated.CreateLawFirmRequest.class), any(StreamObserver.class));
 
     replyWith(AckResponse.getDefaultInstance())
         .when(serviceAddressService)
@@ -318,7 +374,16 @@ public class ServiceAddressSorterTest {
         .logSortDecision(logSortDecisionRequestArgument.capture(), any(StreamObserver.class));
 
     // Run test
-    serviceAddressSorter.createLawFirmAndAssignServiceAddress(createLawFirmRequest);
+    final CreateLawFirmResponse response = serviceAddressSorter.createLawFirmAndAssignServiceAddress(createLawFirmRequest);
+    assertThat(response.getSortEffect())
+        .as("This is a new sort")
+        .isEqualTo(SortEffect.SORT_STATUS_UPDATED);
+    assertThat(response.getSortResult())
+        .as("This is a new sort")
+        .isEqualTo(SortResult.NEW_SORT);
+    assertThat(response.getOutcomeCase() == CreateLawFirmResponse.OutcomeCase.NEW_LAW_FIRM_ID)
+        .as("This is a not a re-sort")
+        .isTrue();
 
     // Verify create law firm called
     verify(lawFirmDbService, times(1))
@@ -400,6 +465,49 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
+  public void createLawFirm_already_sorted_same() throws Exception {
+    final String username = faker.name().username();
+    when(userService.canPerformRealSort(eq(username))).thenReturn(false);
+
+    final LawFirm lawFirm = LawFirmTestHelper.createLawFirm();
+    final CreateLawFirmRequest createLawFirmRequest =
+        CreateLawFirmRequest
+            .newBuilder()
+            .setRequestedBy(username)
+            .setName(lawFirm.getName())
+            .setState(lawFirm.getStateStr())
+            .setCountryCode(lawFirm.getCountry())
+            .setWebsiteUrl(lawFirm.getWebsiteUrl())
+            .setServiceAddress(createServiceAddressToMatchLawFirm(lawFirm))
+            .build();
+
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
+
+    replyWith(
+        GetLawFirmByIdResponse
+            .newBuilder()
+            .setLawFirm(lawFirm)
+            .setResult(GetLawFirmByIdResponse.GetLawFirmByIdResult.LAW_FIRM_LOOKUP_OK)
+            .build()
+    )
+    .when(lawFirmDbService).getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
+
+    // Run test
+    final CreateLawFirmResponse response = serviceAddressSorter.createLawFirmAndAssignServiceAddress(createLawFirmRequest);
+    assertThat(response.getSortEffect())
+        .as("The user doesn't have permission to perform a real sort")
+        .isEqualTo(SortEffect.NOT_UPDATED);
+    assertThat(response.getSortResult())
+        .as("The sort result is the same")
+        .isEqualTo(SortResult.SAME);
+    assertThat(response.getOutcomeCase() == CreateLawFirmResponse.OutcomeCase.EXPECTED_SORT_ASSIGNMENT)
+        .as("This is a re-sort")
+        .isTrue();
+  }
+
+  @Test
   public void unsortServiceAddress() throws Exception {
     replyWithAckResponse()
         .when(serviceAddressService)
@@ -418,7 +526,7 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void testSetInsufficientInfoSort() {
+  public void testSetInsufficientInfoSort_new_sort() {
     final String username = faker.name().username();
     final ServiceAddress serviceAddress = createUnsortedServiceAddress(faker.company().name());
 
@@ -433,13 +541,23 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
 
-    serviceAddressSorter.setInsufficientInfoToSort(
+    SetInsufficientInfoStatusResponse response = serviceAddressSorter.setInsufficientInfoToSort(
         SetInsufficientInfoStatusRequest
             .newBuilder()
             .setServiceAddressId(1L)
             .setRequestedBy(username)
             .build()
     );
+
+    assertThat(response.getSortEffect())
+        .as("This is a new sort")
+        .isEqualTo(SortEffect.SORT_STATUS_UPDATED);
+    assertThat(response.getSortResult())
+        .as("This is a new sort")
+        .isEqualTo(SortResult.NEW_SORT);
+    assertThat(response.hasExpectedSortAssignment())
+        .as("This is a not a re-sort")
+        .isFalse();
 
     verify(serviceAddressService, times(1))
         .insufficientInfoToSort(
@@ -463,7 +581,42 @@ public class ServiceAddressSorterTest {
   }
 
   @Test
-  public void setServiceAddressAsNonLawFirm() throws Exception {
+  public void testSetInsufficientInfoSort_re_sort() {
+    final String username = faker.name().username();
+    final ServiceAddress serviceAddress = createServiceAddressForNonLawFirm(faker.name().fullName());
+
+    when(userService.canPerformRealSort(eq(username))).thenReturn(true);
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .insufficientInfoToSort(any(InsufficientInfoToSortRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
+
+    SetInsufficientInfoStatusResponse response = serviceAddressSorter.setInsufficientInfoToSort(
+        SetInsufficientInfoStatusRequest
+            .newBuilder()
+            .setServiceAddressId(1L)
+            .setRequestedBy(username)
+            .build()
+    );
+
+    assertThat(response.getSortEffect())
+        .as("This is a not new sort and the user can do real sorts")
+        .isEqualTo(SortEffect.SORT_SCORE_UPDATED);
+    assertThat(response.getSortResult())
+        .as("The sort result is different")
+        .isEqualTo(SortResult.DIFFERENT);
+    assertThat(response.hasExpectedSortAssignment())
+        .as("This is a re-sort")
+        .isTrue();
+  }
+
+  @Test
+  public void setServiceAddressAsNonLawFirm_new_sort() throws Exception {
     final ServiceAddress serviceAddress =
         ServiceAddress
             .newBuilder(createServiceAddressForNonLawFirm(faker.company().name()))
@@ -486,13 +639,23 @@ public class ServiceAddressSorterTest {
         .when(serviceAddressService)
         .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
 
-    serviceAddressSorter.setServiceAddressAsNonLawFirm(
+    final SetServiceAddressAsNonLawFirmResponse response = serviceAddressSorter.setServiceAddressAsNonLawFirm(
         pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
             .newBuilder()
             .setServiceAddressId(serviceAddress.getServiceAddressId())
             .setRequestedBy(username)
             .build()
     );
+
+    assertThat(response.getSortEffect())
+        .as("This is a new sort")
+        .isEqualTo(SortEffect.SORT_STATUS_UPDATED);
+    assertThat(response.getSortResult())
+        .as("This is a new sort")
+        .isEqualTo(SortResult.NEW_SORT);
+    assertThat(response.hasExpectedSortAssignment())
+        .as("This is a not a re-sort")
+        .isFalse();
 
     verify(serviceAddressService, times(1))
         .setServiceAddressAsNonLawFirm(
@@ -540,6 +703,45 @@ public class ServiceAddressSorterTest {
         ),
         any(StreamObserver.class)
     );
+  }
+
+  @Test
+  public void setServiceAddressAsNonLawFirm_re_sort() throws Exception {
+    final ServiceAddress serviceAddress =
+        ServiceAddress
+            .newBuilder(createServiceAddressForNonLawFirm(faker.company().name()))
+            .build();
+
+    final String username = faker.name().username();
+    when(userService.canPerformRealSort(eq(username))).thenReturn(true);
+
+    replyWith(serviceAddress)
+        .when(serviceAddressService)
+        .getServiceAddressById(any(GetServiceAddressByIdRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .incrementSortScore(any(IncrementSortScoreRequest.class), any(StreamObserver.class));
+    replyWithAckResponse()
+        .when(serviceAddressService)
+        .logSortDecision(any(LogSortDecisionRequest.class), any(StreamObserver.class));
+
+    final SetServiceAddressAsNonLawFirmResponse response = serviceAddressSorter.setServiceAddressAsNonLawFirm(
+        pi.admin.service_address_sorting.generated.SetServiceAddressAsNonLawFirmRequest
+            .newBuilder()
+            .setServiceAddressId(serviceAddress.getServiceAddressId())
+            .setRequestedBy(username)
+            .build()
+    );
+
+    assertThat(response.getSortEffect())
+        .as("This is not a new sort and the user can do real sorts")
+        .isEqualTo(SortEffect.SORT_SCORE_UPDATED);
+    assertThat(response.getSortResult())
+        .as("This is a new sort")
+        .isEqualTo(SortResult.SAME);
+    assertThat(response.hasExpectedSortAssignment())
+        .as("This is a not a re-sort")
+        .isTrue();
   }
 
   @Test
@@ -622,6 +824,79 @@ public class ServiceAddressSorterTest {
         .as("Sort score was updated");
     verify(serviceAddressService, times(1))
         .decrementSortScore(any(DecrementSortScoreRequest.class), any(StreamObserver.class));
+  }
+
+  @Test
+  public void getCurrentSortAssignment_non_law_firm() throws Exception {
+    final ServiceAddress serviceAddress = createServiceAddressForNonLawFirm(faker.name().fullName());
+    assertThat(serviceAddressSorter.getCurrentSortAssignment(serviceAddress).getServiceAddress())
+        .as("We should get back the service address")
+        .isEqualTo(serviceAddress);
+    assertThat(serviceAddressSorter.getCurrentSortAssignment(serviceAddress).hasAssignedLawFirm())
+        .as("The service address is not assigned to a law firm")
+        .isFalse();
+  }
+
+  @Test
+  public void getCurrentSortAssignment_law_firm_not_found() throws Exception {
+    final ServiceAddress serviceAddress = createServiceAddressToMatchLawFirm(LawFirmTestHelper.createLawFirm());
+    replyWith(
+        GetLawFirmByIdResponse
+            .newBuilder()
+            .setResult(GetLawFirmByIdResponse.GetLawFirmByIdResult.LAW_FIRM_NOT_FOUND)
+            .build()
+    )
+    .when(lawFirmDbService).getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
+    assertThat(serviceAddressSorter.getCurrentSortAssignment(serviceAddress).getAssignedLawFirm().getLawFirmId())
+        .as("The service address is considered to be assigned to a law firm even if we couldn't fetch it")
+        .isEqualTo(serviceAddress.getLawFirmId().getValue());
+  }
+
+  @Test
+  public void getCurrentSortAssignment_law_firm_found() throws Exception {
+    final LawFirm lawFirm = LawFirmTestHelper.createLawFirm();
+    final ServiceAddress serviceAddress = createServiceAddressToMatchLawFirm(lawFirm);
+    replyWith(
+        GetLawFirmByIdResponse
+            .newBuilder()
+            .setLawFirm(lawFirm)
+            .setResult(GetLawFirmByIdResponse.GetLawFirmByIdResult.LAW_FIRM_LOOKUP_OK)
+            .build()
+    )
+    .when(lawFirmDbService).getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
+    assertThat(serviceAddressSorter.getCurrentSortAssignment(serviceAddress).getAssignedLawFirm())
+        .as("The service address is considered to be assigned to a law firm even if we couldn't fetch it")
+        .isEqualTo(lawFirm);
+  }
+
+  @Test
+  public void getLawFirmById_not_found() throws Exception {
+    replyWith(
+        GetLawFirmByIdResponse
+            .newBuilder()
+            .setResult(GetLawFirmByIdResponse.GetLawFirmByIdResult.LAW_FIRM_NOT_FOUND)
+            .build()
+    )
+    .when(lawFirmDbService).getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
+    assertThat(serviceAddressSorter.getLawFirmById(1L))
+        .as("The law firm was not found")
+        .isEmpty();
+  }
+
+  @Test
+  public void getLawFirmById_found() throws Exception {
+    final LawFirm lawFirm = LawFirmTestHelper.createLawFirm();
+    replyWith(
+        GetLawFirmByIdResponse
+            .newBuilder()
+            .setLawFirm(lawFirm)
+            .setResult(GetLawFirmByIdResponse.GetLawFirmByIdResult.LAW_FIRM_LOOKUP_OK)
+            .build()
+    )
+    .when(lawFirmDbService).getLawFirmById(any(GetLawFirmByIdRequest.class), any(StreamObserver.class));
+    assertThat(serviceAddressSorter.getLawFirmById(lawFirm.getLawFirmId()))
+        .as("The law firm was found")
+        .isEqualTo(Optional.of(lawFirm));
   }
 
   private Stubber replyWithAckResponse() {
