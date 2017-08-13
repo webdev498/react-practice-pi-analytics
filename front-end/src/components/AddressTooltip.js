@@ -11,12 +11,12 @@ const AddressTooltip = (props: Object) => {
   const id = Math.random().toString(36).substr(2);
 
   const newLabel = (typeof label === 'string')
-    ? <span>{label}</span>
+    ? <span htmlFor="" className="">{label}</span>
     : label;
 
   let element;
   if (typeof children === 'string') {
-    element = <span>{children}</span>;
+    element = <span id="">{children}</span>;
   } else {
     element = React.Children.only(children);
   }

@@ -18,7 +18,7 @@ import {
   unsortedServiceAddressFetchError,
   unsortedServiceAddressPreFetchError,
   serviceAddressSkipped,
-} from "../reducers/root";
+} from "../reducers/root"
 import {searchQueryError, searchQueryFulfilled} from "../reducers/search";
 import {firmCreationError, lawFirmCreated} from "../reducers/createfirmdialog";
 import {
@@ -32,7 +32,7 @@ import {
   UNDO_SERVICE_ADDRESS,
   UNSORT_SERVICE_ADDRESS,
   SET_INSUFFICIENT_INFO_STATUS,
-  SKIP_SERVICE_ADDRESS
+  SKIP_SERVICE_ADDRESS,
 } from "../actions/FetchActions";
 import {ActionsObservable} from "redux-observable";
 import Authentication from "../services/Authentication";
@@ -41,7 +41,7 @@ import {ApiUrls, OuterUrls} from "../services/Urls";
 import u from "updeep";
 import type {Action} from "redux";
 
-const mapResponse = method => ajax => method(u.freeze(camelcaseKeysDeep(ajax.response)));
+const mapResponse = method => ajax => ajax ? method(u.freeze(camelcaseKeysDeep(ajax.response))) : null;
 const mapError = method => error => Observable.of(error).mapTo(method());
 
 export const fetchNextUnsortedServiceAddress = (action$: ActionsObservable<Action>): ActionsObservable<Action> =>

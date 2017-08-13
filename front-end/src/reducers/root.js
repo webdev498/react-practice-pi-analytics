@@ -117,7 +117,7 @@ export const unsortedServiceAddressPreFetchError = (): Action => ({
   }
 });
 
-export const serviceAddressSkipped = (): Action => ({
+export const serviceAddressSkipped = (...params : any): Action => ({
   type: Actions.MESSAGE,
   payload: {
     skipping: false
@@ -131,14 +131,14 @@ export const toggleApplicationsPanel = (previous: boolean): Action => ({
   }
 });
 
-export const serviceAddressUnsorted = (): Action => ({
+export const serviceAddressUnsorted = (...params : any): Action => ({
   type: Actions.SERVICE_ADDRESS_UNSORTED,
   payload: {
     loading: false
   }
 });
 
-export const undoServiceAddressSuccess = (): Action => ({
+export const undoServiceAddressSuccess = (...params : any): Action => ({
   type: Actions.UNDO_COMPLETED,
   payload: {
     loading: false,
@@ -164,7 +164,7 @@ export const unsortedServiceAddressPreFetched = (bundle: ServiceAddressBundle): 
   }
 }
 
-export const getNextUnsortedServiceAddress = (): Action => (dispatch: Dispatch) => {
+export const getNextUnsortedServiceAddress = (...params : any): Action => (dispatch: Dispatch) => {
   if (store.getState().root.serviceAddressesCache && store.getState().root.serviceAddressesCache.length > 0) {
     dispatch({type: Actions.CONSUME_CACHED_SERVICE_ADDRESS});
     if (canPreFetch()) {
